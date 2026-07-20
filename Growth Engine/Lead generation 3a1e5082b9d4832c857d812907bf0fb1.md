@@ -1,0 +1,22 @@
+# Lead generation
+
+- Lead acquisition channels
+- Prospect database building
+- Lead list building and enrichment
+- Outbound prospecting systems
+- Inbound lead capture systems
+- Lead generation campaigns
+- Landing page lead capture
+- Lead magnets and gated content
+- Webinar lead generation
+- Event and conference lead capture
+- Social media lead generation
+- LinkedIn lead generation
+- Paid advertising lead generation
+- SEO-driven lead generation
+- Content marketing lead generation
+- Referral-based lead generation
+- Partnership lead generation
+- Affiliate lead generation
+- Chatbot lead capture
+- Interactive forms and quizzes for leads

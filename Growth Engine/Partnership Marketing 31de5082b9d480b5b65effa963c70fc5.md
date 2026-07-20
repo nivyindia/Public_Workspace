@@ -1,0 +1,24 @@
+# Partnership Marketing
+
+- Strategic brand partnerships
+- Agency partnerships and collaborations
+- Affiliate marketing programs
+- Referral partner programs
+- Influencer partnerships
+- Industry partnerships and alliances
+- Co-marketing campaigns
+- Joint webinars and events
+- Co-branded content creation
+- Cross-promotion campaigns
+- Channel partnerships
+- Reseller partnerships
+- Distribution partnerships
+- Technology integrations and partnerships
+- Marketplace partnerships
+- Community partnerships
+- Media partnerships
+- Sponsorship partnerships
+- Strategic alliance programs
+- Partner lead sharing programs
+- Joint product launches
+- Guest content collaborations (blogs, podcasts, newsletters)

@@ -1,0 +1,19 @@
+# FAQ — 42 Implementation and Delivery Setup
+
+> Part of Stage 42 (Implementation and Delivery Setup). See [README.md](README.md) for the full stage overview.
+> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+
+---
+
+## Frequently Asked Questions
+
+**Q: _placeholder question_**
+A: _placeholder answer_
+
+---
+
+## Cross-References
+
+- Stage README: [README.md](README.md)
+- Previous stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
+- Next stage: [43 Account Management](../43 Account Management/README.md)

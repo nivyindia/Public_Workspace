@@ -1,0 +1,3 @@
+# 🏠 General Hub
+
+This hub covers internal company information, policies, and operational tracking.nnUse the sidebar to navigate to any section.nn---nn## What's in herenn| Section | Purpose |n|---|---|n| 📋 Documentation & Compliance | Policies vault, ISO docs, legal templates, data protection |n| ⚙️ Operations & Tracking | Internal tools, reporting systems, operational tracking |nn---nn## Quick contactsnn- Team manager: [fill in]n- Internal WhatsApp group: [fill in]n- Operations queries: [fill in]nn---nn> This hub sits under 🏢 Nivy HQ. For sales and outreach content, go to 🏠 Sales & Marketing Hub.

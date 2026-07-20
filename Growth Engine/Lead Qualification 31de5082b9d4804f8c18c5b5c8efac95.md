@@ -1,0 +1,22 @@
+# Lead Qualification
+
+- Lead qualification frameworks (BANT, MEDDIC, CHAMP)
+- Lead scoring systems
+- AI-based lead scoring
+- Prospect segmentation
+- Ideal customer profile (ICP) matching
+- Sales readiness evaluation
+- Marketing Qualified Lead (MQL) identification
+- Sales Qualified Lead (SQL) identification
+- Lead intent analysis
+- Behavioral lead scoring
+- Firmographic qualification
+- Demographic qualification
+- Budget qualification
+- Authority identification
+- Need assessment
+- Timeline qualification
+- Lead prioritization systems
+- Disqualification criteria systems
+- Lead routing and assignment
+- Qualification call frameworks

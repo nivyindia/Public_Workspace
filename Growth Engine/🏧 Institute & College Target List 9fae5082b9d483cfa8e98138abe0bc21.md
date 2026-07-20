@@ -1,0 +1,16 @@
+# 🏧 Institute & College Target List
+
+| Institute / Academy | Website | Facebook Page | LinkedIn | Notes |
+| --- | --- | --- | --- | --- |
+| VA Ready Academy | [https://www.vareadyacademy.com](https://www.vareadyacademy.com/) | [https://facebook.com/vareadyacademy](https://facebook.com/vareadyacademy) | Search founder on LinkedIn | Popular VA transition training for Filipinos ([vareadyacademy.com](https://www.vareadyacademy.com/?utm_source=chatgpt.com)) |
+| VA Training Academy PH | [https://vatrainingacademy.ph](https://vatrainingacademy.ph/) | [https://facebook.com/vatrainingacademyph](https://facebook.com/vatrainingacademyph) | Available on LinkedIn | Training for aspiring VAs with industry tools ([vatrainingacademy.ph](https://vatrainingacademy.ph/?utm_source=chatgpt.com)) |
+| Sandbox VA Training | [https://sandboxva.com](https://sandboxva.com/) | [https://facebook.com/sandboxva](https://facebook.com/sandboxva) | [https://linkedin.com/company/sandboxva](https://linkedin.com/company/sandboxva) | Offers Amazon VA, PPC, automation courses ([sandboxva.com](https://sandboxva.com/?utm_source=chatgpt.com)) |
+| Virtual Lead PH Academy | [https://virtualleadph.com/virtual-lead-ph-academy](https://virtualleadph.com/virtual-lead-ph-academy) | [https://facebook.com/virtualleadph](https://facebook.com/virtualleadph) | LinkedIn available | Provides free training for aspiring VAs ([Virtual Lead PH](https://virtualleadph.com/virtual-lead-ph-academy?utm_source=chatgpt.com)) |
+| Surge Freelancing Marketplace | [https://surgefreelancing.com](https://surgefreelancing.com/) | [https://facebook.com/surgefreelancing](https://facebook.com/surgefreelancing) | [https://linkedin.com/company/surgefreelancing](https://linkedin.com/company/surgefreelancing) | One of the largest VA academies in PH |
+| Filipino Virtual Assistance | [https://filipinovirtualassistance.com](https://filipinovirtualassistance.com/) | [https://facebook.com/filipinovirtualassistance](https://facebook.com/filipinovirtualassistance) | LinkedIn available | Provides VA courses and agency services |
+| Virtual Assistant Training PH | [https://vatrainingph.com](https://vatrainingph.com/) | [https://facebook.com/vatrainingph](https://facebook.com/vatrainingph) | LinkedIn available | Certification-based VA training |
+| Freelance Academy PH | [https://freelanceacademy.com](https://freelanceacademy.com/) | [https://facebook.com/freelanceacademyph](https://facebook.com/freelanceacademyph) | LinkedIn available | Focus on freelancing & VA careers |
+| VA Bootcamp Philippines | [https://vabootcamp.ph](https://vabootcamp.ph/) | [https://facebook.com/vabootcampph](https://facebook.com/vabootcampph) | LinkedIn available | Intensive VA training programs |
+| Digital Jobs PH Training | [https://digitaljobs.ph](https://digitaljobs.ph/) | [https://facebook.com/digitaljobsph](https://facebook.com/digitaljobsph) | [https://linkedin.com/company/digitaljobsph](https://linkedin.com/company/digitaljobsph) | Government supported digital skills training |
+
+site:facebook.com ("founder" OR "co-founder" OR "owner" OR "trainer" OR "coach") AND ("virtual assistant academy" OR "VA training" OR "virtual assistant training") AND ("Philippines" OR "Manila" OR "Cebu" OR "Davao")

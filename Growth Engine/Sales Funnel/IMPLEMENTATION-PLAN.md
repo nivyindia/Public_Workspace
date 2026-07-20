@@ -1,0 +1,87 @@
+# Implementation Plan — Sales Funnel Knowledge Bases
+
+> Master build plan and progress tracker for the 54-stage International B2B Sales Knowledge Base. Update the tracker table below at the end of every work session.
+
+\---
+
+## 1\. Objective
+
+Build all 54 stages to the same depth as the **Stage 06 (Lead Extraction) pilot** — full README (13-section spec) + methods/tools/automation/checklists/templates/resources/faq/references, mining existing Nivy Digital documentation as raw material wherever it exists, and writing fresh where it doesn't.
+
+## 2\. Build Order \& Batching Strategy
+
+Stages are grouped into 8 batches of \~5–8, sequenced to front-load stages where this repo already has strong raw material (Notion export of Nivy Digital's existing docs), so early batches are faster and establish reusable patterns for later ones.
+
+|Batch|Stages|Rationale|
+|-|-|-|
+|1|01–05|Research/ICP/persona/competitor/source-selection — strong existing raw material (`Market Research\\\\\\\*.md`, `Ideal Client Profile\\\\\\\*.md`, `Target Market Analysis\\\\\\\*.md`, `Value Proposition\\\\\\\*.md`)|
+|2|07–10|Contact discovery, enrichment, cleaning, verification — natural continuation of the Stage 06 pilot; reuses the same tool stack (Apollo, Hunter, Snov, ZeroBounce)|
+|3|11–15|Scoring, segmentation, CRM setup, list management, channel strategy — some existing material (`HubSpot CRM Setup Guide`, `Lead Scoring Rules Document`, `Lead Qualification Framework`)|
+|4|16–21|Email/LinkedIn/cold-call/WhatsApp/SMS outreach + sequencing — very strong existing material (`Cold Email System`, `LinkedIn Outreach System`, `WhatsApp Outreach SOP`, multiple SOP-VA files)|
+|5|22–27|Copywriting, deliverability, follow-up, reply handling, objections, qualification — existing material (`Objection Handling Library`, `Follow-Up Automation System`)|
+|6|28–37|Discovery call → demo → proposal → pricing → negotiation → closing — existing material (`Discovery Call Script`, `Proposal \\\\\\\& Deal Closing SOP`, `Pricing Strategy` docs)|
+|7|38–46|Deal desk → onboarding → delivery → account management → support — existing material (Client Onboarding Kit, Delivery SOPs, Service Agreement templates)|
+|8|47–54|Upsell/cross-sell/renewal/churn/feedback/case studies/referral/advocacy — existing material (`Upsell Trigger System`, `Referral Program System`, `Case Studies \\\\\\\& Social Proof Library`)|
+
+## 3\. Per-Stage Build Checklist (applied to every stage)
+
+* \[ ] Search this repo for existing raw material relevant to the stage
+* \[ ] Draft Sub-Stages (2. Complete Sub-Stages) specific to the topic
+* \[ ] Write `methods.md` — traditional/modern/AI/manual/automated/API/browser-automation/scraping/public-database/government/community/referral coverage
+* \[ ] Write `tools.md` — tool library with pricing (flagged "verify current"), OSS/free alt, API/automation support
+* \[ ] Write `automation.md` — manual → semi-auto → full-auto → AI-assisted workflows per method
+* \[ ] Write `checklists.md` — QC gates, duplicate/accuracy/completeness checks
+* \[ ] Write `templates.md` — reusable scripts/snippets/formats for the stage
+* \[ ] Write `resources.md` — website/vendor library (only where the stage has a website library; otherwise vendor/tool docs)
+* \[ ] Write `faq.md`
+* \[ ] Write `references.md` — internal sources cited + official docs
+* \[ ] Write full `README.md` (13-section spec) last, once the supporting files exist to link into it
+* \[ ] Cross-reference previous/next stage and any stage this one materially feeds or depends on
+* \[ ] Update the progress tracker below
+
+## 4\. Known Constraints / Decisions Carried Forward
+
+* Pricing figures throughout are marked "approximate, verify before use" rather than treated as authoritative — SaaS pricing changes too often to state as fact from training-era knowledge.
+* No fabricated vendor claims, invented case studies, or invented pricing — where the repo's source material doesn't cover something, the file says so explicitly rather than inventing detail to look complete.
+* I do not have GitHub push credentials for this repo — every batch is delivered as a downloadable file/zip with exact `git add/commit/push` instructions; you push it on your end.
+
+\---
+
+## 5\. Progress Tracker
+
+|Batch|Stages|Status|Files Complete|Notes|
+|-|-|-|-|-|
+|Pilot|06 Lead Extraction|✅ Done|10/10|Quality bar for all other stages|
+|Skeleton|01–54 (all, structural only)|✅ Done|486/486 (stub-level)|Correctly named, cross-referenced, awaiting content|
+|1|01–05|✅ Done|45/45|All 5 stages (Market Research, ICP Definition, Buyer Persona, Competitor Research, Lead Source Selection) at pilot depth|
+|2|07–10|✅ Done|36/36|All 4 stages (Contact Discovery, Lead Enrichment, Data Cleaning, Lead Verification) at pilot depth|
+|3|11–15|✅ Done|45/45|All 5 stages (Lead Scoring and Prioritization, Lead Segmentation, CRM Setup and Data Structuring, List Building and List Management, Outreach Channel Strategy) at pilot depth|
+|4|16–21|⬜ Not started|0/54||
+|5|22–27|⬜ Not started|0/54||
+|6|28–37|⬜ Not started|0/90||
+|7|38–46|⬜ Not started|0/81||
+|8|47–54|⬜ Not started|0/72||
+
+**Legend:** ⬜ Not started · 🟡 In progress · ✅ Done
+
+**Overall completion:** 136 / 496 files at full pilot depth (10 pilot + 45 Batch 1 + 36 Batch 2 + 45 Batch 3; skeleton-level structure exists for all remaining non-pilot files).
+
+\---
+
+## 6\. Session Log
+
+|Date|Session|What was done|
+|-|-|-|
+|2026-07-18|1|Audited repo (confirmed no prior structured KB existed despite earlier transcript). Built full 54-folder skeleton (486 files). Built Stage 06 Lead Extraction to full pilot depth (10 files) using existing Nivy SOPs as source material. Created this implementation plan.|
+|2026-07-19|2|Built Batch 1 stages 01 (Market Research) and 02 (ICP Definition) to full pilot depth (18 files total), mining existing Nivy Digital raw material (Market Research — India, Market Research — International US/UK/UAE/AU, Nivy Empires Market Research brief with TAM/SAM/SOM and Porter's Five Forces, and the ICP — Full Document with 4 defined ICPs + Negative ICP table). Stages 03–05 of Batch 1 remain — next session continues with Buyer Persona (03), which has strong existing raw material to draw on.|
+|2026-07-19|3|Completed Batch 1: built stages 03 (Buyer Persona), 04 (Competitor Research), and 05 (Lead Source Selection) to full pilot depth (27 files), mining the ICP document's embedded demographic/psychographic detail for personas, the "Competitor Categories You Must Track" system + "Competitor Positioning" playbook for competitor research, and the "Data Sources \& Databases Guide" + "International Lead Sources" guide for source selection. Batch 1 (Stages 01-05, 45/45 files) is now fully at pilot depth. Next session starts Batch 2 (Stages 07-10: Contact Discovery, Lead Enrichment, Data Cleaning, Lead Verification), which has strong existing raw material and reuses the Stage 06 pilot's tool stack (Apollo, Hunter, Snov, ZeroBounce).|
+|2026-07-19|4|Completed Batch 2: built stages 07 (Contact Discovery), 08 (Lead Enrichment), 09 (Data Cleaning), and 10 (Lead Verification) to full pilot depth (36 files), mining the "Data Infrastructure OS — Scraping, Enrichment \& CRM" document (Layers 1-4: scraping/discovery, email validation, enrichment, segmentation) for Stages 07-08, "SOP-VA-012 — Data Cleaning SOP" directly for Stage 09, and the Data Infrastructure OS's email validation layer plus the Section H Verification \& Due Diligence Framework (adapted from trade-partner verification to lead-contact verification) for Stage 10. Batch 2 (Stages 07-10, 36/36 files) is now fully at pilot depth. Overall: 91/496 files at pilot depth. Next session starts Batch 3 (Stages 11-15: Lead Scoring, Segmentation, CRM Setup, List Management, Outreach Channel Strategy), which has some existing material (HubSpot CRM Setup Guide, Lead Scoring Rules Document, Lead Qualification Framework) to draw on.|
+|2026-07-19|5|Audited the live repo against this tracker at the start of session and found the GitHub-rendered page had been showing a stale/cached view — the raw file on `main` already correctly reflected Batches 1–2 as Done from prior sessions. Completed Batch 3: built stages 11 (Lead Scoring and Prioritization), 12 (Lead Segmentation), 13 (CRM Setup and Data Structuring), 14 (List Building and List Management), and 15 (Outreach Channel Strategy) to full pilot depth (45 files), mining the "Lead Scoring Rules Document" and "Lead Qualification Framework" for Stage 11, general segmentation practice built on Stage 02/03 definitions for Stage 12 (no dedicated internal segmentation SOP existed), the "HubSpot CRM Setup \& Configuration Guide" directly for Stage 13, general list-management practice for Stage 14 (no dedicated internal SOP existed), and general multi-channel outreach practice built on Stage 01-03 research for Stage 15 (no dedicated internal channel-strategy SOP existed). Batch 3 (Stages 11-15, 45/45 files) is now fully at pilot depth. Overall: 136/496 files at pilot depth. Next session starts Batch 4 (Stages 16-21: Email/LinkedIn/Cold-Call/WhatsApp/SMS Outreach + Multi-Channel Sequencing), which has very strong existing material (Cold Email System, LinkedIn Outreach System, WhatsApp Outreach SOP, multiple SOP-VA files).|
+
+\---
+
+## Cross-References
+
+* [Funnel home / full stage index](README.md)
+* \[Stage 06 Lead Extraction (pilot / quality bar)](06 Lead Extraction/README.md)
+
