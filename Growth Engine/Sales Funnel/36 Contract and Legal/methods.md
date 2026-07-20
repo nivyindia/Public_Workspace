@@ -1,31 +1,36 @@
 # Methods — 36 Contract and Legal
 
-> Part of Stage 36 (Contract and Legal). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Physical/manual paperwork and wet signatures — replaced by e-signature tooling for speed and a clean audit trail.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+E-signature platforms (DocuSign, Dropbox Sign, PandaDoc, Signable) generating and executing the service agreement from a standard template.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-assisted drafting of the Statement of Work (SOW) deliverables/timeline/scope section from the approved solution map and negotiated terms — never used to draft the legal/liability clauses themselves without qualified legal review.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Any deviation from the standard contract template (custom clauses, non-standard notice period, liability terms) requires review before sending — this is a legal document, not a marketing asset.
 
----
+## Automated
+Contract status (sent/viewed/signed) syncing automatically to the CRM deal stage.
 
-## Cross-References
+## API / Integration
+E-signature tool ⇄ CRM ⇄ payment tool integration so a signed contract can auto-trigger the invoice/payment-link send (feeds Stage 39).
 
-- Stage README: [README.md](README.md)
-- Previous stage: [35 Negotiation](../35 Negotiation/README.md)
-- Next stage: [37 Closing Techniques](../37 Closing Techniques/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable in routine use; jurisdiction-specific contract law/compliance requirements (e.g., for international clients) should be verified with qualified legal counsel rather than assumed from a template.
+
+## Community / Referral
+Not applicable to this stage.
+
+## Method Selection Guidance
+Use the standard service-agreement template for routine deals; escalate to legal review for any Enterprise-tier custom scope, non-standard terms, or client-redlined contracts.

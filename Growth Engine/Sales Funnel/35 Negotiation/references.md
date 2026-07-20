@@ -1,18 +1,13 @@
 # References — 35 Negotiation
 
-> Part of Stage 35 (Negotiation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Proposal & Deal Closing SOP (Growth Engine) — "Handling Negotiation" section is the primary source for this stage's scripted responses and discount-threshold rule
+- Pricing Strategy — Tiers & Packaging (Growth Engine) — "Discount & Negotiation Policy" and "If Prospect Pushes Back on Price" escalation ladder
+- Stage 26 Objection Handling (this KB) — broader objection library this stage's price/term-specific scripts extend
 
-## References
+## Official / Vendor Docs
+- None specific to this stage
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [34 Pricing and Packaging](../34 Pricing and Packaging/README.md)
-- Next stage: [36 Contract and Legal](../36 Contract and Legal/README.md)
+> Discount-threshold and escalation-ladder detail is carried over directly from internal SOPs dated May 2026 — verify current policy with leadership before relying on the specific percentage figures.

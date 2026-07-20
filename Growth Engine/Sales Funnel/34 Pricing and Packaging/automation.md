@@ -1,26 +1,21 @@
 # Automation — 34 Pricing and Packaging
 
-> Part of Stage 34 (Pricing and Packaging). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Founder sign-off on any Enterprise-tier custom quote or any discount above the standard discretionary threshold.
 
-## Automation Workflows
+## Semi-Automated
+Rep selects a tier + market (India/International) from the catalog; add-ons are toggled from a fixed list; the tool computes the total rather than the rep doing manual math.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Once a tier + market + add-ons are selected, the pricing table auto-populates Section 3 of the proposal (Stage 33) from the single source-of-truth catalog.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Solution map (Stage 31) identifies which tier fits the prospect's scope.
+2. Pricing catalog (this stage) supplies the exact figure for that tier + market.
+3. LLM drafts the ROI-anchoring paragraph using the prospect's own numbers (deal size, expected volume) against the tier price.
+4. Rep reviews before the figure goes into the proposal — pricing errors here are commercially costly, never send unreviewed.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [33 Proposal Creation](../33 Proposal Creation/README.md)
-- Next stage: [35 Negotiation](../35 Negotiation/README.md)
+## Suggested n8n / integration flow
+`Solution map (Stage 31) → Pricing catalog lookup (tier + market) → Add-on selection → Auto-populate proposal Section 3 (Stage 33) → Rep review → Send`

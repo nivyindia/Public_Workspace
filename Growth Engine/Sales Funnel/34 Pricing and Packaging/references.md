@@ -1,18 +1,13 @@
 # References — 34 Pricing and Packaging
 
-> Part of Stage 34 (Pricing and Packaging). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Pricing Strategy — Tiers & Packaging (Growth Engine) — primary and comprehensive source for this stage's philosophy, tiers, pricing tables, add-ons, discount policy, and communication guide
+- Proposal & Deal Closing SOP (Growth Engine) — Section 3 (Pricing) usage context and negotiation-handling cross-reference
+- 9. Offer & Pricing System (Growth Engine) — supplementary tier/value-framing pattern from a related internal vertical playbook
 
-## References
+## Official / Vendor Docs
+- HubSpot product/price-book documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [33 Proposal Creation](../33 Proposal Creation/README.md)
-- Next stage: [35 Negotiation](../35 Negotiation/README.md)
+> Pricing figures throughout are carried over from internal reference material dated May 2026 and are marked "approximate, verify before use" rather than treated as current fact.

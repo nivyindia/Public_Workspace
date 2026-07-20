@@ -1,22 +1,14 @@
 # Tools — 35 Negotiation
 
-> Part of Stage 35 (Negotiation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| CRM deal notes (HubSpot) | Log negotiation history, discount requests, and approvals per deal | Free with HubSpot | Free tier | Native |
+| PandaDoc / Proposify | Revise and re-send a proposal with negotiated terms | Paid, verify current tier pricing | — | API |
+| Slack / WhatsApp (internal) | Fast founder/approver sign-off request for above-threshold discounts | Free–low cost | Free tier | Webhooks |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [34 Pricing and Packaging](../34 Pricing and Packaging/README.md)
-- Next stage: [36 Contract and Legal](../36 Contract and Legal/README.md)
+## Selection Notes
+- No specialized "negotiation software" is required at this business's scale — the discipline is in the scripted-response table and the approval workflow, not the tooling.

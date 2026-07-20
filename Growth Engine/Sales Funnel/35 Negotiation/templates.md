@@ -1,23 +1,44 @@
 # Templates — 35 Negotiation
 
-> Part of Stage 35 (Negotiation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Standard Scripted Responses
 
-## Templates
+| Ask | Response |
+|---|---|
+| "Can you do it cheaper?" | "Our pricing reflects the quality and expertise we bring. If budget is a concern, we could start with a smaller scope and expand from there." |
+| "Can we start with just one service?" | "Absolutely — let's start with [service], and we can add more as you see results." |
+| "We need to think about it" | "Of course! What information would help you decide? Happy to answer any specific questions." |
+| "We're comparing with others" | "That makes sense. When you're comparing, look beyond price — consider quality assurance, qualifications, and how responsive the team is." |
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+## Price-Pushback Escalation Ladder
+1. Reframe on ROI and outcomes
+2. Offer a smaller starting scope (Starter tier) with an upgrade path
+3. Offer a prepay discount (Stage 34) if cash flow is the stated concern
+4. If still not viable — politely decline and route to 90-day nurture (Stage 24)
 
----
+## Discount Ceiling Rule
+**Never discount more than the standard threshold (10% per source SOP — verify current policy) without founder/named-approver sign-off.**
 
-## Cross-References
+## Approval Request Template (internal)
+```
+Deal: [Prospect / Company]
+Tier quoted: [Tier + market]
+Requested discount: [%] — reason: [prepay / competitive pressure / budget]
+Standard threshold: [X%]
+Requesting approval to proceed.
+```
 
-- Stage README: [README.md](README.md)
-- Previous stage: [34 Pricing and Packaging](../34 Pricing and Packaging/README.md)
-- Next stage: [36 Contract and Legal](../36 Contract and Legal/README.md)
+## Walk-Away Message Template
+```
+Hi [Name],
+
+Thanks for the conversation — I want to be upfront that the scope we
+discussed isn't something we can deliver well at the price point that
+works for you right now.
+
+I'd love to stay in touch, and if your budget or timeline shifts, we're
+happy to pick this back up.
+
+[Your name]
+```

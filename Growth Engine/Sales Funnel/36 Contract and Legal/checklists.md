@@ -1,23 +1,24 @@
 # Checklists — 36 Contract and Legal
 
-> Part of Stage 36 (Contract and Legal). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Send QC
+- [ ] Contract price and terms match exactly what was agreed in negotiation (Stage 35) — no drift
+- [ ] Standard clauses present: scope of services, payment terms, project duration, termination clause, confidentiality agreement
+- [ ] Any non-standard clause has been reviewed, not auto-generated and sent unchecked
 
-## Quality Control Checklists
+## Signature QC
+- [ ] Sent via the agreed e-signature tool with correct signer(s) identified
+- [ ] Signed copy automatically or manually filed to company records (Google Drive / Notion)
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Payment-Trigger QC
+- [ ] Signed contract triggers invoice/payment-link send (Stage 39) — work does not begin before payment is received
+- [ ] Payment structure (monthly retainer / upfront deposit / first-month-in-advance) matches what was negotiated
 
----
+## CRM & Handoff QC
+- [ ] CRM deal stage updated to Closed Won only after signature (not before)
+- [ ] Onboarding workflow (Stage 40) triggered immediately on signature
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [35 Negotiation](../35 Negotiation/README.md)
-- Next stage: [37 Closing Techniques](../37 Closing Techniques/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No deal has two versions of a "final" signed contract in circulation
+- [ ] Notice period and termination clause figures match current company policy, not an outdated template copy

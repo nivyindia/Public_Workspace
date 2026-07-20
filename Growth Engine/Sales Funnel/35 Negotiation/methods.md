@@ -1,31 +1,36 @@
 # Methods — 35 Negotiation
 
-> Part of Stage 35 (Negotiation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Ad hoc, rep-improvised responses to pushback — replaced by a standard scripted-response table so answers are consistent and never accidentally under-price the engagement.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A fixed "common asks → standard response" table (see [templates.md](templates.md)) referenced live during negotiation calls or reply threads.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-assisted drafting of a personalized version of a standard response, adapted to the specific objection wording a prospect used, while keeping the underlying policy (e.g., discount ceiling) unchanged.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Any discount above the standard discretionary threshold requires founder/named-approver sign-off before being offered — never automated past this point.
 
----
+## Automated
+CRM logging of discount requests and approvals so every negotiated deviation from list price has an auditable record.
 
-## Cross-References
+## API / Integration
+Negotiation outcome (final price, discount %, approver) feeds directly into the contract (Stage 36) so the signed agreement matches exactly what was negotiated.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [34 Pricing and Packaging](../34 Pricing and Packaging/README.md)
-- Next stage: [36 Contract and Legal](../36 Contract and Legal/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+The referral discount (Stage 34) is a pre-approved negotiation lever that can be offered without additional sign-off, since it's already policy rather than a case-by-case exception.
+
+## Method Selection Guidance
+Default to the scripted response table for the four common asks; escalate to founder-level negotiation only for custom Enterprise-tier deals or discount requests beyond the standard threshold.

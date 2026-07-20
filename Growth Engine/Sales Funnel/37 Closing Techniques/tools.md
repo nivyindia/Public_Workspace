@@ -1,22 +1,13 @@
 # Tools — 37 Closing Techniques
 
-> Part of Stage 37 (Closing Techniques). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| HubSpot Quotes / PandaDoc / Proposify | Proposal view/open tracking — surfaces buying-signal timing | Free–paid, verify current pricing (shared with Stage 33) | Free tier | API |
+| CRM deal stage tracking | Records Closed Won / Closed Lost and stage-transition timing | Free with HubSpot | Free tier | Native |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [36 Contract and Legal](../36 Contract and Legal/README.md)
-- Next stage: [38 Deal Desk and Approval Workflows](../38 Deal Desk and Approval Workflows/README.md)
+## Selection Notes
+- No dedicated "closing" tool exists separate from the proposal tracking and CRM already used in Stages 33/35/36 — this stage is a discipline layered on existing tooling, not a new tool category.

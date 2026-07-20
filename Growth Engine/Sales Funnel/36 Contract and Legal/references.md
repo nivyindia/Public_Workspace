@@ -1,18 +1,12 @@
 # References — 36 Contract and Legal
 
-> Part of Stage 36 (Contract and Legal). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Phase 14 — Contract & Payment Setup (Growth Engine) — primary source for contract tools, key document requirements, payment structures, and the contract-to-payment flow
+- Proposal & Deal Closing SOP (Growth Engine) — "Contract & Sign-Off" section — standard clause list, notice period, and payment-term figures
 
-## References
+## Official / Vendor Docs
+- DocuSign / Dropbox Sign / PandaDoc documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [35 Negotiation](../35 Negotiation/README.md)
-- Next stage: [37 Closing Techniques](../37 Closing Techniques/README.md)
+> This stage is not a substitute for qualified legal review. Contract clause figures (notice period, payment terms) are carried over from internal reference material and should be verified against current company policy and applicable jurisdiction before use in a live client agreement.

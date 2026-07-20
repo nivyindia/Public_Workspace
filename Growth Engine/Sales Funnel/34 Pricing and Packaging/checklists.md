@@ -1,23 +1,22 @@
 # Checklists — 34 Pricing and Packaging
 
-> Part of Stage 34 (Pricing and Packaging). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Catalog Integrity QC
+- [ ] Single source-of-truth pricing catalog exists and is the only place rates are edited
+- [ ] India vs. International pricing both current and correctly market-segmented
+- [ ] Add-on price list matches what's actually quoted in proposals
 
-## Quality Control Checklists
+## Quote QC (per deal)
+- [ ] Tier selected matches the approved solution map (Stage 31), not picked ad hoc
+- [ ] Market (India/International) correctly applied
+- [ ] Any custom Enterprise-tier scope has founder sign-off before quoting
+- [ ] Discount, if any, does not exceed the standard discretionary threshold without a named approver (see [templates.md](templates.md))
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Communication QC
+- [ ] Price is never led with — discovery (Stage 30) and solution (Stage 31) come first, per the source doc's Pricing Communication Guide
+- [ ] Proposal frames ROI/outcome, not just the raw number
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [33 Proposal Creation](../33 Proposal Creation/README.md)
-- Next stage: [35 Negotiation](../35 Negotiation/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No two live documents (Notion vs. CRM) showing different figures for the same tier
+- [ ] Effective per-hour rate never quoted below the stated floor (see [templates.md](templates.md))

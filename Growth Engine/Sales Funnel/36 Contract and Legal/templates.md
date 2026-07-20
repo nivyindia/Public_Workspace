@@ -1,23 +1,45 @@
 # Templates — 36 Contract and Legal
 
-> Part of Stage 36 (Contract and Legal). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Standard Contract Sections
+1. Scope of services
+2. Payment terms
+3. Project duration
+4. Termination clause
+5. Confidentiality agreement
 
-## Templates
+## Statement of Work (SOW) — What It Specifies
+- Deliverables
+- Timeline
+- Project scope
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+## Standard Terms
+- **Notice period:** 30 days written notice to terminate (monthly contracts) — verify current policy
+- **Payment terms:** Invoice monthly, payment due within 14 days — verify current policy
 
----
+## Contract → Payment Flow
+```
+Discovery Call → Client agrees → Contract sent → Contract signed
+→ Invoice sent → Payment received → Onboarding begins
+```
 
-## Cross-References
+## Key Documents Checklist (every client project)
+1. **Service Agreement** — defines legal relationship and responsibilities
+2. **Statement of Work (SOW)** — deliverables, timeline, scope
+3. **Invoice** — amount due, payment method, due date
 
-- Stage README: [README.md](README.md)
-- Previous stage: [35 Negotiation](../35 Negotiation/README.md)
-- Next stage: [37 Closing Techniques](../37 Closing Techniques/README.md)
+## Contract & Sign-Off Steps
+1. Use a simple service agreement (1–2 pages): scope, pricing, payment terms, notice period, confidentiality
+2. Sign via e-signature tool (DocuSign / Dropbox Sign / PandaDoc / Signable)
+3. Send signed copy to client + file in company records (Google Drive / Notion)
+4. Log in CRM: deal stage → Closed Won
+5. Trigger onboarding workflow (Stage 40)
+
+## Onboarding Confirmation Message Template
+```
+Thanks for completing the agreement and payment.
+
+We'll begin onboarding on [start day] and send you the onboarding
+questionnaire shortly.
+```

@@ -1,23 +1,19 @@
 # Checklists — 37 Closing Techniques
 
-> Part of Stage 37 (Closing Techniques). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Signal-Recognition QC
+- [ ] A close attempt is triggered by an actual observed signal (re-opened proposal, direct question, forwarded internally), not a fixed day-count alone
+- [ ] Standard follow-up cadence (Stage 24/33) is not skipped just because a signal wasn't observed
 
-## Quality Control Checklists
+## Close-Attempt QC
+- [ ] CTA is clear and singular ("sign below / reply to confirm / book a call"), not multiple competing asks
+- [ ] No artificial urgency or pressure tactics used — proposal validity window (Stage 33) is stated honestly, not fabricated as scarcity
+- [ ] Tone stays consultative, matching the source SOP's negotiation-response tone (Stage 35)
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Outcome QC
+- [ ] Signed deals move immediately to contract (Stage 36) — no delay between "yes" and paperwork
+- [ ] Declined or unresponsive deals after the full cadence are routed to 90-day nurture (Stage 24), not abandoned silently
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [36 Contract and Legal](../36 Contract and Legal/README.md)
-- Next stage: [38 Deal Desk and Approval Workflows](../38 Deal Desk and Approval Workflows/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] Deal stage in CRM reflects the actual outcome (Closed Won/Closed Lost/Nurture), not left stale on "Proposal Sent"
