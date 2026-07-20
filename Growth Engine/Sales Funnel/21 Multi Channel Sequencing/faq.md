@@ -1,19 +1,18 @@
 # FAQ — 21 Multi Channel Sequencing
 
-> Part of Stage 21 (Multi Channel Sequencing). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+**Q: How is this different from Stage 15 Outreach Channel Strategy?**
+Stage 15 decides *which* channels to use for a segment. This stage decides the *order, timing, and coordination logic* once more than one channel is in play.
 
-## Frequently Asked Questions
+**Q: What happens if a contact replies on LinkedIn while an email follow-up is scheduled for tomorrow?**
+The reply should halt all remaining automated steps across every channel for that contact immediately — the email follow-up should not fire. This is the single most important QC gate for this stage.
 
-**Q: _placeholder question_**
-A: _placeholder answer_
+**Q: Does every segment need a multi-channel sequence?**
+No — Stage 15 may decide some segments are single-channel. This stage only applies where Stage 15 has called for a coordinated multi-channel approach.
 
----
+**Q: How much time should there be between touches on different channels?**
+There's no universal figure — the example blueprints in [templates.md](templates.md) use 2-3 day spacing as a starting point, but this should be tuned per segment based on performance data, not treated as fixed.
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [20 SMS Outreach](../20 SMS Outreach/README.md)
-- Next stage: [22 Personalization and Copywriting](../22 Personalization and Copywriting/README.md)
+**Q: What if two channels are run by different tools that don't talk to each other?**
+Use a CRM-centered orchestration layer (e.g., n8n) as the coordination point, as described in [automation.md](automation.md), rather than relying on each tool's own siloed sequence logic.

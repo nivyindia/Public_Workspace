@@ -1,23 +1,21 @@
 # Checklists — 21 Multi Channel Sequencing
 
-> Part of Stage 21 (Multi Channel Sequencing). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Launch Blueprint QC
+- [ ] Sequence blueprint documented with channel order, day-offsets, and stop conditions
+- [ ] Timing between channel touches respects a sensible minimum spacing (avoids same-day multi-channel bombardment)
+- [ ] Each individual channel step still respects that channel's own daily volume limit (Stages 16-20)
 
-## Quality Control Checklists
+## Reply-Stop Logic QC
+- [ ] Reply-anywhere halt logic tested on a small batch before scaling
+- [ ] Halted contacts correctly routed to Stage 25 Reply Handling, not left in limbo
+- [ ] No further automated touch fires on a paused/replied contact
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Ongoing QC
+- [ ] Cross-channel contact timeline reviewed periodically for duplicate/contradictory touches
+- [ ] Sequence performance tracked per blueprint and reviewed for refinement
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [20 SMS Outreach](../20 SMS Outreach/README.md)
-- Next stage: [22 Personalization and Copywriting](../22 Personalization and Copywriting/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No contact enrolled in two active multi-channel sequences simultaneously
+- [ ] Every step's channel-specific record (Stage 16-20 CRM fields) matches the sequence's expected step index

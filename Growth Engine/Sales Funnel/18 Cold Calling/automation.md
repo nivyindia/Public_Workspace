@@ -1,26 +1,22 @@
 # Automation — 18 Cold Calling
 
-> Part of Stage 18 (Cold Calling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+The call itself — opening, discovery questions, objection handling — is always manual.
 
-## Automation Workflows
+## Semi-Automated
+Softphone/dialer auto-dials the next number and logs connect/no-answer automatically; rep manually selects the detailed outcome code and adds notes.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Call-list preparation (pulling today's contacts, filtering against DNC status and calling-hours window) runs automatically each morning, requiring no manual list-building before the calling block starts.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Automation pulls the day's eligible contacts (verified, DNC-clear, within calling-hours window for their timezone).
+2. LLM drafts a 2-3 line pre-call brief per contact from available enrichment data.
+3. Rep calls manually using the script and brief.
+4. Post-call, rep dictates or types a short note; LLM summarizes into the CRM outcome/notes fields (transcription only where legally permitted).
+5. Booked outcomes trigger a Stage 28 handoff automatically.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [17 LinkedIn Outreach](../17 LinkedIn Outreach/README.md)
-- Next stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
+## Suggested n8n / integration flow
+`CRM (daily eligible-contact pull)` → `n8n (DNC + calling-hours filter)` → `Dialer/softphone (manual calling)` → `Dialer webhook (outcome)` → `CRM (log outcome)` → `Booked → Stage 28 calendar handoff`

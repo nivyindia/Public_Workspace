@@ -1,26 +1,22 @@
 # Automation — 19 WhatsApp Outreach
 
-> Part of Stage 19 (WhatsApp Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Sending from the standard WhatsApp Business app for low-volume/high-touch contacts.
 
-## Automation Workflows
+## Semi-Automated
+VA loads an approved contact batch into the BSP tool and triggers the first-contact template send within the daily limit; follow-ups reviewed before sending.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+BSP-scheduled sequence sends first-contact and Day 3/Day 7 follow-ups automatically, stopping on any reply, once a batch is approved.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Pull newly Stage-10-verified contacts for a market confirmed WhatsApp-appropriate (Stage 15).
+2. LLM drafts the personalization line per contact.
+3. Human spot-checks a sample before the batch is queued.
+4. BSP sends on schedule; replies routed to Stage 25 triage (AI-assisted classification, human decision on ambiguous/complaint-style replies).
+5. CRM auto-updates via BSP webhook.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [18 Cold Calling](../18 Cold Calling/README.md)
-- Next stage: [20 SMS Outreach](../20 SMS Outreach/README.md)
+## Suggested n8n / integration flow
+`CRM (new verified, market-approved contact)` → `BSP API (queue template send)` → `BSP webhook (delivery/read/reply status)` → `CRM (update status)` → `Positive reply → Slack alert + Stage 25 handoff`

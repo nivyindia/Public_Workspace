@@ -1,31 +1,36 @@
 # Methods — 19 WhatsApp Outreach
 
-> Part of Stage 19 (WhatsApp Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Manual messaging from a standard WhatsApp Business app, one contact at a time.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+WhatsApp Business API (via a BSP like WATI, Interakt, or Twilio) for higher-volume sending with tracking and templated messages.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-drafted first-contact/follow-up message variants; LLM-based reply triage.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Personal responses to any nuanced or complaint-style reply ("who is this," "how did you get my number").
 
----
+## Automated
+BSP-based scheduled sending of approved sequence steps within daily volume limits.
 
-## Cross-References
+## API / Integration
+WhatsApp Business API integration with CRM (native or via n8n) so message status and replies sync automatically.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [18 Cold Calling](../18 Cold Calling/README.md)
-- Next stage: [20 SMS Outreach](../20 SMS Outreach/README.md)
+## Browser Automation
+Not typically used/recommended — WhatsApp Business API is the sanctioned route for volume; unofficial browser automation risks number bans.
+
+## Scraping
+Not used at this stage; phone numbers come from Stage 07/10.
+
+## Public Database / Government
+Not directly applicable, though messaging-app business-use policies (WhatsApp Business Policy) function as a compliance constraint to check per market.
+
+## Community / Referral
+Warm-intro contacts can enter directly at a lighter-touch message referencing the mutual connection rather than the cold first-contact template.
+
+## Method Selection Guidance
+Use the WhatsApp Business API/BSP route once volume exceeds what's manageable on the standard app; keep all volume within the market-appropriate limits established in Stage 15's channel plan.

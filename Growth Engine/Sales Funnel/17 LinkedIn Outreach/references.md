@@ -1,18 +1,17 @@
 # References — 17 LinkedIn Outreach
 
-> Part of Stage 17 (LinkedIn Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- LinkedIn Outreach System — Full SOP (Growth Engine)
+- LinkedIn Outreach Script (Most Powerful for B2B) (Growth Engine)
+- SOP-VA-005 — LinkedIn DM Outreach (Growth Engine)
+- n8n Workflow 8 — LinkedIn DM Sequence Tracker (Growth Engine)
+- Stage 03 Buyer Persona (this KB)
+- Stage 15 Outreach Channel Strategy (this KB)
 
-## References
+## Official / Vendor Docs
+- LinkedIn Sales Navigator documentation
+- PhantomBuster documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [16 Email Outreach](../16 Email Outreach/README.md)
-- Next stage: [18 Cold Calling](../18 Cold Calling/README.md)
+> Daily volume limits and platform-detection behavior in this stage's files are marked "verify current" — LinkedIn's automation-detection policy changes without public notice and un-verified figures can lead to account restriction.

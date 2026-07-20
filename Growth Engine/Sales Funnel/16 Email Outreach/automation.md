@@ -1,26 +1,22 @@
 # Automation — 16 Email Outreach
 
-> Part of Stage 16 (Email Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Hand-written, hand-sent emails for named strategic accounts only.
 
-## Automation Workflows
+## Semi-Automated
+VA loads verified contacts into the sequencer tool, selects the correct template, and reviews AI-drafted personalization fields before the sequence starts sending.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Sequencer tool executes the full multi-step sequence (send → wait → follow-up → wait → breakup) automatically, stopping on reply/bounce/unsubscribe, once a contact is loaded and approved.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Pull newly Stage-10-verified contacts for a segment.
+2. LLM drafts a personalized first line per contact using enrichment fields (company, industry, recent signal).
+3. Human spot-checks a sample (10-20%) of AI-personalized lines before the batch is queued.
+4. Sequencer sends on schedule; replies flow to Stage 25 triage (AI-assisted classification, human decision on ambiguous cases).
+5. CRM auto-updates via native integration or n8n webhook on every open/reply/bounce event.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [15 Outreach Channel Strategy](../15 Outreach Channel Strategy/README.md)
-- Next stage: [17 LinkedIn Outreach](../17 LinkedIn Outreach/README.md)
+## Suggested n8n / integration flow
+`CRM (new verified contact)` → `Sequencer API (add to sequence)` → `Sequencer webhook (status change)` → `CRM (update status field)` → `Slack/email alert on "Interested" status`

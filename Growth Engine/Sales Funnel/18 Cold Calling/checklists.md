@@ -1,23 +1,23 @@
 # Checklists — 18 Cold Calling
 
-> Part of Stage 18 (Cold Calling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Call-Block Compliance QC
+- [ ] Call list scrubbed against DNC/registry status for that market
+- [ ] Calling-hours window confirmed for the contact's timezone/local regulation
+- [ ] Script and objection-handling notes reviewed before the block starts
 
-## Quality Control Checklists
+## Per-Call QC
+- [ ] Outcome logged immediately after the call, not batched at day's end
+- [ ] Any DNC request suppresses the contact across all channels same-day
+- [ ] Voicemail script used consistently, not ad-libbed inconsistently across reps
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Daily Calling Block QC
+- [ ] Attempted-call count matches the CRM log count (no under-logging)
+- [ ] Booked calls handed to Stage 28 same-day
+- [ ] No-answer/voicemail contacts queued for the correct follow-up cadence
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [17 LinkedIn Outreach](../17 LinkedIn Outreach/README.md)
-- Next stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No contact called twice in the same day by two different reps
+- [ ] Wrong-number outcomes corrected/flagged back to Stage 10 for re-verification
+- [ ] Notes field contains enough detail for the next rep to pick up without re-asking basics

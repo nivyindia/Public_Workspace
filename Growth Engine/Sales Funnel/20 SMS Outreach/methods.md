@@ -1,31 +1,36 @@
 # Methods — 20 SMS Outreach
 
-> Part of Stage 20 (SMS Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Manually typed/sent confirmation texts from a business phone.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+SMS gateway platforms (Twilio, MessageBird) triggered automatically off booking events for confirmations/reminders.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-drafted short-form confirmation/reminder/re-engagement copy within character limits.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Any cold/first-contact SMS use case (rare, and only where a documented lawful basis exists) is human-reviewed before sending given the compliance sensitivity.
 
----
+## Automated
+Confirmation and reminder SMS triggered automatically off a Stage 28 booking event, since these are transactional rather than cold-outreach messages.
 
-## Cross-References
+## API / Integration
+SMS gateway ⇄ calendar/CRM integration (native or via n8n) so confirmations/reminders fire without manual triggering.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
-- Next stage: [21 Multi Channel Sequencing](../21 Multi Channel Sequencing/README.md)
+## Browser Automation
+Not applicable to this channel.
+
+## Scraping
+Not applicable to this channel.
+
+## Public Database / Government
+TCPA (US) and equivalent regulations in other markets govern consent requirements for commercial SMS — a required compliance check before any SMS use beyond confirming an already-booked meeting.
+
+## Community / Referral
+Not a typical entry point for this channel; SMS in this funnel is downstream of an existing engagement, not a first-touch channel.
+
+## Method Selection Guidance
+Automate confirmation/reminder SMS fully — they carry minimal compliance risk since the contact already booked a meeting. Treat any other SMS use case as requiring explicit human sign-off on lawful basis first.

@@ -1,23 +1,38 @@
 # Templates — 19 WhatsApp Outreach
 
-> Part of Stage 19 (WhatsApp Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Message 1 — First Contact
+```
+Hi [Name] — my name is [Your Name] from [Company]. I came across [Company
+Name] and wanted to reach out. We work with [business type] in [market] to
+help with [1-line pain]. Would it be worth a brief conversation?
+```
 
-## Templates
+## Message 2 — Follow-Up (Day 3, if no reply)
+```
+Hi [Name] — just following up on my earlier message. Completely understand
+if the timing isn't right. We've helped businesses like [Company Name] with
+[pain] — happy to share a quick example if useful?
+```
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+## Message 3 — Follow-Up (Day 7, if no reply)
+```
+[Name] — one last follow-up. If [pain area] ever becomes a priority, feel
+free to reach back out anytime. Happy to help.
+```
+After 3 messages with no reply → mark **Dead** in CRM.
 
----
+## Reply-Handling Quick Reference
 
-## Cross-References
+| Reply Type | Response Pattern |
+|---|---|
+| Positive | Escalate to Stage 25/28 within 30 minutes |
+| "Who is this? / How did you get my number?" | Respond professionally, identify yourself and the source, offer to leave them be; mark **Dead** |
+| Not interested | Thank them for their time; mark **Dead** |
 
-- Stage README: [README.md](README.md)
-- Previous stage: [18 Cold Calling](../18 Cold Calling/README.md)
-- Next stage: [20 SMS Outreach](../20 SMS Outreach/README.md)
+## Formatting Rules
+- Max 4 lines for the first message
+- No links, brochures, or attachments in message 1
+- Greet by name, reference their business/role
+- End with a soft question, not a pitch

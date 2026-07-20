@@ -1,23 +1,57 @@
 # Templates — 16 Email Outreach
 
-> Part of Stage 16 (Email Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Email 1 — Opener (Day 1)
 
-## Templates
+Subject: `Quick question about [Company Name]`
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+```
+Hi [First Name],
 
----
+I came across [Company Name] while researching [industry] businesses in [location].
 
-## Cross-References
+[One-line relevant observation or value statement tied to their likely pain point].
 
-- Stage README: [README.md](README.md)
-- Previous stage: [15 Outreach Channel Strategy](../15 Outreach Channel Strategy/README.md)
-- Next stage: [17 LinkedIn Outreach](../17 LinkedIn Outreach/README.md)
+Quick question: [specific, low-friction question related to the pain point]?
+
+[Your name]
+[Title] | [Company]
+```
+
+## Email 2 — Value Follow-Up (Day 4, if no reply)
+
+Subject: `Re: [same subject as Email 1]`
+
+```
+Hi [First Name],
+
+Following up on my last message — wanted to share a quick example that might be relevant:
+
+[One-line case study reference]
+
+Worth a 15-minute call to explore if something similar makes sense for [Company Name]?
+
+[Your name]
+```
+
+## Email 3 — Breakup (Day 10, if no reply)
+
+Subject: `Closing the loop`
+
+```
+Hi [First Name],
+
+Last message from my side — if the timing isn't right, completely understood.
+
+If you ever need support with [pain area], feel free to reach out at any point.
+
+[Your name]
+```
+After this: no further emails. CRM status → **Nurture — re-engage in 60 days**.
+
+## Formatting Rules
+- Max 5-8 lines total per email
+- No attachments or HTML formatting in Email 1
+- One clear question or ask per email
+- Subject lines under 50 characters, no ALL CAPS, avoid words like *Free, Guarantee, Limited time, Act now, Click here*

@@ -1,22 +1,15 @@
 # Tools — 20 SMS Outreach
 
-> Part of Stage 20 (SMS Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Twilio SMS | SMS gateway for transactional sends | Usage-based (~$0.0079/msg US, verify) | — | Full API |
+| MessageBird / Bird | SMS gateway, multi-market coverage | Usage-based | — | Full API |
+| Calendly/Cal.com native SMS reminders | Built-in confirmation/reminder SMS tied to booking | Often bundled with scheduling tool tier | — | Native |
+| n8n | Orchestrating booking-event → SMS triggers | Free (self-host) / ~$20+/mo cloud | Self-hosted free | Yes |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
-- Next stage: [21 Multi Channel Sequencing](../21 Multi Channel Sequencing/README.md)
+## Selection Notes
+- Prefer a scheduling tool's native SMS reminder feature (Stage 28) over a standalone SMS build where available — it removes an integration point and keeps consent tied directly to the booking action.

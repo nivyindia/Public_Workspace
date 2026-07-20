@@ -1,26 +1,21 @@
 # Automation — 20 SMS Outreach
 
-> Part of Stage 20 (SMS Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Any SMS use case outside confirmation/reminder/re-engagement is drafted and sign-off approved manually before sending, given compliance sensitivity.
 
-## Automation Workflows
+## Semi-Automated
+Re-engagement SMS to a warm-but-quiet contact is drafted by AI, reviewed by a human, then sent individually.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Confirmation SMS fires automatically the moment a Stage 28 booking is created; reminder SMS fires automatically at a fixed interval (e.g., 24 hours and 1 hour) before the booked meeting.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Stage 28 booking event triggers the automation.
+2. Template (not freshly AI-generated per send, to keep compliance-reviewed language consistent) populates contact/meeting details.
+3. SMS gateway sends confirmation immediately and reminder(s) on schedule.
+4. Any reply or STOP keyword routes to CRM and, if STOP, immediately suppresses future SMS.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
-- Next stage: [21 Multi Channel Sequencing](../21 Multi Channel Sequencing/README.md)
+## Suggested n8n / integration flow
+`Calendar/CRM (booking created)` → `n8n (schedule reminder timers)` → `SMS gateway API (send confirmation + reminders)` → `SMS gateway webhook (reply/STOP)` → `CRM (log status / suppress on STOP)`

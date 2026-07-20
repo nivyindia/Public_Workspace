@@ -1,31 +1,36 @@
 # Methods — 18 Cold Calling
 
-> Part of Stage 18 (Cold Calling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Manual dialing from a phone/softphone, one call at a time, following the opening script and objection-handling flow.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+Power/predictive dialers that auto-dial the next number the moment a call ends, and CRM-integrated softphones that auto-log call outcomes.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-drafted script variants and pre-call briefs; post-call transcription/summarization where legally permitted in that market.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+All live calling is inherently manual — no channel here is fully automatable without a human on the line.
 
----
+## Automated
+Call-list preparation, DNC/compliance filtering, and outcome logging can be automated around the manual call itself.
 
-## Cross-References
+## API / Integration
+Dialer-to-CRM integrations (native or via n8n) so call outcomes sync without manual re-entry.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [17 LinkedIn Outreach](../17 LinkedIn Outreach/README.md)
-- Next stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
+## Browser Automation
+Not applicable — calling requires a phone line/softphone, not a browser session.
+
+## Scraping
+Not used at this stage; phone numbers come from Stage 07/10, not scraped fresh here.
+
+## Public Database / Government
+Do-Not-Call registry checks (where applicable per market, e.g., US National DNC Registry) are a required compliance step before calling.
+
+## Community / Referral
+Warm-intro calls (where a mutual contact has already flagged the call) skip the cold opener and reference the referral directly.
+
+## Method Selection Guidance
+Use a power dialer once list volume justifies it; below that, manual dialing with disciplined outcome logging is sufficient and lower-risk while scripts are still being refined.

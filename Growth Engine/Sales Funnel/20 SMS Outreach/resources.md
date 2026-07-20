@@ -1,23 +1,5 @@
 # Resources — 20 SMS Outreach
 
-> Part of Stage 20 (SMS Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
-
-## Resources
-
-- Official documentation: _to be added_
-- Official APIs: _to be added_
-- Learning resources: _to be added_
-- GitHub repositories: _to be added_
-- Communities: _to be added_
-- Videos / Blogs: _to be added_
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
-- Next stage: [21 Multi Channel Sequencing](../21 Multi Channel Sequencing/README.md)
+No external website library applies to this stage (execution stage, not source-discovery). See [tools.md](tools.md) for the SMS gateway tool stack and [references.md](references.md) for compliance references.

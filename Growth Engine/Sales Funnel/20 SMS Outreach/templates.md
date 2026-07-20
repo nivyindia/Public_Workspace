@@ -1,23 +1,31 @@
 # Templates — 20 SMS Outreach
 
-> Part of Stage 20 (SMS Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Meeting Confirmation (sent immediately after booking)
+```
+Hi [First Name], this confirms your call with [Company] on [Date] at [Time]
+[Timezone]. Reschedule: [link]. Reply STOP to opt out.
+```
 
-## Templates
+## Reminder — 24 Hours Before
+```
+Reminder: your call with [Company] is tomorrow, [Date] at [Time] [Timezone].
+[Meeting link]. Reply STOP to opt out.
+```
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+## Reminder — 1 Hour Before
+```
+Your call with [Company] starts in 1 hour. Join here: [Meeting link].
+```
 
----
+## Re-Engagement (for a warm-but-quiet contact who previously opted in)
+```
+Hi [First Name], following up from [Company] — still worth a quick chat
+about [pain area]? Reply YES and I'll send times, or STOP to opt out.
+```
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
-- Next stage: [21 Multi Channel Sequencing](../21 Multi Channel Sequencing/README.md)
+## Formatting Rules
+- Keep to a single SMS segment (~160 characters) where possible
+- Always include a clear opt-out instruction on any non-purely-transactional message
+- Never include unsolicited pitch content in a confirmation/reminder message

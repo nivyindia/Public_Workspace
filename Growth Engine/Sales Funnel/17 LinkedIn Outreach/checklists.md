@@ -1,23 +1,24 @@
 # Checklists — 17 LinkedIn Outreach
 
-> Part of Stage 17 (LinkedIn Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Outreach Setup QC
+- [ ] Company page and founder/rep profile optimization checklist complete (see README Sub-Stage 17A)
+- [ ] Sales Navigator search filters match Stage 03 persona criteria
+- [ ] Connection-note and DM templates reviewed/approved by supervisor
 
-## Quality Control Checklists
+## Per-Batch QC
+- [ ] No duplicate contact already connected/pending from a prior batch
+- [ ] List filtered to correct market/title/company-size criteria
+- [ ] Personalization fields populated where used
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Daily Send QC
+- [ ] Connection requests within daily safe limit
+- [ ] DM sends within daily safe limit
+- [ ] Account health checked for any restriction warning — pause all automation immediately if flagged
+- [ ] CRM statuses current for the day's activity
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [16 Email Outreach](../16 Email Outreach/README.md)
-- Next stage: [18 Cold Calling](../18 Cold Calling/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No contact receives a duplicate connection request across VAs/campaigns
+- [ ] DM sequence only triggered after confirmed acceptance
+- [ ] Reply statuses logged same-day, not batched at week's end

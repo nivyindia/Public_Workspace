@@ -1,23 +1,23 @@
 # Checklists — 19 WhatsApp Outreach
 
-> Part of Stage 19 (WhatsApp Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Send Setup QC
+- [ ] Market confirmed appropriate for WhatsApp outreach (Stage 15 channel plan)
+- [ ] WhatsApp Business profile complete and verified
+- [ ] Message templates pre-approved where required by WhatsApp Business Policy
 
-## Quality Control Checklists
+## Per-Batch QC
+- [ ] Every contact carries a Stage 10 "verified" phone/WhatsApp status
+- [ ] No duplicate contact already in an active WhatsApp sequence
+- [ ] First message contains no links/attachments
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Daily Send QC
+- [ ] Daily volume within safe limit per number
+- [ ] Number health checked for any restriction/ban signal
+- [ ] Replies from previous 24h triaged and actioned
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [18 Cold Calling](../18 Cold Calling/README.md)
-- Next stage: [20 SMS Outreach](../20 SMS Outreach/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No contact messaged on WhatsApp and a different channel on the same day without a Stage 21 sequencing rationale
+- [ ] "Who is this"/complaint-style replies handled per the reply-handling table, not left unanswered
+- [ ] Dead contacts (3 messages, no reply) marked and suppressed from further WhatsApp sends

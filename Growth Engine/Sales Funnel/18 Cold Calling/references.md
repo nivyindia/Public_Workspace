@@ -1,18 +1,14 @@
 # References — 18 Cold Calling
 
-> Part of Stage 18 (Cold Calling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- No dedicated cold-calling SOP was found in this repo's source material at time of writing (see README source note).
+- Adjacent internal material consulted for tone/structure patterns: Discovery Call Script — 30-Min SPIN Framework (Growth Engine, relates to Stage 29), Phase 9 — Appointment Setting (Growth Engine).
+- Stage 07 Contact Discovery, Stage 10 Lead Verification, Stage 15 Outreach Channel Strategy (this KB).
 
-## References
+## Official / Vendor Docs
+- US National Do-Not-Call Registry (donotcall.gov) — US-specific; verify equivalent for other target markets
+- Aircall / JustCall / Kixie product documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [17 LinkedIn Outreach](../17 LinkedIn Outreach/README.md)
-- Next stage: [19 WhatsApp Outreach](../19 WhatsApp Outreach/README.md)
+> This stage carries the highest compliance risk of any outreach channel in this batch. Calling-hours and DNC-equivalent rules must be verified per target market before operational use — do not extend US-market assumptions to other countries.

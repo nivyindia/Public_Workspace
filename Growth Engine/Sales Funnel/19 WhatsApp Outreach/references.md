@@ -1,18 +1,16 @@
 # References — 19 WhatsApp Outreach
 
-> Part of Stage 19 (WhatsApp Outreach). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- SOP-VA-006 — WhatsApp Outreach (Growth Engine)
+- WhatsApp Outreach SOP (Growth Engine)
+- WhatsApp & LinkedIn Message Templates — All Channels (Growth Engine)
+- n8n Workflow 7 — WhatsApp → CRM (Growth Engine)
+- Stage 15 Outreach Channel Strategy (this KB)
 
-## References
+## Official / Vendor Docs
+- WhatsApp Business Policy (meta.com/business/whatsapp)
+- WATI / Interakt / Twilio WhatsApp API documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [18 Cold Calling](../18 Cold Calling/README.md)
-- Next stage: [20 SMS Outreach](../20 SMS Outreach/README.md)
+> Daily volume limits and template-approval requirements in this stage's files are marked "verify current" — WhatsApp Business Policy and BSP-level enforcement both change over time.
