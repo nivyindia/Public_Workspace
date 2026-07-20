@@ -1,23 +1,22 @@
 # Checklists — 22 Personalization and Copywriting
 
-> Part of Stage 22 (Personalization and Copywriting). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## New Template QC
+- [ ] Matches the documented voice/tone standard
+- [ ] Within the target channel's length/structure constraints (Stage 16-21)
+- [ ] Personalization tier label matches what the template actually delivers
+- [ ] Reviewed and approved by a named approver before going live
 
-## Quality Control Checklists
+## Per-Batch Personalization QC
+- [ ] AI-drafted personalization lines spot-checked (10-20% sample) before sending
+- [ ] No unfilled merge-field placeholders remain in any message
+- [ ] No factually stale or incorrect personalization detail (e.g., referencing an outdated job title)
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Ongoing QC
+- [ ] A/B test results reviewed periodically and underperforming variants retired
+- [ ] Templates reviewed for tone drift as multiple reps/VAs contribute copy over time
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [21 Multi Channel Sequencing](../21 Multi Channel Sequencing/README.md)
-- Next stage: [23 Deliverability and Domain Health](../23 Deliverability and Domain Health/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No two live templates for the same channel/segment/tier combination without an active A/B test rationale
+- [ ] Retired templates marked as such, not left ambiguously "live" in the template library

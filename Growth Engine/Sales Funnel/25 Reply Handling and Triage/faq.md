@@ -1,19 +1,18 @@
 # FAQ — 25 Reply Handling and Triage
 
-> Part of Stage 25 (Reply Handling and Triage). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+**Q: How fast do we really need to respond to an Interested reply?**
+As fast as practically possible within business hours — same-day, ideally within a few hours. Interest cools quickly, and a delayed response is one of the most common reasons a warm reply never converts.
 
-## Frequently Asked Questions
+**Q: What if a reply doesn't clearly fit one category?**
+Route it to a human rather than forcing a low-confidence AI classification. Ambiguous replies are exactly where misclassification does the most damage.
 
-**Q: _placeholder question_**
-A: _placeholder answer_
+**Q: Should AI ever send a reply without human review?**
+Only for the lowest-risk category — confirming an unsubscribe/DNC request. Interested and Objection replies should always get a human send, even when AI-drafted.
 
----
+**Q: What's the difference between this stage and Stage 26 Objection Handling?**
+This stage classifies the reply and handles the clear-cut categories (Interested, Question, Not Interested, Unsubscribe). Objection-carrying replies get routed here to Stage 26's dedicated response library rather than answered ad hoc.
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
-- Next stage: [26 Objection Handling](../26 Objection Handling/README.md)
+**Q: What happens after a reply is classified "Interested"?**
+It moves to Stage 28 Discovery Call Scheduling for booking, ideally within the same conversation/thread.

@@ -1,26 +1,21 @@
 # Automation — 23 Deliverability and Domain Health
 
-> Part of Stage 23 (Deliverability and Domain Health). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Incident-response decisions (pause/rotate/retire an identity) always require human sign-off.
 
-## Automation Workflows
+## Semi-Automated
+A team member reviews a weekly AI-summarized health report and decides on any flagged identities.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Daily data pull from each channel tool's API into a centralized health-tracking sheet/dashboard; automatic status flag (`warning`) when a threshold is crossed, blocking new sends from that identity until reviewed.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Scheduled job pulls bounce/complaint/blacklist data from Stage 16-19 tool APIs daily.
+2. Any identity crossing a threshold is flagged `warning` and paused from new sends automatically.
+3. LLM summarizes the day's flagged identities into a short report.
+4. Human reviews the report and decides: resume after investigation, rotate volume to a healthier identity, or retire.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [22 Personalization and Copywriting](../22 Personalization and Copywriting/README.md)
-- Next stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
+## Suggested n8n / integration flow
+`Channel tool APIs (Stage 16-19)` → `n8n (daily pull + threshold check)` → `Sheet/dashboard (health status)` → `n8n (auto-pause sends on warning)` → `Slack alert + LLM summary` → `Human decision`

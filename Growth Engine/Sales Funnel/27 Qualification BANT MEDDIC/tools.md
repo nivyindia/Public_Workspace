@@ -1,22 +1,14 @@
 # Tools — 27 Qualification BANT MEDDIC
 
-> Part of Stage 27 (Qualification BANT MEDDIC). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| HubSpot custom properties | Structured BANT/MEDDIC fields on the opportunity/deal record | Bundled with HubSpot tier (Stage 13) | Free tier limited | Native |
+| Call recording/transcription tool (e.g., Fireflies, Otter) | Capturing discovery call content for AI-assisted assessment drafting | ~$10-30/user/mo | Free tiers available | API |
+| Claude / ChatGPT (LLM) | Transcript summarization into a qualification draft | Subscription or API usage-based | Free tiers available | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [26 Objection Handling](../26 Objection Handling/README.md)
-- Next stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
+## Selection Notes
+- Where call recording/transcription is used, confirm it's legally permitted in that market first (consistent with the consent considerations already flagged in Stage 18).

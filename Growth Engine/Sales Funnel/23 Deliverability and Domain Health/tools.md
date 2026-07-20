@@ -1,22 +1,16 @@
 # Tools — 23 Deliverability and Domain Health
 
-> Part of Stage 23 (Deliverability and Domain Health). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Google Postmaster Tools | Gmail-side domain reputation/spam-rate data | Free | — | Limited API |
+| MXToolbox | SPF/DKIM/DMARC verification and blacklist checks | Free tier + paid | — | Limited |
+| Instantly / Apollo native deliverability dashboards | Per-mailbox bounce/complaint tracking bundled with sequencer tools | Bundled with Stage 16 tool cost | — | API |
+| Mailwarm / Warmup Inbox | Ongoing warm-up maintenance for existing mailboxes | ~$15-30/mo | — | Limited |
+| Twilio number health / carrier lookup | Phone number reputation checks | Usage-based | — | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [22 Personalization and Copywriting](../22 Personalization and Copywriting/README.md)
-- Next stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
+## Selection Notes
+- Google Postmaster Tools is free and gives the most authoritative Gmail-side reputation signal; it should be set up for every sending domain regardless of what other paid tools are in use.

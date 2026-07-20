@@ -1,22 +1,15 @@
 # Tools — 25 Reply Handling and Triage
 
-> Part of Stage 25 (Reply Handling and Triage). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| HubSpot Conversations / shared inbox | Centralized cross-channel reply queue | Bundled with HubSpot tier (Stage 13) | Free tier limited | Native |
+| Claude / ChatGPT (LLM) | Reply classification and response drafting | Subscription or API usage-based | Free tiers available | API |
+| Slack | Real-time alert on Interested/high-priority replies | Free tier / paid tiers | Free tier | API |
+| Calendly / Cal.com | Booking link shared in Interested-reply responses | Free tier / ~$8-16/mo paid | Cal.com free/self-host | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
-- Next stage: [26 Objection Handling](../26 Objection Handling/README.md)
+## Selection Notes
+- A single centralized reply queue (rather than checking each channel's inbox separately) is the single biggest lever for hitting response-time SLAs.

@@ -1,26 +1,21 @@
 # Automation — 32 Demo and Presentation
 
-> Part of Stage 32 (Demo and Presentation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Live delivery of the presentation and real-time handling of prospect questions — always human.
 
-## Automation Workflows
+## Semi-Automated
+AI drafts a deck outline from the approved solution map; rep reviews/adjusts before the session.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Not appropriate for this stage's core activity; only the outline-drafting step can run automatically.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Solution map (Stage 31) is approved.
+2. LLM drafts a short presentation outline (Problem → Solution → Process → Proof → Next Steps).
+3. Rep reviews and finalizes the deck before the session (or the discovery call's closing minutes, if folded in).
+4. Post-session, rep logs questions raised and any adjustments needed for the proposal.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [31 Solution Mapping](../31 Solution Mapping/README.md)
-- Next stage: [33 Proposal Creation](../33 Proposal Creation/README.md)
+## Suggested n8n / integration flow
+`Stage 31 (solution map approved)` → `LLM API (draft presentation outline)` → `Deck tool (rep finalizes)` → `Session delivered` → `CRM (log questions/adjustments)` → `Stage 33 trigger`

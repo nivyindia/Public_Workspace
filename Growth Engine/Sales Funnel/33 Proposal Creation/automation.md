@@ -1,26 +1,23 @@
 # Automation — 33 Proposal Creation
 
-> Part of Stage 33 (Proposal Creation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Final review of pricing, terms, and tone before sending — always human, given the commercial/legal weight of this document.
 
-## Automation Workflows
+## Semi-Automated
+AI drafts the narrative sections from the approved solution map; rep finalizes pricing and terms before send.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Follow-up sends (Day 3/7/12) trigger automatically off the "no response" status once the initial proposal is confirmed sent.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Solution map (Stage 31) approved, presentation (Stage 32) complete.
+2. LLM drafts the proposal document from the standard structure, populated with solution-map content and current pricing (Stage 34).
+3. Rep reviews pricing/terms/tone and finalizes.
+4. Proposal sent within 24 hours via email with a personal note.
+5. Automated follow-up cadence (Day 3/7/12) fires if no response, using the tool's tracked-view status to skip unnecessary follow-ups if the prospect hasn't opened it yet.
+6. On agreement, contract sent for e-signature (feeds Stage 36); on signature, CRM deal stage auto-updates to Closed Won and triggers onboarding.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [32 Demo and Presentation](../32 Demo and Presentation/README.md)
-- Next stage: [34 Pricing and Packaging](../34 Pricing and Packaging/README.md)
+## Suggested n8n / integration flow
+`Stage 31/32 (solution approved, presentation complete)` → `LLM API (draft proposal)` → `Rep review + finalize` → `Proposal tool (send + track)` → `n8n (Day 3/7/12 follow-up if no response)` → `Signed → CRM (Closed Won) → Onboarding trigger`

@@ -1,23 +1,45 @@
 # Templates — 25 Reply Handling and Triage
 
-> Part of Stage 25 (Reply Handling and Triage). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Reply = Interested / Yes
+```
+Great — glad it's useful! [One-line relevant detail or asset, if applicable]
 
-## Templates
+If it's helpful, I can also show you [related value point specific to
+their business]. Worth a quick 15-minute call to walk through it?
+```
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+## Reply = "Tell Me More"
+```
+It's a simple system that helps [industry] businesses with [pain area].
 
----
+I can show you exactly how it applies to your business — want to do a
+quick 10-15 min call?
+```
 
-## Cross-References
+## Reply = Question (price/service)
+```
+It depends on your current setup — that's why we usually start with a
+quick audit. I can show you what's working and what's missing in a short
+call. Does that work?
+```
 
-- Stage README: [README.md](README.md)
-- Previous stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
-- Next stage: [26 Objection Handling](../26 Objection Handling/README.md)
+## Reply = Not Interested
+```
+Totally understand — appreciate you letting me know. If anything changes
+down the line, feel free to reach out. Wishing you all the best!
+```
+Mark **Not Interested** in CRM; no further touches on this channel.
+
+## Reply = Unsubscribe / Stop Contacting
+```
+Understood — you won't hear from us again. Wishing you all the best!
+```
+Mark **DNC** in CRM; suppress across all channels immediately.
+
+## Conversion Rules (apply to every reply)
+- Respond within the SLA — same-day for Interested replies
+- Keep replies short and clear
+- Always move toward booking a call, don't over-explain in chat
+- Never argue with an objection reply — route to Stage 26

@@ -1,23 +1,21 @@
 # Checklists — 26 Objection Handling
 
-> Part of Stage 26 (Objection Handling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Response Quality QC
+- [ ] Every response follows the ARP structure — Acknowledge, Reframe, Probe — not a defensive counter-argument
+- [ ] Response ends with a question that keeps the conversation moving, not a closed statement
+- [ ] Tone matches the funnel's overall voice/tone standard (Stage 22)
 
-## Quality Control Checklists
+## Library Maintenance QC
+- [ ] New objections logged by reps/VAs reviewed on a defined cadence (e.g., monthly)
+- [ ] Newly added entries reviewed and approved by a supervisor before going live
+- [ ] Library reviewed for outdated pricing/policy references (e.g., trial period length, guarantee terms) periodically
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Rep Readiness QC
+- [ ] Reps/VAs confirmed to have studied the library before taking live calls
+- [ ] New reps complete an objection-handling review as part of onboarding
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [25 Reply Handling and Triage](../25 Reply Handling and Triage/README.md)
-- Next stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No duplicate library entries for the same objection with conflicting responses
+- [ ] Category assignment matches the fixed enum, not ad hoc labeling

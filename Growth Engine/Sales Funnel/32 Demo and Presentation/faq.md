@@ -1,19 +1,18 @@
 # FAQ — 32 Demo and Presentation
 
-> Part of Stage 32 (Demo and Presentation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+**Q: Does every opportunity need a separate presentation session?**
+No — for straightforward standard-package opportunities, this can fold into the discovery call's closing minutes (Stage 29). Reserve a dedicated session for larger or customized opportunities.
 
-## Frequently Asked Questions
+**Q: What does "demo" mean for a service business that doesn't have a software product?**
+Making the engagement tangible — walking through the actual onboarding process, communication cadence, and example deliverables, plus relevant proof points, rather than a software walkthrough.
 
-**Q: _placeholder question_**
-A: _placeholder answer_
+**Q: Why actively invite objections here instead of waiting for the proposal?**
+Catching and addressing pushback before the proposal is drafted is cheaper and more natural than having it surface as silence or a declined proposal afterward.
 
----
+**Q: What happens to questions raised during this stage?**
+They're logged and any needed adjustments are resolved before Stage 33 finalizes the proposal document.
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [31 Solution Mapping](../31 Solution Mapping/README.md)
-- Next stage: [33 Proposal Creation](../33 Proposal Creation/README.md)
+**Q: What's the difference between this and Stage 31 Solution Mapping?**
+Stage 31 designs and documents the solution internally. This stage is how that solution gets presented back to the prospect.

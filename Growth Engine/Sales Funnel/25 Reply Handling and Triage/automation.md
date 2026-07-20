@@ -1,26 +1,23 @@
 # Automation — 25 Reply Handling and Triage
 
-> Part of Stage 25 (Reply Handling and Triage). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Sending the final response to any Interested or Objection-classified reply — always human-sent, even if AI-drafted.
 
-## Automation Workflows
+## Semi-Automated
+LLM classifies and drafts a response; human reviews and sends within the SLA window.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Unsubscribe/DNC replies trigger automatic suppression across all channels with no human step required.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Inbound reply arrives on any channel (Stage 16-20 webhook).
+2. LLM classifies into one of the defined categories and drafts a first-pass response for Interested/Question categories.
+3. Human reviews and sends (or edits) within the SLA window.
+4. Objection-classified replies route to Stage 26's library before a final response is drafted.
+5. Unsubscribe/DNC replies auto-suppress the contact; no draft/response needed.
+6. Outcome logged in CRM; Interested replies handed to Stage 28 for booking.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
-- Next stage: [26 Objection Handling](../26 Objection Handling/README.md)
+## Suggested n8n / integration flow
+`Channel tool webhooks (Stage 16-20)` → `n8n (route to centralized reply queue)` → `LLM API (classify + draft)` → `Slack alert (Interested/high-priority)` → `Human review + send` → `CRM (log outcome)` → `Booked → Stage 28`

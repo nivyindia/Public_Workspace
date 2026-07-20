@@ -1,26 +1,22 @@
 # Automation — 30 Needs Analysis
 
-> Part of Stage 30 (Needs Analysis). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Final review and sign-off on the needs-analysis document before Stage 31 begins.
 
-## Automation Workflows
+## Semi-Automated
+AI drafts the structured document from the call transcript; rep reviews, corrects, and finalizes.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Not appropriate for the finalization step, given how directly this document shapes the proposal; the drafting step can run automatically.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Discovery call transcript/notes (Stage 29) become available.
+2. LLM extracts and ranks problems, implications, and desired outcomes into the template structure.
+3. LLM flags any problem missing a clear desired-outcome statement (a gap).
+4. Rep reviews, resolves gaps (via quick clarification if needed), and finalizes.
+5. Finalized document attached to the CRM opportunity record, unlocking Stage 31.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
-- Next stage: [31 Solution Mapping](../31 Solution Mapping/README.md)
+## Suggested n8n / integration flow
+`Stage 29 (call notes/transcript ready)` → `LLM API (structure into needs analysis)` → `CRM (draft attached)` → `Rep review + finalize` → `CRM (status = finalized)` → `Stage 31 trigger`

@@ -1,31 +1,36 @@
 # Methods — 30 Needs Analysis
 
-> Part of Stage 30 (Needs Analysis). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+A rep manually re-reads call notes and writes a summary from memory.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A structured template (this stage's templates.md) filled in directly from call notes/transcript.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-structured extraction of problems, implications, and desired outcomes from a transcript into the template format.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Rep review and finalization before the document is used to design a solution.
 
----
+## Automated
+Initial draft structuring from a transcript can run automatically as an extension of Stage 29's post-call automation.
 
-## Cross-References
+## API / Integration
+CRM opportunity record holding the finalized needs-analysis document so Stage 31/33 can reference it directly.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
-- Next stage: [31 Solution Mapping](../31 Solution Mapping/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Not applicable to this stage.
+
+## Method Selection Guidance
+Draft automatically from the call transcript/notes to save time, but always have a human finalize before Stage 31 begins — this document becomes the backbone of the proposal, and AI extraction can miss conversational nuance.

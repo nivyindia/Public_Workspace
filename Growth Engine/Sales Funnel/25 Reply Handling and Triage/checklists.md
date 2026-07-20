@@ -1,23 +1,21 @@
 # Checklists — 25 Reply Handling and Triage
 
-> Part of Stage 25 (Reply Handling and Triage). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Response SLA QC
+- [ ] Interested/Tell-Me-More replies responded to within a few hours during business hours
+- [ ] All other reply categories responded to within 24 hours
+- [ ] No reply left unclassified past the SLA window
 
-## Quality Control Checklists
+## Classification QC
+- [ ] AI-classified replies spot-checked periodically for accuracy
+- [ ] Ambiguous replies routed to a human rather than auto-classified with low confidence
+- [ ] Objection-carrying replies routed to Stage 26 before final response, not answered ad hoc
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Disqualification QC
+- [ ] Unsubscribe/DNC requests suppressed same-day across all channels, not just the channel the request came in on
+- [ ] Wrong Person replies trigger a Stage 07/10 contact-record correction, not just a dead-ended reply
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
-- Next stage: [26 Objection Handling](../26 Objection Handling/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No reply answered twice by two different reps/channels
+- [ ] Every Interested-classified reply has a corresponding Stage 28 booking attempt logged

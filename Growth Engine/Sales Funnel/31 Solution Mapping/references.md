@@ -1,18 +1,13 @@
 # References — 31 Solution Mapping
 
-> Part of Stage 31 (Solution Mapping). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Proposal & Deal Closing SOP (Growth Engine) — "Section 2: Recommended Solution" structure used as this stage's foundation
+- Case Studies & Social Proof Library (Growth Engine) — source for case-study matching
+- Stage 30 Needs Analysis (this KB) — direct upstream input
 
-## References
+## Official / Vendor Docs
+- None specific to this stage.
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [30 Needs Analysis](../30 Needs Analysis/README.md)
-- Next stage: [32 Demo and Presentation](../32 Demo and Presentation/README.md)
+> No internal doc treats solution mapping as its own discrete step; this stage was synthesized to sit between Stage 30 and Stage 33, using the Proposal & Deal Closing SOP's solution-section structure as its foundation.

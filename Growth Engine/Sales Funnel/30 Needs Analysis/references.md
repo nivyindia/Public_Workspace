@@ -1,18 +1,12 @@
 # References — 30 Needs Analysis
 
-> Part of Stage 30 (Needs Analysis). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Discovery Call Script — 30-Min SPIN Framework (Growth Engine) — source of the Problem/Implication/Need-Payoff structure this stage formalizes into a documentation step
+- Stage 29 Discovery Call Execution (this KB) — upstream source of raw call content
 
-## References
+## Official / Vendor Docs
+- None specific to this stage.
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
-- Next stage: [31 Solution Mapping](../31 Solution Mapping/README.md)
+> No internal doc treats needs analysis as a standalone documentation stage separate from the call itself; this stage was synthesized from the SPIN structure already used in Stage 29, formalized as its own step in this knowledge base.

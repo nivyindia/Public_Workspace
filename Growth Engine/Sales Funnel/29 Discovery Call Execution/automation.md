@@ -1,26 +1,21 @@
 # Automation — 29 Discovery Call Execution
 
-> Part of Stage 29 (Discovery Call Execution). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+The live call itself — always human-run, following the SPIN script.
 
-## Automation Workflows
+## Semi-Automated
+Post-call, the rep reviews an AI-generated transcript summary and finalizes CRM notes rather than writing them from scratch.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Deal-stage update and a 48-hour follow-up task can be created automatically based on the logged call outcome.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Call is recorded/transcribed (where legally permitted).
+2. LLM extracts pain points, budget signals, timeline, and key quotes into structured notes.
+3. Rep reviews and finalizes the notes and outcome classification in CRM within 1 hour.
+4. If outcome is `proposal_committed`, an automated reminder ensures the proposal (Stage 33) is sent within 24 hours.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
-- Next stage: [30 Needs Analysis](../30 Needs Analysis/README.md)
+## Suggested n8n / integration flow
+`Call recording tool (transcript ready)` → `LLM API (extract structured notes)` → `CRM (populate draft notes)` → `Rep review + finalize` → `CRM (deal stage update)` → `n8n (24hr proposal reminder if committed)`

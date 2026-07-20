@@ -1,23 +1,43 @@
 # Templates — 30 Needs Analysis
 
-> Part of Stage 30 (Needs Analysis). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Needs Analysis Document Template
 
-## Templates
+```
+Opportunity: [Company / Contact]
+Call Date: [date]
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+Problem #1 (Rank 1 — highest priority)
+  Statement: [problem, in prospect's language where possible]
+  Implication (cost of not solving): [what they said]
+  Desired Outcome: [what they said they want instead]
+  Supporting quote: "[direct quote]"
 
----
+Problem #2 (Rank 2)
+  Statement: [...]
+  Implication: [...]
+  Desired Outcome: [...]
+  Supporting quote: [...]
 
-## Cross-References
+Problem #3 (Rank 3, if applicable)
+  [...]
 
-- Stage README: [README.md](README.md)
-- Previous stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
-- Next stage: [31 Solution Mapping](../31 Solution Mapping/README.md)
+Gaps Identified:
+  - [any problem mentioned without a clear implication/outcome]
+
+Status: [Draft / Reviewed / Finalized]
+```
+
+## Ranking Guidance
+Rank by a combination of:
+- How strongly the prospect expressed the cost of inaction (implication answer)
+- How specific/quantified their desired outcome was (need-payoff answer)
+- Recency/frequency of mention during the call
+
+## Gap Follow-Up Message (if a significant gap needs clarification)
+```
+Hi [Name], following up quickly from our call — you mentioned [topic]
+but I want to make sure I capture it accurately for the proposal. Could
+you share a bit more on [specific gap]?
+```

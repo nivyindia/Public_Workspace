@@ -1,23 +1,22 @@
 # Checklists — 28 Discovery Call Scheduling
 
-> Part of Stage 28 (Discovery Call Scheduling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Booking QC
+- [ ] Booking confirmed with an automated confirmation message sent
+- [ ] Reminder cadence (24hr, 1hr) scheduled per Stage 20
+- [ ] Correct person/title booked, not an unqualified gatekeeper
 
-## Quality Control Checklists
+## Pre-Call Prep QC
+- [ ] Company website and LinkedIn reviewed
+- [ ] 2-3 problem hypotheses drafted
+- [ ] Pre-call brief attached to the CRM opportunity record before the scheduled time
+- [ ] Rep confirmed they reviewed the brief
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## No-Show / Reschedule QC
+- [ ] No-show triggers a rebooking outreach attempt within 24 hours
+- [ ] Rescheduled bookings carry over the same pre-call brief, not requiring rework
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
-- Next stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No contact double-booked across two reps for the same time slot
+- [ ] Booking status accurately reflects reality (no stale "Booked" status after a completed or no-show call)

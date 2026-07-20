@@ -1,22 +1,14 @@
 # Tools — 26 Objection Handling
 
-> Part of Stage 26 (Objection Handling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Notion | Hosting the categorized objection library | Free tier / ~$8-15/user/mo | Free tier available | API |
+| Claude / ChatGPT (LLM) | Matching objections to library entries, drafting new responses | Subscription or API usage-based | Free tiers available | API |
+| CRM notes/knowledge base | Linking library entries directly from contact records | Bundled with CRM tier (Stage 13) | — | Native |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [25 Reply Handling and Triage](../25 Reply Handling and Triage/README.md)
-- Next stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
+## Selection Notes
+- Keep the library in one canonical location (not duplicated across Notion and CRM) to avoid version drift between what reps study and what's referenced in automated matching.

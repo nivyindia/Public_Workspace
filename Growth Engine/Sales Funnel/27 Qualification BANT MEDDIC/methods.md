@@ -1,31 +1,36 @@
 # Methods — 27 Qualification BANT MEDDIC
 
-> Part of Stage 27 (Qualification BANT MEDDIC). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+A rep asks qualification questions during a discovery call and makes a judgment call based on the answers, recorded in free-text notes.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+CRM opportunity records with structured BANT/MEDDIC fields, filled in during/after the call rather than left in unstructured notes.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-summarized transcript into a first-pass BANT/MEDDIC draft; LLM-flagged gaps where a framework element wasn't clearly addressed.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+The qualification decision (Qualified/Not-Yet-Qualified/Disqualified) is always a human sales judgment call, even with AI-assisted summarization.
 
----
+## Automated
+Structured field population from a call transcript/notes into the CRM opportunity record, reducing manual data entry.
 
-## Cross-References
+## API / Integration
+Call-recording/transcription tool ⇄ CRM integration so qualification data flows directly into the opportunity record rather than being retyped.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [26 Objection Handling](../26 Objection Handling/README.md)
-- Next stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+A referral-sourced opportunity may already carry partial qualification context (e.g., known budget range from the referrer) that shortens the live-call qualification conversation.
+
+## Method Selection Guidance
+Use BANT for most segments — it's faster and sufficient for simpler, shorter sales cycles. Reserve MEDDIC for complex/enterprise deals with multiple stakeholders, where Economic Buyer and Champion identification matter more.

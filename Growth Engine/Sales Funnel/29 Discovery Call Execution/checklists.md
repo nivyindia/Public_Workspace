@@ -1,23 +1,25 @@
 # Checklists — 29 Discovery Call Execution
 
-> Part of Stage 29 (Discovery Call Execution). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Call QC
+- [ ] Pre-call brief reviewed (Stage 28)
+- [ ] Script, objection library (Stage 26), and pricing reference open/available
+- [ ] Mic, camera, connection tested
 
-## Quality Control Checklists
+## Live-Call QC (self-check during/after)
+- [ ] Situation questions asked before any pitching
+- [ ] Dug past the first, surface-level problem answer
+- [ ] Prospect articulated their own desired outcome (need-payoff) before any solution was presented
+- [ ] Recommended ONE clear package, not multiple pricing options
+- [ ] Call ended with a specific, unambiguous next action
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Post-Call QC (within 1 hour)
+- [ ] CRM deal stage updated
+- [ ] Notes added: pain points, budget, timeline, key quotes
+- [ ] Follow-up task set if no immediate commitment
+- [ ] Proposal sent within 24 hours if committed
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
-- Next stage: [30 Needs Analysis](../30 Needs Analysis/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No call logged with a blank outcome field
+- [ ] No two conflicting deal-stage updates from the same call

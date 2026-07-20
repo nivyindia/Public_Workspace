@@ -1,18 +1,13 @@
 # References — 27 Qualification BANT MEDDIC
 
-> Part of Stage 27 (Qualification BANT MEDDIC). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Lead Qualification Framework, Lead Qualification (Growth Engine) — ICP-match scoring criteria referenced for context (closer to Stage 11's pre-conversation role)
+- Stage 11 Lead Scoring and Prioritization (this KB) — the earlier, pre-conversation counterpart to this stage
+- Stage 29 Discovery Call Execution (this KB) — where qualification questions are typically asked
 
-## References
+## Official / Vendor Docs
+- BANT and MEDDIC are widely-used, industry-standard B2B sales qualification frameworks, not proprietary to any single vendor; this stage's element definitions follow standard usage.
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [26 Objection Handling](../26 Objection Handling/README.md)
-- Next stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
+> No internal Nivy Digital doc used the BANT/MEDDIC framework names directly at time of writing; this stage maps standard, industry-recognized qualification methodology onto the funnel, informed by the internal Lead Qualification docs' scoring-criteria approach.

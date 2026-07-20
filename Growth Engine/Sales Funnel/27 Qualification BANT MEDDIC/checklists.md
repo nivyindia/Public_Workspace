@@ -1,23 +1,20 @@
 # Checklists — 27 Qualification BANT MEDDIC
 
-> Part of Stage 27 (Qualification BANT MEDDIC). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Call Prep QC
+- [ ] Correct framework (BANT or MEDDIC) selected for this segment before the call
+- [ ] Relevant question bank reviewed by the rep before the call
 
-## Quality Control Checklists
+## Post-Call Assessment QC
+- [ ] All framework elements addressed or explicitly flagged as unclear/unanswered
+- [ ] Assessment logged in CRM within 24 hours of the call, not left in personal notes
+- [ ] Qualification decision includes documented reasoning, especially for Disqualified
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Handoff QC
+- [ ] Qualified opportunities routed to Stage 30 with the completed assessment attached
+- [ ] Not-Yet-Qualified opportunities routed to an appropriate nurture cadence rather than dropped
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [26 Objection Handling](../26 Objection Handling/README.md)
-- Next stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No opportunity has two conflicting qualification assessments on file
+- [ ] Framework used is consistent within a segment, not switched ad hoc between BANT and MEDDIC without a documented reason

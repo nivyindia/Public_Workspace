@@ -1,23 +1,29 @@
 # Templates — 22 Personalization and Copywriting
 
-> Part of Stage 22 (Personalization and Copywriting). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Personalization Tier Reference
 
-## Templates
+| Tier | Definition | Example |
+|---|---|---|
+| Tier 1 | Merge-field only (name, company) | "Hi [First Name], I came across [Company Name]..." |
+| Tier 2 | Industry/segment-specific line, not contact-unique | "We work with [industry] businesses on [common pain point]..." |
+| Tier 3 | Contact-specific researched line | "Saw your recent post about [specific topic] — resonated with how we think about [related area]..." |
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+## Voice & Tone Checklist (applies to all channels)
+- Conversational, not corporate-formal
+- Confident but not pushy — one clear ask, no hard-sell language
+- Short sentences; avoid jargon unless the persona uses it themselves
+- Question-based closes outperform statement-based closes across channels
 
----
+## A/B Test Variant Naming
+```
+[Channel]-[Segment]-[Tier]-[VariantLetter]
+e.g., email-SME-T2-A vs. email-SME-T2-B
+```
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [21 Multi Channel Sequencing](../21 Multi Channel Sequencing/README.md)
-- Next stage: [23 Deliverability and Domain Health](../23 Deliverability and Domain Health/README.md)
+## Copy Review Checklist (before approval)
+- [ ] Matches voice/tone standard above
+- [ ] No unfilled placeholders
+- [ ] Within channel length/structure constraints
+- [ ] Personalization tier label accurate

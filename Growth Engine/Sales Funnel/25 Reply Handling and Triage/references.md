@@ -1,18 +1,13 @@
 # References — 25 Reply Handling and Triage
 
-> Part of Stage 25 (Reply Handling and Triage). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- 7. Conversion System (Reply → Call) (Growth Engine) — primary source for this stage's reply-classification scripts and conversion rules
+- Stage 16-20 (this KB) — channel sources of inbound replies
+- Stage 28 Discovery Call Scheduling (this KB) — downstream booking handoff
 
-## References
+## Official / Vendor Docs
+- HubSpot Conversations documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
-- Next stage: [26 Objection Handling](../26 Objection Handling/README.md)
+> This stage's response scripts and "move toward call, don't over-explain in chat" rule are carried over directly from the internal Conversion System doc.

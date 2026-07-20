@@ -1,22 +1,16 @@
 # Tools — 33 Proposal Creation
 
-> Part of Stage 33 (Proposal Creation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| PandaDoc / Proposify | Proposal creation + e-signature, professional look | Paid, verify current tier pricing | — | API |
+| HubSpot Quotes | Basic proposal + tracking, bundled with CRM | Free with HubSpot | Free tier | Native |
+| Canva | Designed PDF proposal, high-impact visual | Free / ~$13/mo Pro | Free tier | Limited |
+| Google Docs | Simple, editable proposal | Free | Free | API |
+| DocuSign / Signable | E-signature and contract execution (Stage 36 handoff) | Usage-based / subscription | — | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [32 Demo and Presentation](../32 Demo and Presentation/README.md)
-- Next stage: [34 Pricing and Packaging](../34 Pricing and Packaging/README.md)
+## Selection Notes
+- Per the source SOP: Canva-designed PDF for high-value deals (verify current deal-size threshold with leadership); HubSpot Quotes for fast/simple proposals.

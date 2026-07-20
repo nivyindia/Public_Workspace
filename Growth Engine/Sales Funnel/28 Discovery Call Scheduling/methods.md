@@ -1,31 +1,36 @@
 # Methods — 28 Discovery Call Scheduling
 
-> Part of Stage 28 (Discovery Call Scheduling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Manually emailing back and forth to find a mutually available time.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+Self-service scheduling links (Calendly/Cal.com) shared directly in the Interested-reply response (Stage 25).
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-drafted pre-call research brief summarizing company website/LinkedIn data into problem hypotheses.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Rep personally reviewing the pre-call brief before joining the call.
 
----
+## Automated
+Confirmation and reminder messages (Stage 16/20) firing automatically off the booking event.
 
-## Cross-References
+## API / Integration
+Scheduling tool ⇄ CRM integration so booking status and pre-call brief live on the same opportunity record.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
-- Next stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not used directly; pre-call research draws on Stage 07/08 data already gathered plus a quick manual/AI-assisted website/LinkedIn review.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+A referral-sourced booking may skip some research steps if the referrer already provided context.
+
+## Method Selection Guidance
+Automate booking mechanics fully via a self-service scheduling link; keep pre-call research as a required manual review step even when AI-drafted, since walking into a call unprepared undermines everything Stages 16-27 built.

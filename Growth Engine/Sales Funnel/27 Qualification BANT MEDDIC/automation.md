@@ -1,26 +1,21 @@
 # Automation — 27 Qualification BANT MEDDIC
 
-> Part of Stage 27 (Qualification BANT MEDDIC). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+The final Qualified/Not-Yet-Qualified/Disqualified decision — always a human sales judgment call.
 
-## Automation Workflows
+## Semi-Automated
+Rep fills in structured BANT/MEDDIC fields in the CRM during/immediately after the call, using an AI-drafted summary as a starting point.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Not applicable to the qualification decision itself; the transcript-to-draft-assessment step can run automatically as input to the manual decision.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Discovery call (Stage 29) is recorded/transcribed (where legally permitted).
+2. LLM summarizes the transcript into a first-pass BANT/MEDDIC draft, flagging any element not clearly addressed.
+3. Rep reviews, corrects, and finalizes the assessment in the CRM opportunity record.
+4. Qualified opportunities are automatically flagged for Stage 30 proposal follow-up; Not-Yet-Qualified ones are flagged for further nurture.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [26 Objection Handling](../26 Objection Handling/README.md)
-- Next stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
+## Suggested n8n / integration flow
+`Call transcription tool (transcript ready)` → `LLM API (draft BANT/MEDDIC summary)` → `CRM (populate draft fields)` → `Rep review + finalize` → `CRM (decision logged)` → `Qualified → Stage 30 trigger`

@@ -1,31 +1,36 @@
 # Methods — 25 Reply Handling and Triage
 
-> Part of Stage 25 (Reply Handling and Triage). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+A rep manually reads each inbound reply and decides the response themselves.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+Shared inbox/CRM tools that surface all inbound replies across channels in one queue.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-based first-pass classification and response drafting, with human review before send for high-value categories.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Final send decision on Interested and Objection replies always stays human, even when AI-drafted.
 
----
+## Automated
+Auto-suppression of Unsubscribe/DNC-classified contacts across all channels.
 
-## Cross-References
+## API / Integration
+Channel tool webhooks (Stage 16-20) feeding a centralized reply queue rather than replies sitting siloed per channel inbox.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
-- Next stage: [26 Objection Handling](../26 Objection Handling/README.md)
+## Browser Automation
+Not applicable to this stage directly.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Not applicable to this stage; reply handling applies uniformly regardless of how the original contact was sourced.
+
+## Method Selection Guidance
+Automate classification and low-risk actions (suppression); keep human-in-the-loop for anything that represents genuine buying signal, since speed AND correctness both matter at this stage more than anywhere else in the funnel.

@@ -1,31 +1,36 @@
 # Methods — 23 Deliverability and Domain Health
 
-> Part of Stage 23 (Deliverability and Domain Health). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Manually checking each mailbox/number's stats dashboard periodically.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+Centralized monitoring tools (Google Postmaster Tools, MXToolbox, sequencer-native deliverability dashboards) checked on a fixed schedule.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-summarized daily health reports across many identities, flagging what needs human attention.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Incident response decisions (pause, rotate, retire) always require human judgment given campaign impact.
 
----
+## Automated
+Scheduled daily/weekly pulls of bounce/complaint/blacklist data from each channel tool's API.
 
-## Cross-References
+## API / Integration
+Channel tool APIs (Stage 16-19) feeding a centralized health-tracking sheet or dashboard.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [22 Personalization and Copywriting](../22 Personalization and Copywriting/README.md)
-- Next stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
+## Browser Automation
+Not typically needed; most monitoring tools expose data via dashboard or API directly.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Blacklist-checking services (e.g., MXToolbox) query public DNS-based blacklists (DNSBLs) as part of domain/IP health checks.
+
+## Community / Referral
+Not applicable to this stage.
+
+## Method Selection Guidance
+Automate the data-pull layer fully; keep the pause/rotate/retire decision manual, since it affects live campaigns and warrants human judgment on severity and timing.

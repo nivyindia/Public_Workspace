@@ -1,31 +1,36 @@
 # Methods — 26 Objection Handling
 
-> Part of Stage 26 (Objection Handling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Reps study a static objection-response document before calls and recall responses from memory in the moment.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A searchable, categorized library (Notion/CRM-linked) reps can quickly reference between or during calls.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-based matching of incoming written objections to library entries; LLM-drafted responses to new objections for review.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Live-call objection handling always requires human skill exercised in real time — the library is study material, not a live generator.
 
----
+## Automated
+Written objection-carrying replies (from Stage 25) can be auto-matched to the closest library entry before human response drafting.
 
-## Cross-References
+## API / Integration
+Library hosted centrally (Notion/CRM) so it's referenceable from both Stage 18/29 (calls) and Stage 25 (written replies) without duplication.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [25 Reply Handling and Triage](../25 Reply Handling and Triage/README.md)
-- Next stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Not applicable to this stage; objection handling applies uniformly regardless of lead source.
+
+## Method Selection Guidance
+Use AI-assisted matching for written objections to speed up Stage 25's response drafting; rely on rep training and the ARP framework (not real-time AI prompting) for live-call objection handling, since call flow doesn't allow for a lookup pause.

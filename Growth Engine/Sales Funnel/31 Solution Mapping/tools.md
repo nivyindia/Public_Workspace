@@ -1,22 +1,14 @@
 # Tools — 31 Solution Mapping
 
-> Part of Stage 31 (Solution Mapping). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Claude / ChatGPT (LLM) | Package matching, case study selection drafting | Subscription or API usage-based | Free tiers available | API |
+| Notion | Package catalog and case study library home | Free tier / ~$8-15/user/mo | Free tier available | API |
+| HubSpot | Solution map attached to the opportunity record | Bundled with HubSpot tier (Stage 13) | Free tier limited | Native |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [30 Needs Analysis](../30 Needs Analysis/README.md)
-- Next stage: [32 Demo and Presentation](../32 Demo and Presentation/README.md)
+## Selection Notes
+- Keep the package catalog and case study library in one canonical, regularly updated location so AI-assisted matching draws on current, not stale, information.

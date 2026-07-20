@@ -1,18 +1,12 @@
 # References — 29 Discovery Call Execution
 
-> Part of Stage 29 (Discovery Call Execution). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Discovery Call Script — 30-Min SPIN Framework (Growth Engine) — primary and comprehensive source for this stage
+- Stage 26 Objection Handling, Stage 27 Qualification BANT MEDDIC (this KB)
 
-## References
+## Official / Vendor Docs
+- SPIN Selling is a widely-used, industry-standard B2B sales methodology (originated by Neil Rackham), not proprietary to any vendor.
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
-- Next stage: [30 Needs Analysis](../30 Needs Analysis/README.md)
+> This stage's script, structure, and closing phrases are carried over directly from the internal Discovery Call Script doc. Package/pricing figures referenced in the original script are illustrative and should be checked against current pricing (Stage 31/33) before use.

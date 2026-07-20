@@ -1,23 +1,30 @@
 # Templates — 23 Deliverability and Domain Health
 
-> Part of Stage 23 (Deliverability and Domain Health). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Health Status Thresholds (starting point — verify current)
 
-## Templates
+| Metric | Healthy | Warning | Suspended |
+|---|---|---|---|
+| Bounce rate (email) | < 2% | 2-5% | > 5% |
+| Spam complaint rate (email) | < 0.05% | 0.05-0.1% | > 0.1% |
+| Blacklist status | Clear | — | Listed on any major DNSBL |
+| WhatsApp/number ban signal | None | Warning received | Number restricted/banned |
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+## Incident Response Checklist Template
+```
+Identity: [mailbox/number]
+Date flagged: [date]
+Metric that triggered flag: [bounce/complaint/blacklist/ban]
+Suspected cause: [bad list data / content trigger / volume spike / other]
+Action taken: [paused / rotated / retired]
+Resolution date: [date]
+```
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [22 Personalization and Copywriting](../22 Personalization and Copywriting/README.md)
-- Next stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
+## Weekly Health Report Format
+```
+Identities checked: [N]
+Healthy: [N] | Warning: [N] | Suspended: [N]
+New warnings this week: [list]
+Actions taken: [list]
+```

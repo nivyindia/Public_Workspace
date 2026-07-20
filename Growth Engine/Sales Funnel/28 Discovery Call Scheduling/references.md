@@ -1,18 +1,13 @@
 # References — 28 Discovery Call Scheduling
 
-> Part of Stage 28 (Discovery Call Scheduling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Phase 10 — Meeting Preparation (Growth Engine) — primary source for the pre-call research and problem-hypothesis process
+- Stage 25 Reply Handling and Triage (this KB) — upstream trigger for this stage
+- Stage 20 SMS Outreach, Stage 16 Email Outreach (this KB) — confirmation/reminder mechanics this stage triggers
 
-## References
+## Official / Vendor Docs
+- Calendly / Cal.com documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
-- Next stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
+> This stage's pre-call research structure is carried over directly from the internal Phase 10 — Meeting Preparation doc.

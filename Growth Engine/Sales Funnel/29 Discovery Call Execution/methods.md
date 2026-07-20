@@ -1,31 +1,36 @@
 # Methods — 29 Discovery Call Execution
 
-> Part of Stage 29 (Discovery Call Execution). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+A rep runs the call from memory/experience without a structured script, ad-libbing questions.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A documented SPIN script followed live, with a notes doc open alongside the call.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+Post-call transcription and structured note extraction; pre-call brief (Stage 28) informing question angles.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+The live conversation itself — asking, listening, probing — is entirely a human skill; no automation substitutes for it.
 
----
+## Automated
+CRM deal-stage update and follow-up task creation can be automated based on the logged outcome.
 
-## Cross-References
+## API / Integration
+Call recording/transcription tool ⇄ CRM integration so notes flow into the opportunity record without manual retyping.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [28 Discovery Call Scheduling](../28 Discovery Call Scheduling/README.md)
-- Next stage: [30 Needs Analysis](../30 Needs Analysis/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Not applicable to this stage; the SPIN structure applies regardless of lead source.
+
+## Method Selection Guidance
+Follow the SPIN script structure for every call regardless of rep experience level — it's the single highest-leverage discipline in this stage, and deviating from it (pitching before asking) is the most common and costly mistake.

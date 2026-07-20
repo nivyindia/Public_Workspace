@@ -1,22 +1,14 @@
 # Tools — 24 Follow Up Systems
 
-> Part of Stage 24 (Follow Up Systems). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| HubSpot Workflows | Automated follow-up sequencing and re-engagement scheduling | Bundled with HubSpot tier (Stage 13) | Free tier limited | Native |
+| n8n | Cross-channel follow-up/re-engagement orchestration | Free (self-host) / ~$20+/mo cloud | Self-hosted free | Yes |
+| Notion / Google Sheets | Value-add content library (case studies, stats) home | Free / bundled | — | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [23 Deliverability and Domain Health](../23 Deliverability and Domain Health/README.md)
-- Next stage: [25 Reply Handling and Triage](../25 Reply Handling and Triage/README.md)
+## Selection Notes
+- Since Stage 13 already establishes HubSpot as the CRM, its native workflow engine is the natural home for follow-up scheduling rather than introducing a separate tool.

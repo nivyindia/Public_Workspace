@@ -1,18 +1,13 @@
 # References — 26 Objection Handling
 
-> Part of Stage 26 (Objection Handling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Objection Handling Library (50+ Objections) (Growth Engine) — primary source for this stage's category structure and response scripts
+- Automated Objection Handling System — AI + Response (Growth Engine)
+- Stage 25 Reply Handling and Triage (this KB) — upstream routing source for written objections
 
-## References
+## Official / Vendor Docs
+- Notion documentation (library hosting)
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [25 Reply Handling and Triage](../25 Reply Handling and Triage/README.md)
-- Next stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
+> This stage's ARP framework and category structure (price, trust, timing, competition, quality/risk, commitment, market-specific) are carried over directly from the internal Objection Handling Library doc. Example responses referencing specific guarantee/trial terms should be checked against current company policy before use.

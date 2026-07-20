@@ -1,18 +1,14 @@
 # References — 23 Deliverability and Domain Health
 
-> Part of Stage 23 (Deliverability and Domain Health). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Business Email Setup Starter Package (Growth Engine)
+- Stage 16 Email Outreach methods.md (this KB) — SPF/DKIM/DMARC and warm-up schedule origin
+- Stage 18 Cold Calling, Stage 19 WhatsApp Outreach (this KB) — number health considerations
 
-## References
+## Official / Vendor Docs
+- Google Postmaster Tools documentation
+- MXToolbox documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [22 Personalization and Copywriting](../22 Personalization and Copywriting/README.md)
-- Next stage: [24 Follow Up Systems](../24 Follow Up Systems/README.md)
+> Health-threshold figures in this stage's files are carried over from the Stage 16 source SOP and marked "verify current" — mailbox-provider and DNSBL policy both change over time.

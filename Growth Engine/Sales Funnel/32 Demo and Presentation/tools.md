@@ -1,22 +1,14 @@
 # Tools — 32 Demo and Presentation
 
-> Part of Stage 32 (Demo and Presentation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Google Slides / Canva | Short presentation deck creation | Free / ~$13/mo Canva Pro | Google Slides free | Limited |
+| Google Meet / Zoom | Live screen-share delivery | Free tier / paid tiers | Google Meet free tier | API |
+| Claude / ChatGPT (LLM) | Deck outline drafting from the solution map | Subscription or API usage-based | Free tiers available | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [31 Solution Mapping](../31 Solution Mapping/README.md)
-- Next stage: [33 Proposal Creation](../33 Proposal Creation/README.md)
+## Selection Notes
+- Keep the deck short (5-8 slides) — this stage is a conversation aid, not a standalone document; the formal detail belongs in Stage 33's proposal.

@@ -1,23 +1,35 @@
 # Templates — 28 Discovery Call Scheduling
 
-> Part of Stage 28 (Discovery Call Scheduling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Call Research Checklist
 
-## Templates
+**Step 1 — Research the company**
+- Company website
+- LinkedIn profile / company page
+- Business listings (Google, industry directories)
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+Look for: what they offer, target market, current marketing/sales approach, company size.
 
----
+**Step 2 — Identify likely problems (write 2-3 hypotheses)**
+- Examples: low lead generation, weak online presence, inconsistent pipeline, limited bandwidth for a specific function
 
-## Cross-References
+**Step 3 — Prepare a short service-pitch structure**
+```
+Problem → Solution → Result
+```
 
-- Stage README: [README.md](README.md)
-- Previous stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
-- Next stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
+## Pre-Call Brief Template
+```
+Contact: [Name, Title]
+Company: [Name, size, industry]
+Source: [how they entered the funnel]
+Problem hypotheses:
+  1. [hypothesis]
+  2. [hypothesis]
+  3. [hypothesis]
+Relevant case study to reference: [name]
+```
+
+## Booking Confirmation Reference
+See Stage 16/20 templates.md for the actual confirmation/reminder message text — this stage's booking flow triggers those templates directly.

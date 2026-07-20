@@ -1,18 +1,13 @@
 # References — 33 Proposal Creation
 
-> Part of Stage 33 (Proposal Creation). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Proposal & Deal Closing SOP (Growth Engine) — primary and comprehensive source for this stage's structure, tools, send/follow-up timing, negotiation scripts, and contract/sign-off process
+- Stage 31 Solution Mapping (this KB) — direct upstream input
+- Stage 34 Pricing and Packaging (this KB) — pricing source for Section 3
 
-## References
+## Official / Vendor Docs
+- PandaDoc / HubSpot Quotes documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [32 Demo and Presentation](../32 Demo and Presentation/README.md)
-- Next stage: [34 Pricing and Packaging](../34 Pricing and Packaging/README.md)
+> This stage's structure, timing, and negotiation scripts are carried over directly from the internal Proposal & Deal Closing SOP. Discount-threshold and payment-term figures should be checked against current company policy before use.

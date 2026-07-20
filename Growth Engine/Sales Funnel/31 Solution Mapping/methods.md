@@ -1,31 +1,36 @@
 # Methods — 31 Solution Mapping
 
-> Part of Stage 31 (Solution Mapping). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+A rep manually reviews the needs analysis and picks a package from memory/judgment.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A documented package/deliverable catalog checked systematically against each ranked problem.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-suggested package match and case study matching from the finalized needs-analysis document.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Internal review/sign-off for any customized (non-standard) solution before it's presented.
 
----
+## Automated
+Case study library lookup by industry/problem-type tag can be automated as the library grows.
 
-## Cross-References
+## API / Integration
+CRM opportunity record ⇄ solution map document, so Stage 33 pulls the approved solution map directly rather than re-deriving it.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [30 Needs Analysis](../30 Needs Analysis/README.md)
-- Next stage: [32 Demo and Presentation](../32 Demo and Presentation/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Not applicable to this stage.
+
+## Method Selection Guidance
+Use AI-assisted drafting to speed up the first-pass package match and case study selection, but require human review for anything involving customization beyond the standard catalog, since that carries pricing/delivery implications.

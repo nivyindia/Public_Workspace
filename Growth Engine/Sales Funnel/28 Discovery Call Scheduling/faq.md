@@ -1,19 +1,18 @@
 # FAQ — 28 Discovery Call Scheduling
 
-> Part of Stage 28 (Discovery Call Scheduling). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+**Q: Who shares the booking link?**
+Whoever handles the Interested reply (Stage 25) — the link is included directly in that response, not a separate follow-up step.
 
-## Frequently Asked Questions
+**Q: How much pre-call research is actually necessary?**
+Enough to speak specifically about their business and form 2-3 problem hypotheses — a few minutes reviewing their website and LinkedIn, not a deep investigation.
 
-**Q: _placeholder question_**
-A: _placeholder answer_
+**Q: What if the prospect no-shows?**
+Trigger a rebooking outreach attempt within 24 hours (see [checklists.md](checklists.md)) rather than letting the contact go cold.
 
----
+**Q: Is this the same as Stage 20 SMS Outreach's confirmation/reminder flow?**
+This stage owns the booking and pre-call research process; it triggers Stage 16/20's confirmation and reminder templates rather than duplicating that logic.
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [27 Qualification BANT MEDDIC](../27 Qualification BANT MEDDIC/README.md)
-- Next stage: [29 Discovery Call Execution](../29 Discovery Call Execution/README.md)
+**Q: What happens after the call is booked and prepared?**
+The call itself is executed per Stage 29 Discovery Call Execution.

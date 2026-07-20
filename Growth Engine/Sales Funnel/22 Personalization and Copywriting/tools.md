@@ -1,22 +1,15 @@
 # Tools — 22 Personalization and Copywriting
 
-> Part of Stage 22 (Personalization and Copywriting). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Claude / ChatGPT (LLM) | Drafting personalization lines and copy variants | Subscription or API usage-based | Free tiers available | API |
+| Grammarly | Tone/clarity/grammar QC on final copy | Free tier / ~$12-15/mo paid | Free tier | Browser extension |
+| Google Docs / Notion | Style guide and template library home | Free / bundled | — | API |
+| Instantly / Apollo A/B testing features | Native split-testing of email variants | Bundled with Stage 16 tool cost | — | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [21 Multi Channel Sequencing](../21 Multi Channel Sequencing/README.md)
-- Next stage: [23 Deliverability and Domain Health](../23 Deliverability and Domain Health/README.md)
+## Selection Notes
+- No dedicated "personalization tool" is required beyond the LLM drafting step plus each channel tool's own A/B testing feature (Stage 16-17 tools already support this).
