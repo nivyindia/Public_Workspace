@@ -1,19 +1,18 @@
 # FAQ — 40 Client Onboarding
 
-> Part of Stage 40 (Client Onboarding). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+**Q: When should onboarding start relative to payment?**
+Within 24-48 hours of payment being received, per the internal Client Onboarding System doc. Starting later risks the client's excitement fading and creates an awkward silent gap right after they've committed money.
 
-## Frequently Asked Questions
+**Q: What's the single most important rule in this stage?**
+Do not start delivery work without the required access and information. Starting early on incomplete information routinely creates rework and confusion later — the source SOPs treat this as a hard rule, not a preference.
 
-**Q: _placeholder question_**
-A: _placeholder answer_
+**Q: What information absolutely must be collected before delivery begins?**
+Business basics (company, website, product/service, target customer), current marketing setup, primary KPI/goal, key contacts, and whatever platform access is relevant to the service being delivered (analytics, ad accounts, CMS, social).
 
----
+**Q: How is this different from Stage 41 (Kickoff and Expectation Setting)?**
+This stage is the data-and-access collection and system-setup process (forms, portal, credentials, internal briefing). Stage 41 is the live kickoff call and the explicit conversation where expectations (timeline, roles, what "success" looks like) are set with the client directly.
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [39 Payment and Invoicing](../39 Payment and Invoicing/README.md)
-- Next stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
+**Q: What happens if a client doesn't complete the onboarding questionnaire?**
+An automated reminder fires (typically at 48 hours), and the account manager follows up personally if it's still incomplete — a stalled onboarding should never be left to resolve itself silently.

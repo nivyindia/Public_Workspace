@@ -1,31 +1,36 @@
 # Methods — 41 Kickoff and Expectation Setting
 
-> Part of Stage 41 (Kickoff and Expectation Setting). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+An unstructured "getting to know you" call with no fixed agenda, leaving expectations implicit rather than explicitly agreed.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A structured 45-minute kickoff call run from a fixed agenda template, scheduled via Cal.com, with notes logged directly into the client portal and CRM.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+An LLM generates a personalized kickoff agenda and discovery questions from the onboarding questionnaire answers (Stage 40), so the call goes deeper than generic small talk from minute one.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Running the actual call — tone, relationship-building, and reading the client's confidence level are inherently human and are the entire point of this stage.
 
----
+## Automated
+Call scheduling/reminders, and post-call project-plan generation from the call notes and service package, can run without manual effort.
 
-## Cross-References
+## API / Integration
+Cal.com booking ⇄ Zoom/Meet call link ⇄ Notion (call notes + project plan) ⇄ CRM (call logged, lifecycle progressed) — a connected chain so the call outcome is captured systematically, not left in someone's personal notes.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [40 Client Onboarding](../40 Client Onboarding/README.md)
-- Next stage: [42 Implementation and Delivery Setup](../42 Implementation and Delivery Setup/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Mentioning the referral program and asking permission for a future case-study feature can be seeded naturally during the kickoff call, when the relationship is at its most positive.
+
+## Method Selection Guidance
+Never skip the structured agenda in favor of an unstructured "let's just chat" call — the source material is explicit that a defined agenda (introductions → discovery → scope confirmation → KPIs → communication cadence → access/assets → next steps) is what prevents expectation mismatches from surfacing weeks later as complaints.

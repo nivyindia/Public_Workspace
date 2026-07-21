@@ -1,22 +1,17 @@
 # Tools — 41 Kickoff and Expectation Setting
 
-> Part of Stage 41 (Kickoff and Expectation Setting). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Cal.com | Kickoff call scheduling and reminders | Free / paid tiers | Fully OSS option available | API |
+| Zoom / Google Meet | Kickoff call video | Free (time-limited) / paid | Google Meet free tier | Limited |
+| Notion | Call notes, project plan, client portal update | Free | Free tier | API |
+| HubSpot | Log call notes and update deal/client lifecycle stage | Free tier | — | Native |
+| GPT-4o-class LLM | Kickoff agenda generation, project-plan drafting from call notes | Pay per use | Open-source models viable for this task | API |
+| Loom | Async video recap for clients who prefer it over reading notes | Free tier | — | Limited |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [40 Client Onboarding](../40 Client Onboarding/README.md)
-- Next stage: [42 Implementation and Delivery Setup](../42 Implementation and Delivery Setup/README.md)
+## Selection Notes
+- Recording the kickoff call (with client consent) is useful both for the account manager's own review and as training material for onboarding new account managers.

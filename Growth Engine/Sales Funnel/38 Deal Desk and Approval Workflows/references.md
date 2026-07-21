@@ -1,18 +1,14 @@
 # References — 38 Deal Desk and Approval Workflows
 
-> Part of Stage 38 (Deal Desk and Approval Workflows). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Pricing Strategy — Tiers & Packaging (Growth Engine) — discount/negotiation policy ("never negotiate below $20/hr effective") used as the discretionary floor this stage enforces
+- Stage 33 Proposal Creation (this KB) — the discount-approval threshold and named-approver requirement first introduced there is formalized as its own stage here
+- Stage 34 Pricing and Packaging (this KB) — defines the standard terms that, once deviated from, trigger this stage
 
-## References
+## Official / Vendor Docs
+- HubSpot deal-pipeline and custom-properties documentation
+- n8n approval-workflow pattern documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [37 Closing Techniques](../37 Closing Techniques/README.md)
-- Next stage: [39 Payment and Invoicing](../39 Payment and Invoicing/README.md)
+> No dedicated internal "deal desk" SOP existed under that name — this stage formalizes the discount-approval and named-approver requirements that were already implicit in the Stage 33 proposal SOP and the Pricing Strategy doc's negotiation policy, generalized into a standalone governance stage covering discounts, non-standard payment terms, and custom scope.

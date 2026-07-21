@@ -1,22 +1,17 @@
 # Tools — 38 Deal Desk and Approval Workflows
 
-> Part of Stage 38 (Deal Desk and Approval Workflows). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| HubSpot (deal properties + approval pipeline) | Log discount/term requests against the deal, track approver, decision, timestamp | Free tier / paid tiers for advanced workflow automation | — | Native |
+| Slack / Telegram | Approval request routing and notification to the correct approver | Free tier | Telegram fully free | API/webhook |
+| n8n | Rule-based routing engine (discount % → approver tier), decision logging back to CRM | Free (self-hosted) | Fully OSS | Native |
+| Google Sheets / Airtable | Lightweight approval log for teams not yet using CRM approval fields | Free / free tier | Google Sheets free | API |
+| DocuSign / PandaDoc | Records final approved terms into the contract once a deal-desk decision is made | Usage-based / subscription | — | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [37 Closing Techniques](../37 Closing Techniques/README.md)
-- Next stage: [39 Payment and Invoicing](../39 Payment and Invoicing/README.md)
+## Selection Notes
+- Smaller teams (under ~5 reps) can run this entirely through a Slack channel + a simple rule ("tag @founder for anything over 10%") without dedicated software.
+- Larger teams should move the request into the CRM itself so the approval decision is attached permanently to the deal record, not living only in chat history.

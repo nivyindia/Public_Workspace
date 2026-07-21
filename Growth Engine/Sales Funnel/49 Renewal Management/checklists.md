@@ -1,23 +1,25 @@
 # Checklists — 49 Renewal Management
 
-> Part of Stage 49 (Renewal Management). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pipeline QC
+- [ ] Every active contract has a tracked renewal date in the 90-day rolling pipeline
+- [ ] No renewal discovered for the first time inside the 60-day window — radar flag caught it earlier
 
-## Quality Control Checklists
+## Sequence QC
+- [ ] 60 days: retention call booked, LTV/wins reviewed
+- [ ] 45 days: ROI-summary email sent (AI-drafted, AM-personalized)
+- [ ] 30 days: automated incentive email + personal WhatsApp message sent
+- [ ] 14 days: AM calls directly if not yet renewed
+- [ ] 7 days: final retention offer made, or escalated to founder for high-value accounts
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Renewal Conversation QC
+- [ ] ROI shown clearly before any renewal price is discussed (addresses renewal price resistance directly)
+- [ ] Renewal incentive offered (discount, bonus service, or upgrade) is appropriate to the client's LTV and history, not a flat default
 
----
+## Escalation QC
+- [ ] High-value account renewal calls include founder/CEO attendance where warranted
+- [ ] Any renewal incentive beyond standard offers has appropriate sign-off before being promised
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [48 Cross Sell Strategy](../48 Cross Sell Strategy/README.md)
-- Next stage: [50 Churn Prevention](../50 Churn Prevention/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] Renewal outcome (renewed/churned/pending) logged against the client record, not left stale on the original pipeline stage

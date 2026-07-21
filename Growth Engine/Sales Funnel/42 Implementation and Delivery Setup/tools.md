@@ -1,22 +1,17 @@
 # Tools — 42 Implementation and Delivery Setup
 
-> Part of Stage 42 (Implementation and Delivery Setup). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Notion / ClickUp | Task board setup from the service-specific delivery SOP template | Free / free tier | Notion free tier generous | API |
+| Google Analytics 4 | Baseline tracking setup and goal configuration | Free | Free | API |
+| Meta Business Suite / Ads Manager | Ad account and pixel setup verification | Free | — | API |
+| Google Tag Manager | UTM/tracking implementation | Free | Free | API |
+| Slack / Telegram | Internal team assignment and briefing notification | Free tier | Telegram fully free | API/webhook |
+| n8n | Task-board auto-creation, tracking-verification checks | Free (self-hosted) | Fully OSS | Native |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
-- Next stage: [43 Account Management](../43 Account Management/README.md)
+## Selection Notes
+- Tracking setup (GA4 goals, pixel verification) should be confirmed working before the first deliverable goes live — a delivery stage with broken tracking produces reports the team can't stand behind later.

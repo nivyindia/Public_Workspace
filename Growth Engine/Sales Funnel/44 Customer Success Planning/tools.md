@@ -1,22 +1,17 @@
 # Tools — 44 Customer Success Planning
 
-> Part of Stage 44 (Customer Success Planning). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Tally.so / Brevo | Monthly NPS survey dispatch and response collection | Free / free tier | Tally has generous free tier | API |
+| HubSpot | Client health record, NPS history, churn-risk flag | Free tier | — | Native |
+| n8n | Warning-sign detection, renewal-reminder automation, review-request dispatch | Free (self-hosted) | Fully OSS | Native |
+| WATI / WhatsApp Business API | Proactive check-in messages, save-a-client outreach | Free tier / paid tiers | — | API |
+| GPT-4o-class LLM | Churn-risk scoring from combined CSAT/NPS/engagement/delivery data | Pay per use | Open-source models viable | API |
+| Google/Clutch/GoodFirms/Trustpilot | Public review destinations for promoter (NPS 9-10) clients | Free to post | — | Limited |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [43 Account Management](../43 Account Management/README.md)
-- Next stage: [45 Product and Service Adoption](../45 Product and Service Adoption/README.md)
+## Selection Notes
+- The review-request step should only ever target promoters (NPS 9-10) — asking a passive or detractor client for a public review risks a negative review landing publicly.

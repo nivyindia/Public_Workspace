@@ -1,18 +1,14 @@
 # References — 42 Implementation and Delivery Setup
 
-> Part of Stage 42 (Implementation and Delivery Setup). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Stage 8 — Delivery Engine (Growth Engine) — the delivery operating rhythm (daily/weekly/bi-weekly/monthly cadence) this stage's setup work feeds into
+- 11. Delivery System (High-Level) (Growth Engine) — the phased delivery structure (Foundation → Growth → Scaling) this stage's Phase 1 setup is built from
+- DELIVERY SOP-001 through SOP-006 (Growth Engine) — per-service delivery SOPs (SMM, Content Creation, Performance Marketing, Lead Generation, SEO, CPA/Financial Management) used as the task-board template source for each service type
 
-## References
+## Official / Vendor Docs
+- Google Analytics 4 and Google Tag Manager setup documentation
+- Meta Business Suite / Ads Manager account setup documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
-- Next stage: [43 Account Management](../43 Account Management/README.md)
+> This stage sits between the client-facing kickoff (Stage 41) and the ongoing delivery rhythm (Stage 8-equivalent, covered operationally in Stage 43/44 of this KB) — it's the internal "get everything actually configured and shipped for the first time" step. Task structure should be pulled from the relevant per-service DELIVERY SOP rather than built from scratch per client.

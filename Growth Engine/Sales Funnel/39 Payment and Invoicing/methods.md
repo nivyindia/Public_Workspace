@@ -1,31 +1,36 @@
 # Methods — 39 Payment and Invoicing
 
-> Part of Stage 39 (Payment and Invoicing). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+A manually typed invoice emailed as a PDF attachment, with payment tracked in a spreadsheet.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+An invoicing tool (Zoho Invoice, QuickBooks, Razorpay/Stripe invoicing) that generates, sends, and tracks payment status automatically, replacing the manual PDF-and-spreadsheet approach.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+An LLM drafts payment-reminder messages calibrated to how overdue an invoice is (polite nudge at day 1, firmer language at day 7+), pulled from the standard templates in [templates.md](templates.md).
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Reconciling bank/gateway settlement records against invoices issued — automatable in mature setups, but many small teams still do this by hand monthly.
 
----
+## Automated
+Recurring retainer invoices generated and sent automatically at the start of each billing period; overdue-payment reminders triggered automatically at defined day-thresholds.
 
-## Cross-References
+## API / Integration
+Payment gateway (Razorpay/Stripe/PayPal/Wise) ⇄ invoicing tool ⇄ CRM, so a payment received automatically marks the invoice paid and updates the deal/client record without manual entry.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [38 Deal Desk and Approval Workflows](../38 Deal Desk and Approval Workflows/README.md)
-- Next stage: [40 Client Onboarding](../40 Client Onboarding/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable directly, though GST/tax-compliance rules (India) or equivalent international tax regulations govern invoice format and are treated as an external constraint, not a data source.
+
+## Community / Referral
+Not applicable to this stage.
+
+## Method Selection Guidance
+Use a dedicated invoicing tool with gateway integration from day one — the manual spreadsheet approach breaks down quickly once client count grows past a handful, and reconciliation errors directly cost revenue.

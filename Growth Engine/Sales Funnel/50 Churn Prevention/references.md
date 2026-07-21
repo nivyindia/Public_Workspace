@@ -1,18 +1,13 @@
 # References — 50 Churn Prevention
 
-> Part of Stage 50 (Churn Prevention). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- 🌟 Customer Retention System (Growth Engine) — primary and most detailed source: severity-graded churn warning signs, response ownership, and the full save-a-client script
+- Customer Retention System (Growth Engine, shorter version) — supplementary churn-prevention response sequence
+- Stage 9 — Retention Engine (Growth Engine, Client Journey Engine) — churn-risk predictor AI system, silent-churn mitigation via monthly CSAT, and churn-rate KPI targets
 
-## References
+## Official / Vendor Docs
+- None specific to this stage
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [49 Renewal Management](../49 Renewal Management/README.md)
-- Next stage: [51 Customer Feedback and NPS](../51 Customer Feedback and NPS/README.md)
+> Retention-rate targets and goodwill-offer specifics (e.g., "1 month free") are carried over from internal reference material dated May 2026 — verify current targets and authorization policy with leadership before relying on the specific figures.

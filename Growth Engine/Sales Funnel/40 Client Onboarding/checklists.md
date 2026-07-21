@@ -1,23 +1,26 @@
 # Checklists — 40 Client Onboarding
 
-> Part of Stage 40 (Client Onboarding). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Day 0 (Contract Signed + Payment Confirmed) QC
+- [ ] Welcome email sent within minutes of payment confirmation, not hours
+- [ ] Personal WhatsApp welcome sent from the assigned account manager within 2 hours
+- [ ] Client record created/updated in CRM with lifecycle stage = Customer
+- [ ] Client portal (Notion) and asset folder (Google Drive) created
+- [ ] Internal team notified/briefed that a new client has signed
 
-## Quality Control Checklists
+## Questionnaire & Data Collection QC
+- [ ] Onboarding questionnaire sent same day
+- [ ] Reminder sent if not completed within 48 hours
+- [ ] All mandatory fields completed before onboarding is considered done — no starting delivery work on partial information
+- [ ] Business info (products/services, target customers, competitors, current marketing) captured, not just contact details
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Access & Assets QC
+- [ ] All required account access received (website/CMS, ad accounts, analytics, social, CRM as applicable) before delivery work begins
+- [ ] Credentials stored in the secure vault, never left in plain chat/email
+- [ ] Brand assets (logo, brand guide, past work/testimonials) collected and filed in the client's asset folder
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [39 Payment and Invoicing](../39 Payment and Invoicing/README.md)
-- Next stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
+## Timing & Experience QC
+- [ ] Full onboarding (welcome → questionnaire → access → portal) completed within 24-48 hours of payment, per standard policy
+- [ ] Work does not start without required access — a documented exception rule, not a judgment call
+- [ ] Day 7 CSAT check sent and any score below the defined threshold escalated immediately to the account manager

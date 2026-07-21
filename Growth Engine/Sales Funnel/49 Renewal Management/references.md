@@ -1,18 +1,12 @@
 # References — 49 Renewal Management
 
-> Part of Stage 49 (Renewal Management). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Stage 9 — Retention Engine (Growth Engine, Client Journey Engine) — primary and comprehensive source: 60/45/30/14/7-day renewal sequence, renewal radar automation, renewal KPIs, AI-assisted ROI summary and incentive optimization, team responsibilities
+- Customer Retention System (Growth Engine) — supplementary upsell/expansion framing referenced for renewal-adjacent conversations
 
-## References
+## Official / Vendor Docs
+- HubSpot / n8n documentation for renewal-pipeline and automation setup
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [48 Cross Sell Strategy](../48 Cross Sell Strategy/README.md)
-- Next stage: [50 Churn Prevention](../50 Churn Prevention/README.md)
+> Renewal-rate and churn-rate targets, and the specific day-count sequence, are carried over directly from internal reference material — verify current targets and cadence with leadership before treating them as fixed policy.

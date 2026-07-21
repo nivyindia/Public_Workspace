@@ -1,31 +1,36 @@
 # Methods — 50 Churn Prevention
 
-> Part of Stage 50 (Churn Prevention). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Churn discovered only at the cancellation request itself — replaced by a graded warning-sign system that catches risk earlier, at the medium-severity stage rather than the critical one.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A severity-graded warning-sign table (🟡 Medium / 🔴 High / 🔴 Critical) mapping specific observable signals to a specific, owner-assigned response.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+An AI churn-risk predictor (GPT-4o class) taking CSAT trend, engagement data, and delivery status as input and returning a Low/Medium/High risk score plus a recommended action and a suggested outreach message.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+The founder-level "save-a-client" call — a scripted but genuinely human conversation, not a template sent unread.
 
----
+## Automated
+Monthly CSAT/NPS survey dispatch (guards against "silent churn" — a client who never explicitly complains but is quietly disengaging).
 
-## Cross-References
+## API / Integration
+CRM/CSAT data feeding the churn-risk predictor automatically, so risk scoring doesn't depend on someone remembering to check.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [49 Renewal Management](../49 Renewal Management/README.md)
-- Next stage: [51 Customer Feedback and NPS](../51 Customer Feedback and NPS/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Not applicable directly — churn prevented is retained lifetime value that later feeds referral (Stage 53) and case-study (Stage 52) potential, but this stage's methods are internal, not community-facing.
+
+## Method Selection Guidance
+Match response urgency to the warning sign's severity exactly as graded — a 🟡 Medium signal gets a proactive VA check-in, while a 🔴 Critical signal (cancellation inquiry, NPS <6, invoice dispute) gets a same-day or within-24-hours founder call, never a delayed or delegated response.

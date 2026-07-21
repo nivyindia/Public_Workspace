@@ -1,31 +1,36 @@
 # Methods — 40 Client Onboarding
 
-> Part of Stage 40 (Client Onboarding). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+A manual welcome email typed individually, followed by an ad hoc phone call to collect business details and access.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+An automated welcome sequence (email + WhatsApp) triggered the moment payment is confirmed, paired with a structured questionnaire (Tally/Typeform/Google Forms) that feeds directly into a client portal (Notion) and CRM record.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+An LLM generates a personalized welcome email and a first-draft internal team brief from the questionnaire answers, reducing the account manager's manual write-up time.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+The kickoff call itself (Stage 41) and final review of the AI-drafted team brief before it's shared internally — human judgment on relationship tone and account context still matters here.
 
----
+## Automated
+Client portal creation, Google Drive folder structure creation, questionnaire-reminder sends, and Day 7 CSAT survey dispatch can all run without manual triggering once the automation is set up.
 
-## Cross-References
+## API / Integration
+Contract-signed webhook (from Stage 36/39) ⇄ CRM lifecycle update ⇄ Notion API (portal creation) ⇄ Google Drive API (folder creation) ⇄ WhatsApp/email API (welcome sequence) — a single trigger event that fans out to every onboarding action.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [39 Payment and Invoicing](../39 Payment and Invoicing/README.md)
-- Next stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Inviting the new client into a private client community (WhatsApp group, etc.) as part of the welcome sequence — seeds retention and referral behavior from Day 0 rather than waiting until later stages.
+
+## Method Selection Guidance
+Automate everything that doesn't require relationship judgment (portal creation, folder setup, reminders) so the account manager's time is spent entirely on the human parts — the welcome message tone, the kickoff call, and reading whether the client seems confident or uncertain in their early responses.

@@ -1,22 +1,13 @@
 # Tools — 48 Cross Sell Strategy
 
-> Part of Stage 48 (Cross Sell Strategy). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| CRM (HubSpot or equivalent) | Track current service holdings per client, flag cross-sell readiness | Free–paid tier | Free tier | Native |
+| Client delivery tracker (Notion) | Log cross-sell conversations and outcomes alongside upsell attempts (Stage 47) | Free–paid, verify current tier pricing | Free tier | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [47 Upsell Identification](../47 Upsell Identification/README.md)
-- Next stage: [49 Renewal Management](../49 Renewal Management/README.md)
+## Selection Notes
+- Cross-sell tracking should live in the same tracker used for upsell attempts (Stage 47) — the two are closely related motions and splitting them across separate systems risks inconsistent follow-up.

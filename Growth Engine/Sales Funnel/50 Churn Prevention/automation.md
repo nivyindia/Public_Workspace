@@ -1,26 +1,22 @@
 # Automation — 50 Churn Prevention
 
-> Part of Stage 50 (Churn Prevention). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+The founder-level save-a-client call for 🔴 Critical signals — always a real, live conversation, never a templated response.
 
-## Automation Workflows
+## Semi-Automated
+AI drafts a churn-risk analysis (risk level, primary factor, recommended action, suggested outreach message) from CRM/CSAT data; the Account Manager or founder reviews and personalizes before acting.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Monthly NPS/CSAT survey dispatch; automatic flagging when a score falls below the detractor threshold (0-6) or a warning-sign pattern (7+ days no reply, reduced task volume) is detected in CRM activity data.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. CSAT/NPS survey and engagement data feed the churn-risk predictor automatically each month.
+2. AI returns a risk level (Low/Medium/High), primary risk factor, and recommended action.
+3. 🟡 Medium-severity signals route to the VA/Account Manager for a proactive check-in.
+4. 🔴 High/Critical signals route to the founder for a same-day or within-24-hours call, using the save-a-client script.
+5. Outcome (retained/churned/pending) logged against the client record and feeds Stage 49's renewal pipeline if relevant.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [49 Renewal Management](../49 Renewal Management/README.md)
-- Next stage: [51 Customer Feedback and NPS](../51 Customer Feedback and NPS/README.md)
+## Suggested n8n / integration flow
+`Monthly CSAT/NPS dispatch → Response data → Churn-risk predictor (LLM) → Risk level + recommended action → Route: Medium → VA check-in | High/Critical → Founder call (same day/24hrs) → Outcome logged`

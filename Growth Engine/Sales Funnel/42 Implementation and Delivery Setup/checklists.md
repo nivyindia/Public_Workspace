@@ -1,23 +1,26 @@
 # Checklists — 42 Implementation and Delivery Setup
 
-> Part of Stage 42 (Implementation and Delivery Setup). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Task Setup QC
+- [ ] Task board created from the correct service-specific delivery SOP template, not a generic list
+- [ ] All required client-specific customizations (brand tone, do-not-post list, content pillars, etc.) captured from kickoff notes (Stage 41) before work begins
+- [ ] Delivery team member(s) assigned and briefed with full client context
 
-## Quality Control Checklists
+## Tracking & Access QC
+- [ ] All platform access confirmed working (not just "received" — actually tested with a login)
+- [ ] Analytics goals/conversions configured and verified firing correctly
+- [ ] UTM parameters or tracking pixels implemented where applicable
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Phase 1 Foundation QC (per delivery system structure)
+- [ ] Foundation-phase activities scoped and scheduled (e.g., profile optimization, on-page basics, initial tracking) — see [templates.md](templates.md)
+- [ ] Client-facing timeline for Phase 1 communicated, matching what was set in Stage 41
 
----
+## First Deliverable QC
+- [ ] First deliverable quality-checked by a team lead or supervisor before going live — never sent to the client unreviewed
+- [ ] First deliverable ships within 7 days of payment/kickoff, per standard target
+- [ ] Client notified when the first deliverable goes live, with brief context on what it is and why
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
-- Next stage: [43 Account Management](../43 Account Management/README.md)
+## Completeness Checks
+- [ ] No delivery work begins with incomplete access (this duplicates the Stage 40 gate deliberately — it's the last checkpoint before real work starts)
+- [ ] Delivery task board is visible to the account manager, not siloed within the delivery team only

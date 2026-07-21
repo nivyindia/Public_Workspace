@@ -1,31 +1,36 @@
 # Methods — 43 Account Management
 
-> Part of Stage 43 (Account Management). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+An account manager reactively responds to client messages as they come in, with no defined touchpoint cadence beyond "whenever something needs discussing."
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A defined operating rhythm (weekly WhatsApp update, bi-weekly report, monthly strategy call) tracked against an active-client dashboard (Airtable/HubSpot) so no account silently goes quiet.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+An LLM drafts the weekly client update and monthly report content from performance data, so the account manager's time goes into relationship judgment and strategic framing rather than data compilation.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+The actual relationship-carrying activity — reading whether a client seems confident or frustrated, deciding how to frame a difficult update, running the monthly strategy call — stays human.
 
----
+## Automated
+Weekly metrics pulls, report generation drafts, KPI-threshold alerts, and renewal-radar flags at 60/30/14/7 days before contract expiry.
 
-## Cross-References
+## API / Integration
+Analytics/ad platform APIs ⇄ report generator ⇄ CRM (client health record) ⇄ AM notification channel (Slack/Telegram), so performance data flows into the AM's weekly routine without manual pulling.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [42 Implementation and Delivery Setup](../42 Implementation and Delivery Setup/README.md)
-- Next stage: [44 Customer Success Planning](../44 Customer Success Planning/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+A private VIP client community (WhatsApp/Discord group) run by account management as an added-value, belonging-driven retention lever, separate from any one-to-one AM relationship.
+
+## Method Selection Guidance
+Hard-cap the number of active accounts per account manager (roughly 8, per the source material) — account management quality degrades sharply past a certain portfolio size, and a client feeling like "just another account" is a leading indicator of churn.

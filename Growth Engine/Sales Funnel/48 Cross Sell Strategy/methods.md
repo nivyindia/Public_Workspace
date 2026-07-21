@@ -1,31 +1,36 @@
 # Methods — 48 Cross Sell Strategy
 
-> Part of Stage 48 (Cross Sell Strategy). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Cross-sell attempted opportunistically with no structured combination logic — replaced by the "golden cross-sell combinations" table mapping a client's current service to specific, reasoned pairings.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A fixed combination table (primary service → cross-sell 1 → cross-sell 2 → rationale) referenced during delivery reviews and quarterly strategy calls.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-assisted matching of "quick trigger" phrases a client says during any conversation (e.g., "we're spending on ads but not getting results") to the correct cross-sell recommendation.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+The actual cross-sell conversation and any Level 3 system-upgrade recommendation — a judgment call about budget readiness and relationship depth, not automated.
 
----
+## Automated
+Standing monitoring for when a client crosses from one Level 2 service into holding 2+ Level 2 services simultaneously, which is itself a signal worth flagging for a Level 3 system-upgrade conversation.
 
-## Cross-References
+## API / Integration
+CRM service-holding data feeding a cross-sell-readiness flag, so Account Managers see which combination table row applies to a given client without manually checking.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [47 Upsell Identification](../47 Upsell Identification/README.md)
-- Next stage: [49 Renewal Management](../49 Renewal Management/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Not applicable directly, though a client on multiple cross-sold services with strong integrated results is a stronger candidate for case studies (Stage 52) and referrals (Stage 53).
+
+## Method Selection Guidance
+Use the golden combination table as the default cross-sell map; escalate to a Level 3 system-upgrade conversation only once a client already holds 2+ Level 2 services or explicitly signals wanting everything integrated (see [templates.md](templates.md)).

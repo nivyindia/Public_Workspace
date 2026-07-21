@@ -1,18 +1,13 @@
 # References — 41 Kickoff and Expectation Setting
 
-> Part of Stage 41 (Kickoff and Expectation Setting). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Stage 7 — Onboarding Engine (Growth Engine) — kickoff call agenda structure, AI agenda-generation prompt, and the "time to kickoff call < 3 days" KPI
+- 10. Client Onboarding System (Growth Engine) — expectation-setting language (timeline, role clarity, results expectation) used directly in this stage's templates
+- Phase 15 — Client Onboarding (Growth Engine) — success-metrics definition step and communication-channel confirmation step
 
-## References
+## Official / Vendor Docs
+- Cal.com and Zoom scheduling/API documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [40 Client Onboarding](../40 Client Onboarding/README.md)
-- Next stage: [42 Implementation and Delivery Setup](../42 Implementation and Delivery Setup/README.md)
+> This stage separates the "kickoff call and expectation setting" step out of the broader onboarding process documented in Stage 7 — Onboarding Engine and 10. Client Onboarding System, since it deserved its own dedicated build given how much it determines early client trust. The 45-minute call structure and AI agenda prompt are carried over directly from Stage 7's source material.

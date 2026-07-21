@@ -1,22 +1,20 @@
 # Tools — 40 Client Onboarding
 
-> Part of Stage 40 (Client Onboarding). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Tally.so / Typeform / Google Forms | Onboarding questionnaire | Free / free tier | Google Forms fully free | API/webhook |
+| Notion | Client portal — timeline, deliverables, dashboard | Free | Free tier | API |
+| Google Drive | Client asset folder structure | Free | Free tier | API |
+| HubSpot | Client record creation, lifecycle stage update (Lead → Customer) | Free tier | Free tier | Native |
+| n8n | Full onboarding workflow orchestration (webhook → portal → folder → welcome sequence) | Free (self-hosted) | Fully OSS | Native |
+| WATI / WhatsApp Business API | Personal welcome message and questionnaire reminders | Free tier / paid tiers | — | API |
+| 1Password / Bitwarden | Secure storage of client-provided access credentials | Free tier | Bitwarden has strong free tier | Limited |
+| Cal.com | Kickoff call scheduling (feeds Stage 41) | Free | Fully OSS option available | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [39 Payment and Invoicing](../39 Payment and Invoicing/README.md)
-- Next stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
+## Selection Notes
+- The credential vault (1Password/Bitwarden) matters more than it might seem — client login credentials collected during onboarding should never sit in an unsecured spreadsheet or chat thread.
+- A Notion client portal gives the client self-serve visibility into onboarding progress, reducing "is this done yet?" check-in messages.

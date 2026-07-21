@@ -1,31 +1,36 @@
 # Methods — 49 Renewal Management
 
-> Part of Stage 49 (Renewal Management). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Renewal handled reactively when a contract is about to lapse — replaced by a structured 60-day multi-touch renewal sequence that starts well ahead of expiry.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A 90-day rolling renewal pipeline view in the CRM, so no upcoming renewal is discovered only when it's already urgent.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+AI-generated ROI summaries and tailored renewal talking points (churn-risk and objection-type informed) to help the Account Manager personalize each renewal conversation rather than sending a generic reminder.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+The actual renewal call at 60 and 14 days, and any founder-level escalation on high-value accounts — relationship-critical conversations that stay human.
 
----
+## Automated
+The 60/45/30-day renewal touchpoint cadence (radar flag, ROI email, incentive email/WhatsApp) fires automatically on schedule off the contract end date.
 
-## Cross-References
+## API / Integration
+CRM renewal-pipeline data ⇄ automation tool (e.g., n8n) ⇄ email/WhatsApp send, so the renewal sequence triggers without manual tracking of each contract's expiry date.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [48 Cross Sell Strategy](../48 Cross Sell Strategy/README.md)
-- Next stage: [50 Churn Prevention](../50 Churn Prevention/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+A successful renewal is a precondition for later referral requests (Stage 53) — clients who churn rarely refer, so this stage indirectly protects the referral pipeline.
+
+## Method Selection Guidance
+Default to the standard 60/45/30/14/7-day sequence for every renewal; escalate to founder involvement only for high-value accounts or where the 14-day call reveals genuine risk of non-renewal.

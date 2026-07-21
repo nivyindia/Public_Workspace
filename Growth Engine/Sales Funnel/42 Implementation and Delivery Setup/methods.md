@@ -1,31 +1,36 @@
 # Methods — 42 Implementation and Delivery Setup
 
-> Part of Stage 42 (Implementation and Delivery Setup). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+A team lead manually creates a task list from memory once a new client is assigned, with no standard template to work from.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A Notion/ClickUp task board auto-populated from the service-specific delivery SOP (e.g., DELIVERY-SOP-001 for SMM, DELIVERY-SOP-004 for SEO), so every client of the same service type starts from an identical, proven task structure.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+An LLM cross-references the kickoff call notes (Stage 41) against the standard delivery SOP to flag any client-specific customization needed (e.g., a "do-not-post" list, unusual brand tone) before the delivery team begins.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Final QC review of the first deliverable before it goes live — this is the client's first real proof point and should always get a human quality check, not an automated pass/fail.
 
----
+## Automated
+Recurring monthly task creation for retainer clients, tracking-setup verification (UTMs, pixel firing, analytics goals), and internal deadline reminders.
 
-## Cross-References
+## API / Integration
+Project plan (Stage 41) ⇄ task management tool (Notion/ClickUp) ⇄ analytics/ad platform APIs (for tracking setup verification) ⇄ internal Slack/Telegram (team assignment notification).
 
-- Stage README: [README.md](README.md)
-- Previous stage: [41 Kickoff and Expectation Setting](../41 Kickoff and Expectation Setting/README.md)
-- Next stage: [43 Account Management](../43 Account Management/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+Not applicable to this stage.
+
+## Method Selection Guidance
+Always build from the service-specific delivery SOP rather than a generic task list — per-service SOPs (SMM, SEO, paid media, lead generation, content) already encode the correct cadence, deliverable count, and QC checkpoints, and skipping them in favor of ad hoc planning is a common source of inconsistent delivery quality.

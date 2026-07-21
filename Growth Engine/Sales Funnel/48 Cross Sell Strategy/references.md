@@ -1,18 +1,12 @@
 # References — 48 Cross Sell Strategy
 
-> Part of Stage 48 (Cross Sell Strategy). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Sell → Upsell → Cross-Sell Playbook (Growth Engine) — primary and comprehensive source: entry/upsell/cross-sell/system-upgrade flow, golden combination tables, regional selling guidance, revenue math, and quick-trigger phrase table
+- Stage 47 Upsell Identification (this KB) — adjacent same-service-line expansion motion this stage's cross-sell logic complements
 
-## References
+## Official / Vendor Docs
+- None specific to this stage
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [47 Upsell Identification](../47 Upsell Identification/README.md)
-- Next stage: [49 Renewal Management](../49 Renewal Management/README.md)
+> Deal-size and revenue-math figures in the source playbook are illustrative reference points from internal material — verify current pricing and typical deal sizes before using them as literal targets in client conversations.

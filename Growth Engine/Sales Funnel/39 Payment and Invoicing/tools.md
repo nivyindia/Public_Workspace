@@ -1,22 +1,18 @@
 # Tools — 39 Payment and Invoicing
 
-> Part of Stage 39 (Payment and Invoicing). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Razorpay / Stripe | Payment gateway — cards, UPI, international wire, subscriptions | Transaction-fee based (no fixed cost) | — | API |
+| PayPal / Wise | International client payments, especially USD/GBP/EUR invoicing | Transaction-fee based | — | API |
+| Zoho Invoice / QuickBooks | Invoice generation, recurring billing, payment status tracking | Free tier / paid tiers for advanced features | Zoho Invoice has a generous free tier | API |
+| Google Sheets | Lightweight payment tracker for very small operations | Free | Free | API |
+| n8n | Automated reminder sequences, gateway-to-CRM reconciliation | Free (self-hosted) | Fully OSS | Native |
+| Bank NEFT/RTGS/IMPS (India) | Direct bank transfer for domestic clients | Free / bank-fee dependent | — | Limited |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [38 Deal Desk and Approval Workflows](../38 Deal Desk and Approval Workflows/README.md)
-- Next stage: [40 Client Onboarding](../40 Client Onboarding/README.md)
+## Selection Notes
+- International clients are typically billed via PayPal, Wise, or wire transfer in USD/GBP/EUR, while domestic (India) clients are billed in INR via bank transfer, UPI, or card — per the source Payment Terms Policy.
+- A recurring-billing-capable invoicing tool pays for itself quickly once a team is running more than a handful of monthly retainer clients.

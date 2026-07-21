@@ -1,22 +1,15 @@
 # Tools — 50 Churn Prevention
 
-> Part of Stage 50 (Churn Prevention). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| CRM (HubSpot or equivalent) | Track warning signs, churn-risk flags, and response history per client | Free–paid tier | Free tier | Native |
+| Brevo (or equivalent) | Monthly NPS/CSAT survey dispatch feeding the churn-risk model | Free tier available, verify current pricing | Free tier | API |
+| GPT-4o class LLM | Churn-risk prediction from CSAT/engagement/delivery data | Usage-based | — | API |
+| WhatsApp / Email | VA proactive check-in and founder save-a-client outreach channels | Low cost | Free tier | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [49 Renewal Management](../49 Renewal Management/README.md)
-- Next stage: [51 Customer Feedback and NPS](../51 Customer Feedback and NPS/README.md)
+## Selection Notes
+- The churn-risk data source should be the same CRM/CSAT system used for Stage 44/45/49, so risk scoring reflects the full client picture rather than a siloed churn-specific dataset.

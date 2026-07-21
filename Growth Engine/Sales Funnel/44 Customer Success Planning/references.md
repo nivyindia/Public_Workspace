@@ -1,18 +1,12 @@
 # References — 44 Customer Success Planning
 
-> Part of Stage 44 (Customer Success Planning). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Customer Retention System (Growth Engine) — primary and comprehensive source: retention philosophy, lifecycle touchpoint map, monthly client success SOP, churn warning signs and response matrix, save-a-client script, NPS system and score-based actions
+- Stage 9 — Retention Engine (Growth Engine) — churn-risk AI prompt pattern and renewal-radar sequence, cross-referenced against this stage's warning-sign matrix
 
-## References
+## Official / Vendor Docs
+- Brevo / Tally.so survey and automation documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [43 Account Management](../43 Account Management/README.md)
-- Next stage: [45 Product and Service Adoption](../45 Product and Service Adoption/README.md)
+> This stage is built directly from the internal Customer Retention System doc, which is already a complete, ready-to-use success-planning framework covering the full client lifecycle, churn detection, and NPS-driven action. Churn-rate targets and NPS thresholds should be verified against current company policy before operational use.

@@ -1,23 +1,50 @@
 # Templates — 43 Account Management
 
-> Part of Stage 43 (Account Management). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Standard Communication Cadence
 
-## Templates
+| Frequency | Activity | Owner |
+|---|---|---|
+| Weekly | Personal WhatsApp/update — one key win from the week | Account Manager |
+| Weekly (internal) | KPI check — pull metrics, flag anything below threshold | Account Manager + Team Lead |
+| Bi-weekly or monthly | Formal performance report (email) | Account Manager (AI-drafted, human-reviewed) |
+| Monthly | Strategy review call (30-45 min) | Account Manager |
+| Quarterly | Full performance audit vs. contract promises | Account Manager + Operations |
 
-- Email templates: _to be added_
-- Scripts: _to be added_
-- Prompt templates: _to be added_
-- Excel/CSV templates: _to be added_
-- CRM templates: _to be added_
-- Checklists: see [checklists.md](checklists.md)
+## Weekly Client Update Template
+```
+Hi [Name],
 
----
+Quick update from this week: [one specific win — e.g., "your campaign hit
+a 15% higher CTR than last week" or "we published 3 new pieces of content
+and engagement is trending up"].
 
-## Cross-References
+[One sentence on what's coming next week, if relevant.]
 
-- Stage README: [README.md](README.md)
-- Previous stage: [42 Implementation and Delivery Setup](../42 Implementation and Delivery Setup/README.md)
-- Next stage: [44 Customer Success Planning](../44 Customer Success Planning/README.md)
+Let me know if you have any questions!
+[AM Name]
+```
+
+## Monthly Strategy Call Agenda (30-45 min)
+```
+1. Review results vs. agreed KPIs (10 min)
+2. What's working well (5 min)
+3. What we're optimizing / adjusting (10 min)
+4. Client questions and feedback (10 min)
+5. Next month's priorities agreed together (5-10 min)
+```
+
+## Renewal Sequence
+
+| Timing | Action |
+|---|---|
+| 60 days before expiry | AM books a retention-focused call; reviews client LTV and wins to date |
+| 45 days | ROI summary email sent (automated draft, AM personalizes) |
+| 30 days | Automated renewal email with any incentive offer, plus a personal AM WhatsApp message |
+| 14 days | AM calls the client directly if not yet renewed |
+| 7 days | Final retention offer; escalate to founder for high-value accounts |
+
+## Account Manager Capacity Guide
+- Hard cap: ~8 active accounts per AM (verify current company policy) — exceeding this consistently degrades response time and relationship depth
+- If portfolio exceeds capacity, this should trigger a hiring/reallocation decision, not silent overload

@@ -1,23 +1,24 @@
 # Checklists — 41 Kickoff and Expectation Setting
 
-> Part of Stage 41 (Kickoff and Expectation Setting). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Pre-Call QC
+- [ ] Onboarding questionnaire (Stage 40) complete before the call is scheduled — the call should build on known context, not gather it from scratch
+- [ ] Kickoff call scheduled within 3 days of contract signing, per standard policy
+- [ ] Personalized agenda prepared (AI-drafted from questionnaire answers, human-reviewed)
 
-## Quality Control Checklists
+## During-Call QC
+- [ ] All agenda sections covered: introductions, deeper discovery, scope confirmation, KPI/success-metric agreement, communication cadence, access/assets confirmation, next steps
+- [ ] Timeline expectation explicitly stated in plain language (e.g., "initial setup takes 2-4 weeks, results build over time")
+- [ ] Role clarity explicitly stated: what the company handles vs. what the client is responsible for (content, approvals, communication)
+- [ ] Client's questions answered before the call ends, not deferred indefinitely
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Post-Call QC
+- [ ] Call notes logged in Notion/CRM within the same day
+- [ ] Project plan shared with the client in the portal, not just discussed verbally
+- [ ] Success metrics and communication cadence documented and accessible to both sides, not just remembered
+- [ ] Any outstanding access/assets chased per the Stage 40 checklist
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [40 Client Onboarding](../40 Client Onboarding/README.md)
-- Next stage: [42 Implementation and Delivery Setup](../42 Implementation and Delivery Setup/README.md)
+## Completeness Checks
+- [ ] No client proceeds to Stage 42 (Implementation and Delivery Setup) without a completed kickoff call
+- [ ] 100% kickoff call attendance rate — reschedule within 24 hours if the client no-shows, don't let it drift

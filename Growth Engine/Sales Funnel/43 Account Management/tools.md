@@ -1,22 +1,18 @@
 # Tools — 43 Account Management
 
-> Part of Stage 43 (Account Management). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| HubSpot | Client health record, CSAT history, renewal pipeline | Free tier | — | Native |
+| Airtable | Active client portfolio tracker (status, AM, renewal date, CSAT) | Free tier | — | API |
+| n8n | Weekly metrics pull, report drafting trigger, renewal-radar alerts | Free (self-hosted) | Fully OSS | Native |
+| WATI / WhatsApp Business API | Weekly personal client update | Free tier / paid tiers | — | API |
+| Zoom / Google Meet | Monthly strategy review call | Free / paid | Google Meet free tier | Limited |
+| Cal.com | Monthly review call scheduling | Free / paid tiers | Fully OSS option | API |
+| GPT-4o-class LLM | Weekly update and monthly report drafting from performance data | Pay per use | Open-source models viable | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [42 Implementation and Delivery Setup](../42 Implementation and Delivery Setup/README.md)
-- Next stage: [44 Customer Success Planning](../44 Customer Success Planning/README.md)
+## Selection Notes
+- The AM-facing dashboard (Airtable/HubSpot) matters more than any single communication tool — it's what prevents an account from silently going unmanaged when an AM is juggling a full portfolio.
