@@ -1,22 +1,15 @@
 # Tools — 53 Referral Programs
 
-> Part of Stage 53 (Referral Programs). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Tapfiliate | Affiliate/referral program platform — tracking, payouts, dashboard | ~$69-149/mo | — | API |
+| ReferralHero | Referral program platform, viral loop mechanics | ~$59+/mo | — | API |
+| HubSpot (custom tracking codes) | Simple built-in tracking via unique contact tags/UTM codes | Bundled with HubSpot tier (Stage 13) | Free tier limited | Native |
+| Google Sheets | Manual referral tracking for a simple/early-stage program | Free | Free | Limited |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
-- Next stage: [54 Advocacy](../54 Advocacy/README.md)
+## Selection Notes
+- For a program launch, built-in CRM tracking (unique codes/tags) avoids added platform cost; upgrade to a dedicated platform once volume and payout complexity justify it.

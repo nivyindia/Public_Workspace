@@ -1,23 +1,20 @@
 # Checklists — 51 Customer Feedback and NPS
 
-> Part of Stage 51 (Customer Feedback and NPS). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Survey Cadence QC
+- [ ] Survey tied to an existing touchpoint (monthly report/quarterly review), not a disruptive separate ask
+- [ ] Every active account included in the defined cadence, not just a subset
 
-## Quality Control Checklists
+## Response Handling QC
+- [ ] Every detractor score has a logged, completed follow-up action
+- [ ] Every promoter score flagged for Stage 52/53 consideration
+- [ ] Open-ended feedback reviewed, not just the numeric score
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Trend Tracking QC
+- [ ] Company-wide NPS tracked and reviewed on a regular cadence (e.g., quarterly)
+- [ ] Per-account NPS trend reviewed at account renewal/review points
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [50 Churn Prevention](../50 Churn Prevention/README.md)
-- Next stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No account surveyed twice in the same cycle
+- [ ] No detractor score left without a follow-up task on record

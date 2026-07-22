@@ -1,23 +1,22 @@
 # Checklists — 52 Case Studies and Testimonials
 
-> Part of Stage 52 (Case Studies and Testimonials). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Case Study QC
+- [ ] Follows the standard template (Client Snapshot → Challenge → Solution → Results → Quote → Lesson)
+- [ ] Includes quantified results, not vague claims
+- [ ] Client has approved the final wording (and anonymization level, if applicable)
 
-## Quality Control Checklists
+## Testimonial QC
+- [ ] Ask made at the right moment — post-milestone with high NPS, or immediately after spontaneous positive feedback
+- [ ] Client approved the final formatted wording before publishing
+- [ ] Tagged correctly by industry/client type for Stage 31 matching
 
-- [ ] Validation checklist
-- [ ] QA checklist
-- [ ] Duplicate detection
-- [ ] Data accuracy check
-- [ ] Completeness score
-- [ ] Risk checks
+## Review Platform QC
+- [ ] Google Business Profile and Clutch prioritized as critical (per source SOP)
+- [ ] Review counts tracked against the 90-day target
+- [ ] Clients directed to the easiest-for-them platform, not forced to a specific one
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [51 Customer Feedback and NPS](../51 Customer Feedback and NPS/README.md)
-- Next stage: [53 Referral Programs](../53 Referral Programs/README.md)
+## Duplicate / Accuracy / Completeness Checks
+- [ ] No case study published without a completed client-approval step
+- [ ] No duplicate testimonial entries for the same client/quote across the bank

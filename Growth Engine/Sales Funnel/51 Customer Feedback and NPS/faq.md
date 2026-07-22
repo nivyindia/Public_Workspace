@@ -1,19 +1,18 @@
 # FAQ — 51 Customer Feedback and NPS
 
-> Part of Stage 51 (Customer Feedback and NPS). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+**Q: How often should NPS surveys be sent?**
+Tie it to existing touchpoints (monthly report or quarterly review per the retention system) rather than a separate ask — typically quarterly is enough to track trend without survey fatigue.
 
-## Frequently Asked Questions
+**Q: What's a good NPS score?**
+The internal retention system references 8+ as a target — note this is likely an average client satisfaction target rather than the standard NPS -100 to +100 scale; verify current internal target definitions before reporting.
 
-**Q: _placeholder question_**
-A: _placeholder answer_
+**Q: What happens when a client scores as a detractor?**
+A mandatory follow-up task is triggered — always a human conversation to understand the issue and address it before it becomes a churn risk.
 
----
+**Q: What happens when a client scores as a promoter?**
+They're flagged as a candidate for Stage 52 (case study/testimonial) and Stage 53 (referral ask) — the best time to ask for either is right after they've expressed strong satisfaction.
 
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [50 Churn Prevention](../50 Churn Prevention/README.md)
-- Next stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
+**Q: Is this the same as general client check-ins?**
+No — general touchpoints (weekly WhatsApp, monthly calls) are relationship management. This stage is the structured, scored measurement layer that rides alongside those touchpoints.

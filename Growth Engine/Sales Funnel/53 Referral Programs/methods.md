@@ -1,31 +1,36 @@
 # Methods — 53 Referral Programs
 
-> Part of Stage 53 (Referral Programs). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Asking a happy client for referrals informally, with no formal tracking or incentive.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A dedicated referral/affiliate platform (Tapfiliate, ReferralHero) with tracking links, dashboards, and automated payout tracking.
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-drafted, personalized referral-ask messages referencing the client's specific positive feedback.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+Program structure design and payout decisions — human-owned given the financial commitment.
 
----
+## Automated
+Referral-ask trigger firing off a Stage 51 promoter flag; tracking-link generation and conversion reporting via the chosen platform.
 
-## Cross-References
+## API / Integration
+Referral platform ⇄ CRM integration so referred leads and their attribution sync automatically into the funnel.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
-- Next stage: [54 Advocacy](../54 Advocacy/README.md)
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+This entire stage is the community/referral method formalized as a structured program — the highest-trust, typically highest-converting acquisition channel available.
+
+## Method Selection Guidance
+Start with built-in CRM tracking (e.g., a unique tag/code per referrer) for a simple launch; move to a dedicated platform (Tapfiliate/ReferralHero) once referral volume justifies the added cost and features.

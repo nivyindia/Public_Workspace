@@ -1,26 +1,21 @@
 # Automation — 54 Advocacy
 
-> Part of Stage 54 (Advocacy). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Relationship cultivation and any specific ask (reference call, content participation) — always human-led.
 
-## Automation Workflows
+## Semi-Automated
+AI drafts an advocate-specific outreach message; a team member personalizes and sends it given the relationship's importance.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Advocate-candidate identification (a scheduled report of accounts with sustained high NPS, repeat referrals, or testimonial activity) runs automatically.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Scheduled report aggregates Stage 51-53 data to surface advocate candidates (sustained satisfaction, not a single instance).
+2. Team reviews and curates the candidate list — this stays a small, deliberately chosen group.
+3. For a specific need (reference call, content interview), AI drafts a personalized ask; a team member sends it.
+4. Advocate feedback and market insight gathered over time is periodically synthesized by AI into structured input for Stage 01-03 refinement.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [53 Referral Programs](../53 Referral Programs/README.md)
-- Next stage: _none — this is the final stage_
+## Suggested n8n / integration flow
+`Stage 51-53 data (scheduled aggregation)` → `n8n (surface sustained-satisfaction candidates)` → `Team review (curate advocate list)` → `Specific need arises` → `LLM (draft personalized ask)` → `Human send` → `Periodic feedback synthesis → Stage 01-03`

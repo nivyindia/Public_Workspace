@@ -1,18 +1,12 @@
 # References — 53 Referral Programs
 
-> Part of Stage 53 (Referral Programs). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Affiliate & Referral Program Setup (Nivy Level 4 Add-On) (Growth Engine) — structure, KPIs, and process adapted for this stage (originally describes a client-facing service package, not Nivy's own program — see README source note)
+- Stage 51 Customer Feedback and NPS (this KB) — upstream promoter-flagging trigger
 
-## References
+## Official / Vendor Docs
+- Tapfiliate / ReferralHero documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
-- Next stage: [54 Advocacy](../54 Advocacy/README.md)
+> This stage adapts the internal Affiliate & Referral Program Setup doc's structure (originally a client-facing service offering) to Nivy's own referral program context, since the underlying program mechanics are the same regardless of who it's built for.

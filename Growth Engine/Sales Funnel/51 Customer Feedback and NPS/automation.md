@@ -1,26 +1,22 @@
 # Automation — 51 Customer Feedback and NPS
 
-> Part of Stage 51 (Customer Feedback and NPS). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Detractor follow-up outreach — always human, regardless of how the message was drafted.
 
-## Automation Workflows
+## Semi-Automated
+AI summarizes open-ended feedback into themes for a quarterly review; a human decides what action to take on the patterns identified.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Survey sending on the defined cadence, tied to the existing touchpoint calendar, with no manual trigger needed.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Survey tool sends the NPS survey automatically per the defined cadence (tied to monthly report or quarterly review).
+2. Score and open-ended feedback log to the CRM account record automatically.
+3. A detractor score (0-6) triggers an automatic task assignment for human follow-up.
+4. A promoter score (9-10) triggers an automatic flag for Stage 52/53 consideration.
+5. Quarterly, AI summarizes open-ended feedback across all accounts into themed patterns for a team review.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [50 Churn Prevention](../50 Churn Prevention/README.md)
-- Next stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
+## Suggested n8n / integration flow
+`Touchpoint calendar (survey due)` → `Survey tool API (send)` → `Survey tool webhook (response)` → `CRM (log score + feedback)` → `n8n (detractor → task; promoter → Stage 52/53 flag)`

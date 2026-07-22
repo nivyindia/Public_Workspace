@@ -1,18 +1,13 @@
 # References — 52 Case Studies and Testimonials
 
-> Part of Stage 52 (Case Studies and Testimonials). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Case Studies & Social Proof Library (Growth Engine) — primary and comprehensive source for this stage's template, collection SOP, and review-platform structure
+- Stage 51 Customer Feedback and NPS (this KB) — upstream promoter-flagging trigger
+- Stage 31 Solution Mapping, Stage 33 Proposal Creation (this KB) — downstream consumers of this library
 
-## References
+## Official / Vendor Docs
+- Google Business Profile, Clutch.co documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [51 Customer Feedback and NPS](../51 Customer Feedback and NPS/README.md)
-- Next stage: [53 Referral Programs](../53 Referral Programs/README.md)
+> This stage's template, ask scripts, and review-platform priorities are carried over directly from the internal Case Studies & Social Proof Library doc. Target figures (case studies per niche, review counts) should be checked against current team priorities before use.

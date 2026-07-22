@@ -1,18 +1,12 @@
 # References — 51 Customer Feedback and NPS
 
-> Part of Stage 51 (Customer Feedback and NPS). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Customer Retention System (Growth Engine) — source of the NPS benchmark (8+) referenced in this stage's KPIs and the touchpoint cadence this stage's surveys ride on
 
-## References
+## Official / Vendor Docs
+- Net Promoter Score (NPS) is a standard, industry-wide customer loyalty metric, not proprietary to any vendor; this stage's classification thresholds (Promoter 9-10/Passive 7-8/Detractor 0-6) follow standard NPS methodology.
+- Delighted / Survicate documentation
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [50 Churn Prevention](../50 Churn Prevention/README.md)
-- Next stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
+> No internal doc details a full NPS survey process end-to-end; this stage combines the internal Customer Retention System's benchmark reference with standard NPS methodology.

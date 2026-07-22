@@ -1,26 +1,22 @@
 # Automation — 53 Referral Programs
 
-> Part of Stage 53 (Referral Programs). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Manual
+Program structure design and payout approval decisions — human-owned given the financial commitment.
 
-## Automation Workflows
+## Semi-Automated
+AI drafts a personalized referral-ask message for a flagged promoter; a team member reviews before sending.
 
-For every method in [methods.md](methods.md), define:
+## Full-Automated
+Tracking-link generation, referral status updates, and conversion reporting run automatically once the platform is set up.
 
-- Manual workflow
-- Semi-automated workflow
-- Fully automated workflow
-- AI-assisted workflow
-- Required tools / APIs / browser automation (Playwright, Selenium) / Python scripts / n8n workflows / Apify Actors / MCPs
-- Expected output
-- Common errors and recovery methods
+## AI-Assisted Workflow
+1. Stage 51 flags a promoter account.
+2. Automated (or AI-assisted, human-reviewed) referral-ask message sends with the client's unique tracking link.
+3. Referred contact enters the funnel tagged with the referrer's tracking code.
+4. Referral status updates automatically as the referred lead progresses (Introduced → Contacted → Qualified → Closed Won/Lost).
+5. On Closed Won, payout triggers per the documented commission structure.
 
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
-- Next stage: [54 Advocacy](../54 Advocacy/README.md)
+## Suggested n8n / integration flow
+`Stage 51 (promoter flagged)` → `n8n (send referral ask with tracking link)` → `Referral platform (link click → new contact)` → `CRM (tagged with referrer code)` → `Funnel progression (Stage 07-33)` → `Closed Won → n8n (trigger payout)`

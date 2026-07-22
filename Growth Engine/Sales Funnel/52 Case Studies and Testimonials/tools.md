@@ -1,22 +1,16 @@
 # Tools — 52 Case Studies and Testimonials
 
-> Part of Stage 52 (Case Studies and Testimonials). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Notion | Case study library and testimonial bank home | Free tier / ~$8-15/user/mo | Free tier available | API |
+| Google Business Profile | Primary review platform (critical priority per source SOP) | Free | Free | Limited |
+| Clutch.co | B2B services review platform (critical priority per source SOP) | Free listing | Free | Limited |
+| Canva | Formatting testimonials/case studies into shareable visual assets | Free / ~$13/mo Pro | Free tier | Limited |
+| Claude / ChatGPT (LLM) | Drafting case study write-ups and formatting testimonials | Subscription or API usage-based | Free tiers available | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [51 Customer Feedback and NPS](../51 Customer Feedback and NPS/README.md)
-- Next stage: [53 Referral Programs](../53 Referral Programs/README.md)
+## Selection Notes
+- Prioritize Google Business Profile and Clutch setup first per the source SOP's "critical" priority tags — GoodFirms, TechBehemoths, Trustpilot, and Glassdoor are lower priority.

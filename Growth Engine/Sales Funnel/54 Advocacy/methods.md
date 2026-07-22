@@ -1,31 +1,36 @@
 # Methods — 54 Advocacy
 
-> Part of Stage 54 (Advocacy). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Traditional
+Informally remembering which clients seem especially happy and calling on them ad hoc when a reference is needed.
 
-## Method Coverage Checklist
+## Modern / Tool-Assisted
+A documented, curated advocate list derived systematically from Stage 51-53 data (sustained NPS, repeat referrals/testimonials).
 
-- [ ] Traditional methods
-- [ ] Modern methods
-- [ ] AI methods
-- [ ] Manual methods
-- [ ] Automated methods
-- [ ] API methods
-- [ ] Browser automation
-- [ ] Scraping
-- [ ] Public databases
-- [ ] Government sources
-- [ ] Community sources
-- [ ] Referral methods
+## AI-Assisted
+LLM-drafted advocate-specific outreach; LLM-synthesized advocate feedback into Stage 01-03 refinement input.
 
-Each checked method should be expanded into its own subsection with: description, when to use, skill level, and a link to the relevant tool(s) in [tools.md](tools.md).
+## Manual
+The relationship cultivation itself and any specific ask — always a genuine, human-led conversation.
 
----
+## Automated
+Advocate-candidate identification (scheduled report pulling sustained-satisfaction signals from Stage 51-53) can run automatically.
 
-## Cross-References
+## API / Integration
+CRM aggregating Stage 51 (NPS history), Stage 52 (testimonial activity), and Stage 53 (referral activity) per account to surface advocate candidates.
 
-- Stage README: [README.md](README.md)
-- Previous stage: [53 Referral Programs](../53 Referral Programs/README.md)
-- Next stage: _none — this is the final stage_
+## Browser Automation
+Not applicable to this stage.
+
+## Scraping
+Not applicable to this stage.
+
+## Public Database / Government
+Not applicable to this stage.
+
+## Community / Referral
+This stage is the deepest expression of the community/referral method — advocates are the clients most invested in the company's success beyond their own transaction.
+
+## Method Selection Guidance
+Automate the identification of advocate candidates from existing data; keep every actual relationship touch and specific ask human-led, since authenticity is the entire value of this stage — an automated or transactional-feeling ask undermines the trust it depends on.

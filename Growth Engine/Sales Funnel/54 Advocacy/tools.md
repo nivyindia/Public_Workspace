@@ -1,22 +1,15 @@
 # Tools — 54 Advocacy
 
-> Part of Stage 54 (Advocacy). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| HubSpot (custom list/property) | Curated advocate list derived from Stage 51-53 data | Bundled with HubSpot tier (Stage 13) | Free tier limited | Native |
+| Notion | Advocate relationship notes and cultivation tracking | Free tier / ~$8-15/user/mo | Free tier available | API |
+| Claude / ChatGPT (LLM) | Drafting advocate outreach and synthesizing feedback into Stage 01-03 input | Subscription or API usage-based | Free tiers available | API |
+| Calendly / Cal.com | Scheduling reference calls between an advocate and a prospect | Free tier / ~$8-16/mo paid | Cal.com free/self-host | API |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [53 Referral Programs](../53 Referral Programs/README.md)
-- Next stage: _none — this is the final stage_
+## Selection Notes
+- No dedicated "advocacy platform" is needed at this scale — a curated CRM list plus deliberate relationship-management practice is sufficient; the value here is human relationship investment, not tooling.

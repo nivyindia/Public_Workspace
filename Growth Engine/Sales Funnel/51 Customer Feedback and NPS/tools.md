@@ -1,22 +1,15 @@
 # Tools — 51 Customer Feedback and NPS
 
-> Part of Stage 51 (Customer Feedback and NPS). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+_Pricing figures are approximate — verify current pricing before purchase._
 
-## Tool Library
+| Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
+|---|---|---|---|---|
+| Delighted | Dedicated NPS survey tool with trending dashboard | ~$29-224/mo (tier-dependent) | — | API |
+| Survicate | Survey tool, NPS + open-ended feedback | ~$99+/mo | Free tier limited | API |
+| Google Forms | Free, simple NPS survey | Free | Free | Limited (Sheets export) |
+| HubSpot Feedback surveys | Native NPS surveys tied to CRM records | Bundled with certain HubSpot tiers | — | Native |
 
-| Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
-|---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
-
-For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [50 Churn Prevention](../50 Churn Prevention/README.md)
-- Next stage: [52 Case Studies and Testimonials](../52 Case Studies and Testimonials/README.md)
+## Selection Notes
+- HubSpot's native feedback survey feature (if the current CRM tier includes it) avoids adding a separate tool and keeps NPS data directly on the account record.

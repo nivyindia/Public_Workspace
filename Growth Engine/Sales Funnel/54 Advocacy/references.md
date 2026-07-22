@@ -1,18 +1,12 @@
 # References — 54 Advocacy
 
-> Part of Stage 54 (Advocacy). See [README.md](README.md) for the full stage overview.
-> Status: 🟡 Skeleton — awaiting full population (see Stage 06 Lead Extraction for the completed pilot).
+[⬅ Back to README](README.md)
 
----
+## Internal Sources
+- Customer Retention System (Growth Engine) — relationship-investment philosophy extended into this stage's advocacy-cultivation approach
+- Stage 51 Customer Feedback and NPS, Stage 52 Case Studies and Testimonials, Stage 53 Referral Programs (this KB) — direct upstream inputs for advocate identification
 
-## References
+## Official / Vendor Docs
+- None specific to this stage.
 
-Only reliable, official sources should be listed here (official docs, vendor sites, government registries). Mark unverifiable pricing/data as "verify current" rather than fabricating numbers.
-
----
-
-## Cross-References
-
-- Stage README: [README.md](README.md)
-- Previous stage: [53 Referral Programs](../53 Referral Programs/README.md)
-- Next stage: _none — this is the final stage_
+> No internal doc treats ongoing client advocacy as its own discrete stage; this stage was synthesized to close the 54-stage funnel loop, extending the internal Customer Retention System's relationship-investment philosophy into a dedicated stage explicitly distinguished from the more transactional Stage 52/53 activities.
