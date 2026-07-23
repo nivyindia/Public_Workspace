@@ -1,8 +1,38 @@
-# M14 — Twitter-X Engine: Templates
+# M14 — Templates
 
-**Phase:** D — Social Channels
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+Reusable briefs for Twitter/X Engine. These are structural templates — fill in the specifics per post.
 
-This file is a placeholder. Content for **templates.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+## Content brief template (use for every post before drafting)
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+```
+Platform: M14
+Week of: ____________
+Content type (from the mix in README.md §3): ____________
+Source material (M09 article / M10 repurposed asset): ____________
+Key message (1 sentence): ____________
+CTA: Not specified in the source playbook — default to a soft CTA (reply, follow, or link in thread) consistent with LinkedIn's pattern until tested
+Target format: ____________ (see README.md §2 format rotation)
+Draft due: ____________
+Reviewer: ____________
+Scheduled publish time: ____________
+```
+
+## Platform-specific template
+
+### Daily post batch template
+
+```
+Day: ____________
+Post 1 (business tip/insight): ____________
+Post 2 (engagement/reply to trending topic): ____________
+Post 3-5: ____________
+```
+
+### Weekly thread template
+
+```
+Thread topic: ____________
+Tweet 1 (hook): ____________
+Tweet 2-N (one idea per tweet): ____________
+Final tweet (CTA/summary): ____________
+```

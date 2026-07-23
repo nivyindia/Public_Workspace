@@ -1,8 +1,67 @@
 # M22 — Inbound-to-CRM Bridge: Templates
 
-**Phase:** H — Measurement & Bridge
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## CRM Field Template (copy for any manual entry — 22E, 22F fallback)
 
-This file is a placeholder. Content for **templates.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+```
+Lead Name:
+Company Name:
+Email:
+Phone (with country code):
+Market: [India / US / UK / Canada / AU / UAE / Other]
+Source: [Website / Website Chat / WhatsApp / Cal.com Booking / Email Newsletter / Social DM / Referral / Other]
+Date Added: yyyy-mm-dd
+Assigned Owner:
+Status: New
+First Contact Date:
+Last Contact Date:
+Follow-Up Stage: FU0
+Notes: [1-2 lines — what they asked for, pain signal, budget/timeline if mentioned]
+```
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Founder/Sales Notification Message (any automated channel)
+
+```
+New inbound lead — [Source]
+Name: [Name]
+Company: [Company, if known]
+Contact: [email/phone]
+Message: [snippet or summary]
+CRM link: [contact URL]
+```
+
+## Cal.com Prep Email (from the 22C automation)
+
+```
+Subject: Your Call Is Confirmed 💼
+
+Hi [Name],
+
+Excited to speak with you on [Date] at [Time].
+
+Meeting link: [link]
+
+To make the most of our time, it helps to know:
+1. What's your biggest challenge right now with [relevant area]?
+2. Which service(s) are you most interested in?
+3. What does success look like for you in the next 6 months?
+
+See you soon!
+[Team name]
+```
+
+## WhatsApp Follow-Up Task Title Format
+
+```
+Reply to WhatsApp from [Name/Phone] — received [time], due within 2h
+```
+
+## Weekly Inbound Source Report (feeds M21)
+
+| Source | Leads Captured | Contacted Same-Day | Booked | Notes |
+|---|---|---|---|---|
+| Website | | | | |
+| Website Chat | | | | |
+| WhatsApp | | | | |
+| Cal.com Booking | | | | |
+| Email Newsletter | | | | |
+| Social DM | | | | |

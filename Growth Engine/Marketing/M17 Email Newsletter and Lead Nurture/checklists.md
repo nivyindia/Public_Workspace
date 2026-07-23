@@ -1,8 +1,30 @@
-# M17 — Email Newsletter and Lead Nurture: Checklists
+# M17 — Checklists / QC Gates
 
-**Phase:** E — Email
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Before a new signup form goes live (M17.1)
 
-This file is a placeholder. Content for **checklists.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- [ ] Consent mechanism is genuine opt-in (double or clearly-consented single) — no pre-checked boxes or ambiguous language
+- [ ] Confirmed against consent requirements for the specific target market (US/UK/Canada/Australia/UAE differ) — not assumed identical across all five
+- [ ] Promised lead magnet (if any) actually delivers automatically on signup — tested end to end, not assumed working
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Before a welcome or nurture sequence goes live (M17.2, M17.3)
+
+- [ ] Every email in the sequence human-reviewed for authentic voice, even if AI-drafted
+- [ ] Sequence is segmented by funnel stage, not a single generic sequence for every subscriber
+- [ ] Unsubscribe link present and functional in every email (required, not optional)
+
+## Before every newsletter send (M17.4)
+
+- [ ] Content reviewed for genuine reader value, not purely promotional
+- [ ] Links tested (nothing worse for deliverability/trust than a broken link in a mass send)
+- [ ] Subject line reviewed against spam-trigger patterns (excessive caps, spammy phrasing)
+
+## Monthly hygiene review (M17.5)
+
+- [ ] SPF/DKIM/DMARC status confirmed still correctly configured
+- [ ] Long-unopened segment reviewed and re-engagement or removal decided (human call, not automated deletion)
+- [ ] Bounce rate and spam-complaint rate checked against healthy benchmarks
+
+## Sales-readiness handoff (M17.6)
+
+- [ ] Intent-signal rules reviewed periodically — confirm they're still catching genuinely sales-ready leads, not just active-but-uninterested subscribers
+- [ ] Every flagged lead actually reaches the CRM (M22) — spot-checked, not assumed

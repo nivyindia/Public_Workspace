@@ -1,8 +1,37 @@
-# M13 — YouTube and Video Engine: Templates
+# M13 — Templates
 
-**Phase:** D — Social Channels
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+Reusable briefs for YouTube / Video Engine. These are structural templates — fill in the specifics per post.
 
-This file is a placeholder. Content for **templates.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+## Content brief template (use for every post before drafting)
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+```
+Platform: M13
+Week of: ____________
+Content type (from the mix in README.md §3): ____________
+Source material (M09 article / M10 repurposed asset): ____________
+Key message (1 sentence): ____________
+CTA: SEO fields: keyword-optimised title, description, 10 tags, custom thumbnail on every upload
+Target format: ____________ (see README.md §2 format rotation)
+Draft due: ____________
+Reviewer: ____________
+Scheduled publish time: ____________
+```
+
+## Platform-specific template
+
+### Video brief template
+
+```
+Video type (how-to / explainer / interview / screen-recording — README.md §3): ____________
+Working title: ____________
+Target keyword: ____________
+Script outline: ____________
+  Hook (first 15 sec): ____________
+  Main content: ____________
+  CTA: ____________
+SEO fields:
+  Title (keyword-optimised): ____________
+  Description: ____________
+  Tags (10): ____________
+  Thumbnail concept: ____________
+```

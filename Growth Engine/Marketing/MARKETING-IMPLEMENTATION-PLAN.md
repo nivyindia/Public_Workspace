@@ -81,25 +81,28 @@ Batches are sequenced so early ones reuse your existing Growth Engine raw materi
 
 | Batch | Stages | Status | Files Complete | Notes |
 |---|---|---|---|---|
-| Skeleton | M01–M22 (structural only) | ✅ Done | 2/2 top-level docs | This README.md + IMPLEMENTATION-PLAN.md; per-stage folders not yet created |
-| Pilot | M09–M10 | ⬜ Not started | 0/18 | Awaiting confirmation of pilot choice (§3) |
-| 1 | M01–M03 | ⬜ Not started | 0/27 | |
-| 2 | M04–M07 | ⬜ Not started | 0/36 | |
-| 3 | M08, M17 | ⬜ Not started | 0/18 | |
-| 4 | M11–M16 | ⬜ Not started | 0/54 | |
-| 5 | M18 | ⬜ Not started | 0/9 | |
-| 6 | M19–M20 | ⬜ Not started | 0/18 | |
-| 7 | M21–M22 | ⬜ Not started | 0/18 | |
+| Skeleton | M01–M22 (structural only) | ✅ Done | 2/2 top-level docs | This README.md + IMPLEMENTATION-PLAN.md; per-stage skeleton folders created for all 22 stages |
+| Pilot | M09–M10 | ✅ Done | 18/18 | Built 2026-07-22. Tracker previously mis-marked "Not started" — corrected this session; files were already complete on disk |
+| 1 | M01–M03 | ⬜ Not started | 0/27 | Skeleton only |
+| 2 | M04–M07 | ⬜ Not started | 0/36 | Skeleton only |
+| 3 | M08, M17 | ⬜ Not started | 0/18 | Skeleton only |
+| 4 | M11–M16 | ⬜ Not started | 0/54 | Skeleton only |
+| 5 | M18 | ✅ Done | 9/9 | Built 2026-07-23 out of planned batch order, per direct request. Tactic bank mined in full from the existing internal Growth Hacking Master List doc |
+| 6 | M19–M20 | ✅ Done | 18/18 | Built 2026-07-23 out of planned batch order, per direct request. M19 mined from the existing internal Community of Growth Engine and Growth Hacking Master List docs; M20 mined from the Partnership & JV Strategy, PR & Media Outreach Package, Affiliate & Referral Program Setup, Partnership Marketing, and Stage 11 Referral & Viral Engine docs |
+| 7 | M21–M22 | ⬜ Not started | 0/18 | Skeleton only |
 
 **Legend:** ⬜ Not started · 🟡 In progress · ✅ Done
 
-**Overall completion:** 2 / 200 files (2 top-level planning docs; 198 stage files across 22 stages × 9 files remain).
+**Overall completion:** 47 / 200 files (2 top-level planning docs + Pilot 18 + Batch 5 9 + Batch 6 18 = 47; 153 stage files across the remaining 13 unbuilt stages — M01–M08, M11–M17, M21–M22 — still remain).
+
+**Note on build order:** Batches 5 and 6 were built ahead of Batches 1–4 at direct request, skipping the originally planned sequence in §4. This means M19/M20's cross-references to still-unbuilt stages (e.g., M11 LinkedIn, M07 Off-Page SEO) are forward-references — the links are correct but point to skeleton files, not built-out content, until Batches 1–4 are completed.
 
 ## 8. Session Log
 
 | Date | Session | What was done |
 |---|---|---|
 | 2026-07-22 | 1 | Reviewed the live Sales Funnel README.md and IMPLEMENTATION-PLAN.md to copy their exact structure. Designed Track M as 22 single-topic stages (grouped into Phases A-H) instead of the originally-proposed 6 broad tracks, matching the Sales Funnel's one-topic-per-stage granularity. Built the top-level README.md (stage index, folder standard, status legend) and this IMPLEMENTATION-PLAN.md (free/OSS tool stack, batching strategy, pilot recommendation, build checklist, tracker). No per-stage content built yet — awaiting confirmation of pilot stage before proceeding. |
+| 2026-07-23 | 2 | Built Batch 5 (M18 Growth Hacking Experiment Engine) and Batch 6 (M19 Community Building, M20 Partnerships/Co-Marketing/PR) to full 9-file pilot depth, out of the planned batch sequence at direct request. Pulled the live repo (Growth Engine/Marketing/ and Growth Engine/ raw material) to mine existing internal docs rather than write fresh: Growth Hacking Master List (100+ Tactics) for M18's tactic bank and Impact × Effort scoring method; Community of Growth Engine doc (phased-rollout and ambassador/leaderboard mechanics only — its internal paid-workforce department structure was explicitly not adopted, see M19/faq.md) for M19; Partnership & JV Strategy, PR & Media Outreach Package, Affiliate & Referral Program Setup, Partnership Marketing, and Stage 11 — Referral & Viral Engine docs for M20. Also discovered and corrected a tracker error: the Pilot (M09–M10) row was mis-marked "Not started" despite being fully built on disk (346 + 315 lines respectively) — corrected in this update. Confirmed via direct file inspection that Batches 1–4 (M01–M08, M11–M17) remain skeleton-only despite the batching plan's intended order; this is flagged in the tracker note above rather than silently built out of turn. |
 
 ---
 

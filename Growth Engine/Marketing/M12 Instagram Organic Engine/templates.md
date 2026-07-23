@@ -1,8 +1,45 @@
-# M12 — Instagram Organic Engine: Templates
+# M12 — Templates
 
-**Phase:** D — Social Channels
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+Reusable briefs for Instagram Organic Engine. These are structural templates — fill in the specifics per post.
 
-This file is a placeholder. Content for **templates.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+## Content brief template (use for every post before drafting)
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+```
+Platform: M12
+Week of: ____________
+Content type (from the mix in README.md §3): ____________
+Source material (M09 article / M10 repurposed asset): ____________
+Key message (1 sentence): ____________
+CTA: Bio link (Linktree or direct booking page); daily Stories interaction prompt
+Target format: ____________ (see README.md §2 format rotation)
+Draft due: ____________
+Reviewer: ____________
+Scheduled publish time: ____________
+```
+
+## Platform-specific template
+
+### Instagram carousel/quote-graphic brief
+
+```
+Slide/graphic count: ____________
+Visual style (photo / quote graphic / carousel): ____________
+Caption: ____________
+CTA (bio link or comment prompt): ____________
+```
+
+### Reel brief
+
+```
+Hook (first 3 seconds — write this word-for-word): ____________
+Length target: 30-60 sec
+Shot list: ____________
+Caption + CTA: ____________
+```
+
+### Stories prompt template (same-day, lightweight)
+
+```
+Type: Poll / Tip of the day / Question box
+Content: ____________
+```

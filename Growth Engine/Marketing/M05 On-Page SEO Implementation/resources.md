@@ -1,8 +1,17 @@
-# M05 — On-Page SEO Implementation: Resources
+# M05 — Resources
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Tool Documentation
 
-This file is a placeholder. Content for **resources.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- Yoast SEO — https://yoast.com/wordpress/plugins/seo/
+- Rank Math — https://rankmath.com/
+- Google Search Console URL Inspection — https://support.google.com/webmasters/answer/9012289
+- Screaming Frog SEO Spider — https://www.screamingfrog.co.uk/seo-spider/
+- TinyPNG — https://tinypng.com/
+- Squoosh — https://squoosh.app/
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Internal Cross-References
+
+- M04 Keyword Research & Mapping — source of the keyword-to-URL assignment this stage optimizes against
+- M06 Technical SEO & Site Health — shares crawl tooling (Screaming Frog) and overlaps on page speed/Core Web Vitals, which affect on-page performance
+- M09 Long-Form Content Production — the drafted content this stage optimizes
+- M21 Marketing Analytics & Reporting — where this stage's ranking/traffic impact eventually gets measured

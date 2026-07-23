@@ -1,8 +1,16 @@
-# M17 — Email Newsletter and Lead Nurture: Tools
+# M17 — Tools
 
-**Phase:** E — Email
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+| Tool | Use in M17 | Cost | Notes |
+|---|---|---|---|
+| Listmonk (self-hosted) | List management, campaigns, basic automation | Free (fully OSS) | Avoids the subscriber-count cliff Mailchimp's free tier tends to have — verify current terms either way; self-hosting requires basic server setup |
+| Mailchimp (free tier) | Alternative to Listmonk if self-hosting isn't feasible | Free tier — subscriber/send caps, verify current | Easier initial setup than self-hosted Listmonk; less control over deliverability infrastructure long-term |
+| n8n (self-hosted) | Sales-readiness flagging, cross-referencing engagement data, CRM handoff automation | Free | See `automation.md` |
+| Domain-level SPF/DKIM/DMARC setup | Deliverability foundation (M17.5) | Free (configured via DNS) | Essential regardless of ESP choice; not a "nice to have" |
+| Odoo or SuiteCRM | Destination for sales-ready leads (M17.6 → M22) | Odoo already in use per the existing n8n plan; SuiteCRM fully OSS if starting fresh | Matches the shared CRM entry in IMPLEMENTATION-PLAN.md §2 |
 
-This file is a placeholder. Content for **tools.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+## Paid Upgrade Path (optional)
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+- A dedicated marketing-automation platform (e.g., a paid ESP tier with advanced behavioral automation) — worth it once list size or sequence complexity outgrows Listmonk/Mailchimp free-tier automation capabilities.
+- A dedicated deliverability-monitoring tool — useful once list size is large enough that manual open-rate review isn't sufficient to catch reputation issues early.
+
+No paid tool is required to run M17 at pilot depth for an SMB-scale list.

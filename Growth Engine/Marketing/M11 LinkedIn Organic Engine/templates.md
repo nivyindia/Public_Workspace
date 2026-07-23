@@ -1,8 +1,41 @@
-# M11 — LinkedIn Organic Engine: Templates
+# M11 — Templates
 
-**Phase:** D — Social Channels
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+Reusable briefs for LinkedIn Organic Engine. These are structural templates — fill in the specifics per post.
 
-This file is a placeholder. Content for **templates.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+## Content brief template (use for every post before drafting)
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+```
+Platform: M11
+Week of: ____________
+Content type (from the mix in README.md §3): ____________
+Source material (M09 article / M10 repurposed asset): ____________
+Key message (1 sentence): ____________
+CTA: Comment, DM, or book a call — on every post
+Target format: ____________ (see README.md §2 format rotation)
+Draft due: ____________
+Reviewer: ____________
+Scheduled publish time: ____________
+```
+
+## Platform-specific template
+
+### LinkedIn carousel outline template
+
+```
+Slide 1 (hook): ____________
+Slide 2-N (one idea per slide, max 1 sentence each):
+  Slide 2: ____________
+  Slide 3: ____________
+  ...
+Final slide (CTA): Comment / DM / Book a call — ____________
+Caption (accompanies the carousel, includes hashtags): ____________
+```
+
+### LinkedIn text-post template
+
+```
+Hook line (first 1-2 lines, must work before "see more"): ____________
+Body (3-5 short paragraphs): ____________
+CTA: ____________
+Hashtags (3-5, niche-specific): ____________
+```

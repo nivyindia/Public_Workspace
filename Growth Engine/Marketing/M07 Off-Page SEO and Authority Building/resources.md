@@ -1,8 +1,16 @@
-# M07 — Off-Page SEO and Authority Building: Resources
+# M07 — Resources
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Tool Documentation
 
-This file is a placeholder. Content for **resources.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- Google Search Console — Links report: https://support.google.com/webmasters/answer/9051688
+- Google Business Profile: https://www.google.com/business/
+- Ahrefs free backlink checker: https://ahrefs.com/backlink-checker
+- Moz Link Explorer (free tier): https://moz.com/link-explorer
+- Google Search Central — Link spam guidance: https://developers.google.com/search/docs/essentials/spam-policies#link-spam
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Internal Cross-References
+
+- M04 Keyword Research & Mapping — informs which pages need authority-building priority
+- M09 Long-Form Content Production — the source of link-worthy assets this stage promotes
+- M20 Partnerships, Co-Marketing & PR — closely related; PR/partnership relationships often overlap with link-earning outreach, cross-reference rather than duplicate effort
+- M21 Marketing Analytics & Reporting — where backlink-profile growth eventually gets reported

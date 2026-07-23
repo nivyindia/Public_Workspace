@@ -1,8 +1,17 @@
-# M05 — On-Page SEO Implementation: Tools
+# M05 — Tools
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+| Tool | Use in M05 | Cost | Notes |
+|---|---|---|---|
+| Yoast SEO / Rank Math (WordPress) | On-page checklist, snippet preview, readability | Free tier covers title/meta/header checks | Only applies if the site runs WordPress — flag stage-specific if the CMS differs |
+| Google Search Console | Confirms indexing status after publish (M05.5) | Free | Use the URL Inspection tool to request indexing after a page goes live |
+| Screaming Frog | Internal-link and orphan-page audit (M05.3) | Free up to 500 URLs — verify current | Shared with M04/M06 |
+| TinyPNG / Squoosh | Image compression (M05.4) | Free | Browser-based, no install needed |
+| SERP snippet preview tools (multiple free options) | Preview title/meta before publish (M05.1) | Free | Any current free browser tool works; verify the one in use still renders accurately, since Google's display rules change periodically |
+| n8n (self-hosted) | Orphan-page flagging, publish-checklist reminders | Free | See `automation.md` |
 
-This file is a placeholder. Content for **tools.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+## Paid Upgrade Path (optional)
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+- Ahrefs/SEMrush "Site Audit" — replaces Screaming Frog for larger sites (500+ URLs) needing scheduled recurring crawls with a hosted dashboard.
+- Surfer SEO or similar content-optimization tools — automated on-page scoring against top-ranking competitors, useful once content volume is high enough that manual header/keyword-placement review becomes a bottleneck.
+
+No paid tool is required to run M05 at pilot depth for an SMB-scale site.

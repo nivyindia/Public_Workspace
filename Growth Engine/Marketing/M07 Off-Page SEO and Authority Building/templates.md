@@ -1,8 +1,30 @@
-# M07 — Off-Page SEO and Authority Building: Templates
+# M07 — Templates
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## 1. Outreach Pipeline (Airtable/Notion columns)
 
-This file is a placeholder. Content for **templates.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+| Column | Type | Notes |
+|---|---|---|
+| Prospect site | Text | |
+| Contact name/email | Text | |
+| Asset being pitched | Link | Links to the M09 content piece |
+| Status | Select | Prospect Identified / Contacted / Follow-up Sent / Replied / Link Live / Declined |
+| Date contacted | Date | |
+| Follow-up due | Date | Auto-calculated (contacted date + 7 days) |
+| Notes | Text | Personalization angle used, any reply context |
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## 2. Outreach Email Skeleton (personalize every field, never send unedited)
+
+- Subject: [specific, non-generic — reference their actual content, not a form subject line]
+- Opening: [genuine, specific reference to something on their site — proves a human looked at it]
+- The ask: [why this specific asset is useful to their specific audience, not a generic "we have great content"]
+- Close: [low-pressure, easy next step]
+
+## 3. Backlink Tracker (Airtable/Notion columns)
+
+| Column | Type | Notes |
+|---|---|---|
+| Linking domain | Text | |
+| Target page (on our site) | Link | Links to M04 tracker row |
+| Link source type | Select | Guest post / Earned mention / Directory / PR placement |
+| Date discovered | Date | |
+| Legitimacy check | Checkbox | Confirmed not spammy/purchased |

@@ -1,8 +1,54 @@
-# M13 — YouTube and Video Engine: Automation
+# M13 — Automation
 
-**Phase:** D — Social Channels
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+Manual → semi-auto → full n8n workflow, defaulting to free/OSS tools per the Implementation Plan §2.
+Every piece of AI-drafted copy for this channel is reviewed by a human before it is scheduled or published. This is a standing rule across all of Track M's automation.md files, not a suggestion specific to this stage (Implementation Plan §6).
 
-This file is a placeholder. Content for **automation.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+## Level 0 — Manual
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+Post directly in the native app. No automation. See methods.md §1.
+
+## Level 1 — Semi-automated (scheduling only)
+
+1. Draft is written (manually or AI-assisted) and reviewed by a human (checklists.md gate).
+2. Approved draft is queued in **Postiz** for the scheduled slot.
+3. Publishing happens automatically at the scheduled time; replies/DMs are still handled manually.
+
+## Level 2 — Full n8n workflow
+
+```
+[Editorial calendar: post tagged "M13 — ready"]
+        │
+        ▼
+[n8n: pull draft + assets from calendar/Drive]
+        │
+        ▼
+[n8n: post draft to review channel (Slack/email/Notion comment)]
+        │
+        ▼
+[HUMAN REVIEW GATE — approve / edit / reject]  ◄── QC-002 equivalent, see checklists.md
+        │  (approved only)
+        ▼
+[n8n: push to Postiz queue via API]
+        │
+        ▼
+[Postiz: publish at scheduled time]
+        │
+        ▼
+[n8n: log publish confirmation + post URL to tracker]
+        │
+        ▼
+[n8n: poll platform API for new comments/DMs (where supported)]
+        │
+        ▼
+[n8n: create follow-up task for human — NOT an auto-reply]
+        │
+        ▼
+[M21 Analytics: pulls performance data from tracker on schedule]
+```
+
+**What this workflow does NOT do:** auto-reply to comments/DMs, auto-approve AI drafts, or bypass the
+human review gate. Those are explicit non-goals per the Implementation Plan's QC rule (§6).
+
+## Platform-specific automation notes
+
+Automation here covers scheduling the upload and populating SEO metadata (title, description, tags) — it does not cover filming or editing, which stay outside this workflow as a manual/freelance step.

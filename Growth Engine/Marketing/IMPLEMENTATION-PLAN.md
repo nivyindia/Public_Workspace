@@ -89,17 +89,18 @@ Batches are sequenced so early ones reuse your existing Growth Engine raw materi
 | 4 | M11–M16 | ⬜ Not started | 0/54 | |
 | 5 | M18 | ⬜ Not started | 0/9 | |
 | 6 | M19–M20 | ⬜ Not started | 0/18 | |
-| 7 | M21–M22 | ⬜ Not started | 0/18 | |
+| 7 | M21–M22 | ✅ Done | 18/18 | Built to full pilot depth. Note: `Source: Odoo/SuiteCRM` in §2's tool table is the aggregator-side target — production inbound CRM is HubSpot (per confirmed n8n workflows); M22 documents both, flagged in its README §3 |
 
 **Legend:** ⬜ Not started · 🟡 In progress · ✅ Done
 
-**Overall completion:** 2 / 200 files (2 top-level planning docs; 198 stage files across 22 stages × 9 files remain).
+**Overall completion:** 20 / 200 files (2 top-level planning docs + 18 stage files for M21–M22; 180 stage files across the remaining 20 stages × 9 files remain).
 
 ## 8. Session Log
 
 | Date | Session | What was done |
 |---|---|---|
 | 2026-07-22 | 1 | Reviewed the live Sales Funnel README.md and IMPLEMENTATION-PLAN.md to copy their exact structure. Designed Track M as 22 single-topic stages (grouped into Phases A-H) instead of the originally-proposed 6 broad tracks, matching the Sales Funnel's one-topic-per-stage granularity. Built the top-level README.md (stage index, folder standard, status legend) and this IMPLEMENTATION-PLAN.md (free/OSS tool stack, batching strategy, pilot recommendation, build checklist, tracker). No per-stage content built yet — awaiting confirmation of pilot stage before proceeding. |
+| 2026-07-23 | 2 | Built Batch 7 (M21 Marketing Analytics and Reporting, M22 Inbound-to-CRM Bridge) to full 9-file pilot depth, out of build order, per direct request — the pilot (M09/M10) is still unconfirmed and unbuilt. Mined existing raw material: the Analytics Setup & Dashboard System and Tracking & Pixel Setup Package service docs, "16. Performance Metrics & KPIs" (for M21); SOP-VA-011, "6. CRM & Tracking System," the HubSpot CRM Setup & Configuration Guide, and n8n Workflows 1/2/3/7 (for M22). Flagged and reconciled a discrepancy: §2's free/OSS tool table names Odoo/SuiteCRM as the CRM target, but the confirmed n8n workflows show the production inbound pipeline already runs on HubSpot — M22 documents both and explains where each applies. Also flagged two genuine gaps with no existing internal doc rather than fabricating coverage: Social DM→CRM automation (M22) and a UTM-tagging/reporting-cadence standard (M21) — both written fresh and marked as such. Delivered as a downloadable zip per the no-push-access constraint in §6. |
 
 ---
 

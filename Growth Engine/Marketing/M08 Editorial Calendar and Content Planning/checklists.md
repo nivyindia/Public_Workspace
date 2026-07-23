@@ -1,8 +1,24 @@
-# M08 — Editorial Calendar and Content Planning: Checklists
+# M08 — Checklists / QC Gates
 
-**Phase:** C — Content Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Before adding an idea to the backlog
 
-This file is a placeholder. Content for **checklists.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- [ ] Traceable to an M04 keyword assignment or an M03 pillar — no untethered "seemed like a good idea" entries without at least a rough rationale noted
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Before scheduling a backlog item onto the live calendar
+
+- [ ] Realistic given current team capacity (M08.1) — not squeezed in on top of an already-full week
+- [ ] Funnel-stage mix checked against the last 4 weeks' scheduled content — not accidentally skewing entirely to one stage
+- [ ] Owner assigned for each workflow step (brief, draft, review, SEO pass, publish, distribute)
+
+## Before a piece moves to "Publish" status
+
+- [ ] Draft completed (M09)
+- [ ] Review/edit completed
+- [ ] SEO pass completed (M05)
+- [ ] Cross-channel distribution scheduled for the same week (M10 repurposing, M17 newsletter feature where relevant)
+
+## Weekly maintenance review (M08.5)
+
+- [ ] On-time vs. slipped items from the past week reviewed
+- [ ] Root cause noted for any slip (capacity, unclear brief, review bottleneck) — not just marked "late" and moved on
+- [ ] Next 2 weeks previewed for any owner overload

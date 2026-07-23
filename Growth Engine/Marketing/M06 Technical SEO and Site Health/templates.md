@@ -1,8 +1,20 @@
-# M06 — Technical SEO and Site Health: Templates
+# M06 — Templates
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## 1. Monthly Technical Health Report
 
-This file is a placeholder. Content for **templates.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- Audit date: ___
+- Indexing status: [# pages indexed] / [# pages excluded, and why]
+- Core Web Vitals summary (homepage + top 3 pillar pages): LCP / INP / CLS, each rated Good/Needs Improvement/Poor
+- Mobile usability issues open: ___
+- Broken links found this cycle: ___ (vs. last cycle: ___)
+- Redirect chains found: ___
+- Structured data errors (if any new markup was added this cycle): ___
+- Prioritized fix list (ranked by impact): ___
+- Owner assigned per fix: ___
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## 2. Schema Markup Checklist (per page type)
+
+- Page type: [Article / FAQ / Organization / Service / Product / Breadcrumb]
+- Fields to include: ___ (list only fields with real, visible-on-page data)
+- Validated in Rich Results Test: [ ] Yes, zero errors
+- Published date: ___

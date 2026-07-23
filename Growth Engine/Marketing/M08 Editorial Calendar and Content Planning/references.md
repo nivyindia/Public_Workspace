@@ -1,8 +1,14 @@
-# M08 — Editorial Calendar and Content Planning: References
+# M08 — References
 
-**Phase:** C — Content Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Internal Sources
 
-This file is a placeholder. Content for **references.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+**Data-gap note:** IMPLEMENTATION-PLAN.md §4 states a "Content Calendar doc" already exists and covers M08. A Google Drive search for this document during this build session (by name and by semantic search for "content marketing calendar," "editorial calendar") did not locate it — the search returned only a folder reference with no accessible document content, no matching file. This stage was written fresh, without that source, following the same data-gap pattern flagged in M04–M07's references.md. If the Content Calendar doc exists in a location this connector can't reach, reconciling it against this stage is a follow-up action.
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+- M03 Content Pillars & Messaging Framework (internal, Track M)
+- M04 Keyword Research & Mapping (internal, Track M)
+- Sales Funnel Stage 06 (Lead Extraction) — structural standard followed
+
+## External / Official Documentation
+
+- CoSchedule — editorial calendar best practices (general reference, not a required tool): https://coschedule.com/marketing-calendar
+- HubSpot — content planning guidance (general reference): https://blog.hubspot.com/marketing/content-marketing-plan

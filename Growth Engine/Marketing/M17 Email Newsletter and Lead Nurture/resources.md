@@ -1,8 +1,17 @@
-# M17 — Email Newsletter and Lead Nurture: Resources
+# M17 — Resources
 
-**Phase:** E — Email
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Tool Documentation
 
-This file is a placeholder. Content for **resources.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- Listmonk: https://listmonk.app/
+- Mailchimp: https://mailchimp.com/
+- n8n documentation: https://docs.n8n.io/
+- Google — SPF/DKIM/DMARC setup guidance (Gmail Postmaster/Workspace docs): https://support.google.com/a/answer/33786
+- Odoo CRM documentation: https://www.odoo.com/documentation/
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Internal Cross-References
+
+- M04 Keyword Research & Mapping — funnel-stage tags used for nurture segmentation
+- M08 Editorial Calendar & Content Planning — source of content the newsletter curates
+- M09/M10 Long-Form Content & Repurposing — source assets featured in sequences and newsletters
+- M22 Inbound-to-CRM Bridge — destination for sales-ready leads flagged in M17.6
+- M21 Marketing Analytics & Reporting — where email performance rolls up into recurring reporting

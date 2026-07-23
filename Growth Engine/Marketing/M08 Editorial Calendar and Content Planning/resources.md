@@ -1,8 +1,16 @@
-# M08 — Editorial Calendar and Content Planning: Resources
+# M08 — Resources
 
-**Phase:** C — Content Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Tool Documentation
 
-This file is a placeholder. Content for **resources.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- Notion: https://www.notion.so/
+- Airtable: https://www.airtable.com/
+- Google Calendar: https://calendar.google.com/
+- n8n documentation: https://docs.n8n.io/
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Internal Cross-References
+
+- M03 Content Pillars & Messaging Framework — source of pillar structure the calendar organizes around
+- M04 Keyword Research & Mapping — source of funnel-stage tags used for content-mix balancing
+- M09 Long-Form Content Production — the calendar is its production queue
+- M10 Content Repurposing & Distribution Engine — cross-channel sequencing target
+- M17 Email Newsletter & Lead Nurture — newsletter feature scheduling target

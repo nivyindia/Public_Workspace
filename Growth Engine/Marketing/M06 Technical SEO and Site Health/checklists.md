@@ -1,8 +1,21 @@
-# M06 — Technical SEO and Site Health: Checklists
+# M06 — Checklists / QC Gates
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Monthly recurring audit
 
-This file is a placeholder. Content for **checklists.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- [ ] Search Console Coverage report checked — no new pages dropped from "Indexed" to "Excluded" without explanation
+- [ ] `robots.txt` reviewed — no accidental blocking of important sections
+- [ ] Core Web Vitals report checked (Search Console field data, not just lab data) — no metric regressed from "Good" to "Needs Improvement" or "Poor"
+- [ ] Mobile Usability report checked — zero open issues, or open issues are known and scheduled for a fix
+- [ ] Screaming Frog crawl re-run — broken-link (4xx) and redirect-chain counts compared to last month, investigated if increased
+- [ ] XML sitemap spot-checked — only live, canonical, indexable URLs listed
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Before publishing new structured data (M06.4)
+
+- [ ] Markup validated in Google's Rich Results Test with zero errors
+- [ ] Every marked-up field corresponds to content actually visible on the page — no fabricated ratings, counts, or details
+
+## At site launch or major redesign (one-time, not recurring)
+
+- [ ] Search Console property verified and sitemap submitted
+- [ ] `robots.txt` reviewed line by line before launch (not left on a default that may block staging-site crawling remnants)
+- [ ] Core Web Vitals baseline measured before the redesign ships, to have a before/after comparison

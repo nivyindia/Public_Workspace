@@ -1,8 +1,21 @@
-# M04 — Keyword Research and Mapping: Resources
+# M04 — Resources
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Tool Documentation
 
-This file is a placeholder. Content for **resources.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- Google Keyword Planner — https://ads.google.com/intl/en_in/home/tools/keyword-planner/
+- Google Trends — https://trends.google.com/
+- Google Search Console Help (Performance report) — https://support.google.com/webmasters/answer/7576553
+- Ubersuggest — https://neilpatel.com/ubersuggest/
+- AnswerThePublic — https://answerthepublic.com/
+- Screaming Frog SEO Spider — https://www.screamingfrog.co.uk/seo-spider/
+- Airtable — https://www.airtable.com/
+- Notion — https://www.notion.so/
+- n8n documentation — https://docs.n8n.io/
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Internal Cross-References
+
+- M01 Brand & Positioning Foundation — source of ICP language and positioning
+- M03 Content Pillars & Messaging Framework — source of pillar structure this stage maps keywords against
+- M05 On-Page SEO Implementation — consumes assigned keywords per URL
+- M08 Editorial Calendar & Content Planning — consumes funnel-stage tags to sequence publishing
+- M09 Long-Form Content Production — consumes the Keyword-to-Content Brief handoff template

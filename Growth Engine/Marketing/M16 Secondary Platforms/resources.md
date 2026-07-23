@@ -1,8 +1,21 @@
-# M16 — Secondary Platforms: Resources
+# M16 — Resources
 
-**Phase:** D — Social Channels
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+Tool docs and reference material relevant to Secondary Platforms (Pinterest, Threads, WhatsApp Broadcast).
 
-This file is a placeholder. Content for **resources.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+## Tool documentation
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+- Postiz docs — self-hosted scheduling setup and platform integrations (verify current supported
+  platform list before relying on it for M16)
+- n8n docs — HTTP node / webhook setup for the automation.md workflow
+- M16-native help center (see platform-specific links below)
+
+## Platform-specific references
+
+- WhatsApp Business help center (Channels feature)
+- Pinterest for Business and Threads developer docs — not yet reviewed against this stage's needs; flagged for future research once goals are defined
+
+## Internal cross-references
+
+- `../IMPLEMENTATION-PLAN.md` §2 — shared free/OSS tool stack
+- `../README.md` — full Track M stage index
+- M09 (Long-Form Content Production) — source material this stage repurposes from, via M10

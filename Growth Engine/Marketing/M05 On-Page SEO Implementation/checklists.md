@@ -1,8 +1,22 @@
-# M05 — On-Page SEO Implementation: Checklists
+# M05 — Checklists / QC Gates
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Before publish (every page)
 
-This file is a placeholder. Content for **checklists.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- [ ] Target keyword confirmed against the M04 tracker (correct keyword, not an outdated assignment)
+- [ ] Title tag contains the target keyword near the front and previews without truncation in a snippet-preview tool
+- [ ] Meta description is a genuine reason to click, not a keyword restatement, and fits within display limits
+- [ ] Exactly one H1 exists on the page
+- [ ] H2/H3 structure reads naturally — no forced/awkward keyword insertion
+- [ ] Every image renamed descriptively, compressed, and alt-tagged
+- [ ] At least one internal link to the pillar page (if this is a cluster article) or to top cluster articles (if this is the pillar page)
+- [ ] URL slug is short, descriptive, and contains the target keyword where natural
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## After publish
+
+- [ ] Indexing requested via Search Console URL Inspection
+- [ ] M04 tracker row updated to "Live" status
+- [ ] Orphan-page check run within 7 days (no inbound internal link = flag for follow-up)
+
+## Human sign-off (required, not automatable)
+
+- [ ] A named person (not just a workflow) has confirmed the above and takes responsibility for the page as published

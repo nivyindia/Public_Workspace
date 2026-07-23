@@ -1,8 +1,18 @@
-# M06 — Technical SEO and Site Health: Resources
+# M06 — Resources
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Tool Documentation
 
-This file is a placeholder. Content for **resources.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- Google Search Console Help: https://support.google.com/webmasters
+- Google PageSpeed Insights: https://pagespeed.web.dev/
+- Screaming Frog SEO Spider: https://www.screamingfrog.co.uk/seo-spider/
+- Google Rich Results Test: https://search.google.com/test/rich-results
+- Schema.org: https://schema.org/
+- GTmetrix: https://gtmetrix.com/
+- Web.dev — Core Web Vitals guidance: https://web.dev/articles/vitals
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Internal Cross-References
+
+- M02 Channel & Platform Selection — determines the CMS/hosting stack this stage audits against
+- M04 Keyword Research & Mapping — indexing status feeds back into whether a targeted keyword's page can even rank
+- M05 On-Page SEO Implementation — shares Screaming Frog crawl tooling; a technically broken page undermines on-page work
+- M21 Marketing Analytics & Reporting — where technical health metrics roll up into recurring reporting

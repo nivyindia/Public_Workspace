@@ -1,8 +1,18 @@
-# M13 — YouTube and Video Engine: References
+# M13 — References
 
-**Phase:** D — Social Channels
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Internal sources cited
 
-This file is a placeholder. Content for **references.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- **Social Media Platform Playbooks** — `Growth Engine/Social Media Platform Playbooks...md`
+  (Notion export, dated May 2026, status 🟢 Complete). Primary source for this stage's goal,
+  audience, posting frequency, content mix, and CTA data.
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+- **README.md** (Marketing Funnel top-level) — folder standard, stage index, phase grouping
+- **IMPLEMENTATION-PLAN.md** — free/OSS tool stack (§2), batching strategy (§4), build checklist (§6)
+
+## Official platform documentation
+
+- YouTube Creator Academy and Studio help center (official)
+
+## Open items / not yet sourced
+
+- None outstanding for this platform at this time.

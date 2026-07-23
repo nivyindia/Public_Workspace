@@ -1,8 +1,13 @@
-# M08 — Editorial Calendar and Content Planning: Faq
+# M08 — FAQ
 
-**Phase:** C — Content Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+**Q: How far in advance should the calendar be planned?**
+Enough to sequence cross-channel distribution properly (2–4 weeks of scheduled, committed items) plus a longer, looser backlog (1–2 quarters) that hasn't been assigned specific dates yet. A calendar planned a full year out in fixed detail tends to become stale and gets silently ignored when priorities shift.
 
-This file is a placeholder. Content for **faq.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+**Q: What if we consistently miss the planned cadence?**
+That's a capacity-planning signal, not a discipline problem — reduce the planned cadence in M08.1 to match actual sustainable output, rather than repeatedly scheduling more than the team can deliver.
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+**Q: Who decides the funnel-stage content mix?**
+Whoever owns marketing strategy, informed by the M04 keyword data and, once available, M21's conversion data by funnel stage. It's a judgment call that should tighten over time as real performance data accumulates, not a one-time fixed ratio.
+
+**Q: Does every piece need social + email distribution scheduled?**
+Not every piece is a fit for every channel — but the decision (yes, on these channels / no, and here's why) should be explicit in the calendar, not defaulted to "we'll figure it out later," which is how distribution gets skipped in practice.

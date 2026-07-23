@@ -1,8 +1,23 @@
-# M07 — Off-Page SEO and Authority Building: Checklists
+# M07 — Checklists / QC Gates
 
-**Phase:** B — SEO Engine
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Before starting outreach for a new asset (M07.1/M07.2)
 
-This file is a placeholder. Content for **checklists.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- [ ] Confirmed the asset is genuinely link-worthy (original data, comprehensive guide, free tool — not a generic sales page)
+- [ ] Prospect list built from sites actually relevant to the topic, not a generic mass list
+- [ ] Outreach message personalized to each specific site — no copy-paste mass template
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Before any link is added to the tracker as "earned"
+
+- [ ] Confirmed the link was earned organically (outreach, guest content, genuine mention) — not purchased or part of a reciprocal scheme
+- [ ] Source site reviewed for basic legitimacy (real content, not a link farm)
+
+## Monthly hygiene check (M07.5)
+
+- [ ] Search Console Links report reviewed for new backlinks
+- [ ] Any suspicious pattern (bulk foreign-language links, obvious link-farm sources) flagged for review
+- [ ] Disavow file only touched if there's a clear, documented pattern — not preemptively
+
+## Directory/citation listings (M07.4)
+
+- [ ] Only genuinely relevant, reputable directories used — no mass submission services
+- [ ] Business name/address/phone (where applicable) consistent across every listing
