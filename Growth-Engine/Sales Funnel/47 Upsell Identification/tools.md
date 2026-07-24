@@ -9,7 +9,7 @@
 
 | Tool | Purpose | Pricing | Free/OSS Alternative | API | Automation Support | Learning Curve | Docs |
 |---|---|---|---|---|---|---|---|
-| _to be added_ | | | | | | | |
+| _to be added_ |  |  | No direct match in the declared OSS stack (Odoo/Mautic/Documenso/NocoDB-Baserow/Ollama) — evaluate case-by-case rather than force-fit |  |  |  |  |
 
 For each tool, document: Purpose, Features, Pricing, Open-source alternative, Free alternative, Advantages, Limitations, API support, Automation support, Learning curve, Documentation link, GitHub repo (if any).
 

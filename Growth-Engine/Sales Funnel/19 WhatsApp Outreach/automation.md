@@ -2,6 +2,8 @@
 
 [⬅ Back to README](README.md)
 
+**n8n template(s):** No single named template from the audit's "Collection's WhatsApp category (Evolution API pattern)" line resolved to one stable, specific workflow — the collection's WhatsApp folder covers chatbot/RAG patterns rather than an outbound-sequencing template matching this stage's Evolution API/Wuzapi approach. Use the category browse instead: [n8n.io WhatsApp integration templates](https://n8n.io/integrations/whatsapp-business-cloud/) or the [awesome-n8n-templates WhatsApp folder](https://github.com/enescingoz/awesome-n8n-templates/tree/main/WhatsApp) and search "Evolution API" / "outbound sequence" — same fallback convention the index itself already documents for stale/renamed links. Checked 23 Jul 2026.
+
 ## Manual
 Sending from the standard WhatsApp Business app for low-volume/high-touch contacts.
 

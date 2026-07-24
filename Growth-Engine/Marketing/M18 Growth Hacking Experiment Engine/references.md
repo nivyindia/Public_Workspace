@@ -1,8 +1,20 @@
-# M18 — Growth Hacking Experiment Engine: References
+# M18 — References
 
-**Phase:** F — Growth Experiments
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Internal Sources Cited
 
-This file is a placeholder. Content for **references.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- `README.md` (Track M root) — stage index, folder standard, build status legend
+- `IMPLEMENTATION-PLAN.md` (Track M root) — free/OSS tool stack (§2), batching strategy (§4), standing QC rules (§6)
+- Existing internal "Growth Hacking Master List (100+ Tactics)" doc, Section SD-06 — full source of the tactic bank in `resources.md`, including the original Impact × Effort scoring method carried forward in `methods.md`
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Official Tool Docs
+
+- Airtable — support.airtable.com (verify current free-tier record cap)
+- Notion — notion.so/help (verify current free-tier block/record limits)
+- n8n — docs.n8n.io
+- Google Analytics 4 — support.google.com/analytics
+- Looker Studio — support.google.com/looker-studio
+- Evan Miller's A/B testing tools (sample size / significance calculators) — evanmiller.org/ab-testing
+
+## Note on Verification
+
+Per the Implementation Plan's standing constraint (§6), free-tier limits and tool feature sets listed in `tools.md` are marked "verify current" and should be re-checked against the official docs above before being relied on for production volume, since these change without notice.

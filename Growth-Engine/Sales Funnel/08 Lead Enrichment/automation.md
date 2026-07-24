@@ -2,6 +2,8 @@
 
 > Part of Stage 08 (Lead Enrichment). See [README.md](README.md) for the full stage overview.
 
+**n8n template(s):** [Qualify new leads in Google Sheets via OpenAI's GPT-4](https://n8n.io/workflows/2163-qualify-new-leads-in-google-sheets-via-openais-gpt-4/) — same pattern as Stage 06's link, generalized to enrichment: swap the qualification-rule prompt for an enrichment-field prompt and it re-scores/re-writes the same row via the Merge → Google Sheets update pattern. Verified 23 Jul 2026.
+
 ---
 
 ## Automation Workflows

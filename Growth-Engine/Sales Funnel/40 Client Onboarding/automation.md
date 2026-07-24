@@ -2,6 +2,8 @@
 
 [⬅ Back to README](README.md)
 
+**n8n template(s):** [Streamline client onboarding with PDF, Trello, Slack, Gmail & Airtable](https://n8n.io/workflows/8930-streamline-client-onboarding-with-pdf-trello-slack-gmail-and-airtable/) — end-to-end match for this stage: webhook intake → email validation → tier assignment → Trello onboarding card → branded welcome-pack PDF → Slack notify → Gmail send → Airtable archive → weekly manager summary. This is the closest 1:1 template in the whole audit to what this stage needs — flagged in the index as the highest-ROI n8n build in the funnel. Verified 23 Jul 2026.
+
 ## Manual
 The kickoff call (handed off to Stage 41) and any personal follow-up when a client seems confused or unresponsive during onboarding — relationship judgment stays human.
 

@@ -13,6 +13,12 @@
 - Support (929+ templates): https://n8n.io/workflows/categories/support/
 - Community template mega-repo (GitHub, importable JSON): https://github.com/Zie619/n8n-workflows
 
+## 0. Reference Collection (second, curated source)
+
+Alongside n8n.io's live library above, use **[enescingoz/awesome-n8n-templates](https://github.com/enescingoz/awesome-n8n-templates)** (280+ free, ready-to-import JSON templates, curated by category — Gmail/Email, WordPress, Slack, Notion, PDF/Document Processing, Database/Storage, etc.) as a second, curated source when a stage needs a specific pre-built workflow rather than a category browse. Every template link added to a stage's own `automation.md` in this batch was sourced from n8n.io directly or from this collection.
+
+> **Correction note (batch 1 pass):** this section originally referenced `nivyindia/all_n8n_templates_collection` as the second source. That repository could not be found on GitHub as of this pass — it does not appear to exist publicly. `enescingoz/awesome-n8n-templates` is linked above instead, since it's the actual repo the individual template links below resolve to. If `nivyindia/all_n8n_templates_collection` is a private fork or was renamed, swap this line for the correct URL — don't leave the old name unlinked.
+
 ---
 
 ## 1. Automation Feasibility Legend

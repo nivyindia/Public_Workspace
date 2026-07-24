@@ -2,6 +2,8 @@
 
 [⬅ Back to README](README.md)
 
+**n8n template(s):** [LeadPilot Lite – AI Cold Email Writer](https://github.com/enescingoz/awesome-n8n-templates/blob/main/Gmail_and_Email_Automation/LeadPilot%20Lite%20-%20AI%20Cold%20Email%20Writer.json) — reads a Google Sheets lead list and has OpenAI draft a personalized subject line + body per prospect; maps directly onto the AI-Assisted Workflow step below (drafting the first line/subject before human spot-check). Verified 23 Jul 2026.
+
 ## Manual
 Hand-written, hand-sent emails for named strategic accounts only.
 

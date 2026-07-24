@@ -11,7 +11,7 @@ _Pricing figures are approximate — verify current pricing before purchase._
 | Google Drive | Client asset folder structure | Free | Free tier | API |
 | HubSpot | Client record creation, lifecycle stage update (Lead → Customer) | Free tier | Free tier | Native |
 | n8n | Full onboarding workflow orchestration (webhook → portal → folder → welcome sequence) | Free (self-hosted) | Fully OSS | Native |
-| WATI / WhatsApp Business API | Personal welcome message and questionnaire reminders | Free tier / paid tiers | — | API |
+| WATI / WhatsApp Business API | Personal welcome message and questionnaire reminders | Free tier / paid tiers | Evolution API / Wuzapi (OSS WhatsApp API) | API |
 | 1Password / Bitwarden | Secure storage of client-provided access credentials | Free tier | Bitwarden has strong free tier | Limited |
 | Cal.com | Kickoff call scheduling (feeds Stage 41) | Free | Fully OSS option available | API |
 

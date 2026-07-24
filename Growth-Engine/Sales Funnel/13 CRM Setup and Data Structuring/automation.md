@@ -2,6 +2,8 @@
 
 [⬅ Back to README](README.md)
 
+**n8n template(s):** [Chat with Postgresql Database](https://n8n.io/workflows/2859-chat-with-postgresql-database/) — an AI Agent + Postgres tool nodes flow that lets anyone query the CRM's underlying Postgres tables in plain English instead of writing SQL; useful once CRM data lives in a Postgres backend (Odoo/self-hosted setups). [Generate SQL queries from schema only – AI-powered](https://n8n.io/workflows/2508-generate-sql-queries-from-schema-only-ai-powered/) — same idea but schema-only (the agent never touches live data, only generates the query), a safer fit for read-only reporting access on the CRM schema. Verified 23 Jul 2026.
+
 ---
 
 ## Standard Automations to Configure at Setup

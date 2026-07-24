@@ -7,7 +7,7 @@ _Pricing figures are approximate — verify current pricing before purchase._
 | Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
 |---|---|---|---|---|
 | Claude / ChatGPT (LLM) | Structuring call notes/transcript into a ranked needs-analysis document | Subscription or API usage-based | Free tiers available | API |
-| Notion / Google Docs | Document home, linked to the CRM opportunity record | Free / bundled | — | API |
+| Notion / Google Docs | Document home, linked to the CRM opportunity record | Free / bundled | Odoo Community (CRM module, self-hosted, free) | API |
 | HubSpot | Storing the finalized document against the opportunity record | Bundled with HubSpot tier (Stage 13) | Free tier limited | Native |
 
 ## Selection Notes

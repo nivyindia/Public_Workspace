@@ -6,11 +6,11 @@ _Pricing figures are approximate — verify current pricing before purchase._
 
 | Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
 |---|---|---|---|---|
-| Aircall / JustCall | Cloud softphone with CRM integration and call logging | ~$30-50/user/mo | — | API |
-| Kixie | Power dialer with CRM sync | ~$35-65/user/mo | — | API |
-| Google Voice | Basic low-cost calling line | Low/free tier | — | Limited |
+| Aircall / JustCall | Cloud softphone with CRM integration and call logging | ~$30-50/user/mo | Odoo Community (CRM module, self-hosted, free) | API |
+| Kixie | Power dialer with CRM sync | ~$35-65/user/mo | Odoo Community (CRM module, self-hosted, free) | API |
+| Google Voice | Basic low-cost calling line | Low/free tier | No direct match in the declared OSS stack (Odoo/Mautic/Documenso/NocoDB-Baserow/Ollama) — evaluate case-by-case rather than force-fit | Limited |
 | DNC Scrub tools (e.g., DNC.com, per-market registry lookups) | Compliance check before calling | Pay-per-scrub or subscription | Some markets offer free registry lookup | API (market-dependent) |
-| CRM native calling module (HubSpot, etc.) | Logging outcomes directly against the contact record | Often bundled with CRM tier | — | Native |
+| CRM native calling module (HubSpot, etc.) | Logging outcomes directly against the contact record | Often bundled with CRM tier | Odoo Community (CRM module, self-hosted, free) | Native |
 
 ## Selection Notes
 - A CRM-integrated dialer removes the single biggest failure mode of manual calling — forgotten/late outcome logging — and is worth prioritizing over a standalone phone line once volume justifies the cost.

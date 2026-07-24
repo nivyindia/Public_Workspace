@@ -1,5 +1,7 @@
 # M10 — Automation
 
+**n8n template(s):** [Write a WordPress post with AI (starting from a few keywords)](https://github.com/enescingoz/awesome-n8n-templates/blob/main/WordPress/Write%20a%20WordPress%20post%20with%20AI%20(starting%20from%20a%20few%20keywords).json) and [Automate Blog Creation in Brand Voice with AI](https://github.com/enescingoz/awesome-n8n-templates/blob/main/WordPress/Automate%20Blog%20Creation%20in%20Brand%20Voice%20with%20AI.json) — same pair as M09; here they sit upstream of this stage's repurposing pipeline (M09's finished long-form piece is what M10 fans out into per-format assets), so the link is included for continuity rather than as a new build. Verified 23 Jul 2026.
+
 ## Tier 1-3 — Manual through AI-Assisted Manual Handoff
 
 Same structure as M09's Tiers 1-3: manual intake of the M09 handoff packet, manual or AI-assisted drafting per format, manual movement into the review queue and then into Postiz.

@@ -6,11 +6,11 @@ _Pricing figures are approximate — verify current pricing before purchase._
 
 | Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
 |---|---|---|---|---|
-| HubSpot (deal properties + approval pipeline) | Log discount/term requests against the deal, track approver, decision, timestamp | Free tier / paid tiers for advanced workflow automation | — | Native |
+| HubSpot (deal properties + approval pipeline) | Log discount/term requests against the deal, track approver, decision, timestamp | Free tier / paid tiers for advanced workflow automation | Odoo Community (CRM module, self-hosted, free) | Native |
 | Slack / Telegram | Approval request routing and notification to the correct approver | Free tier | Telegram fully free | API/webhook |
 | n8n | Rule-based routing engine (discount % → approver tier), decision logging back to CRM | Free (self-hosted) | Fully OSS | Native |
 | Google Sheets / Airtable | Lightweight approval log for teams not yet using CRM approval fields | Free / free tier | Google Sheets free | API |
-| DocuSign / PandaDoc | Records final approved terms into the contract once a deal-desk decision is made | Usage-based / subscription | — | API |
+| DocuSign / PandaDoc | Records final approved terms into the contract once a deal-desk decision is made | Usage-based / subscription | No direct match in the declared OSS stack (Odoo/Mautic/Documenso/NocoDB-Baserow/Ollama) — evaluate case-by-case rather than force-fit | API |
 
 ## Selection Notes
 - Smaller teams (under ~5 reps) can run this entirely through a Slack channel + a simple rule ("tag @founder for anything over 10%") without dedicated software.

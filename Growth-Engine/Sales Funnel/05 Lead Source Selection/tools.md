@@ -8,15 +8,15 @@
 | Tool | Use | Pricing (approx., verify) | Markets | OSS/Free Alt |
 |---|---|---|---|---|
 | Apollo.io | Email finding + sequencing | ~$49-99/mo | US, UK, AU, UAE | LinkedIn free search (manual) |
-| LinkedIn (free) | Manual prospecting + DMs | Free | All | — |
+| LinkedIn (free) | Manual prospecting + DMs | Free | All | n/a — this source is already free to use |
 | LinkedIn Sales Navigator | Advanced filtering + lead lists | ~$80/mo | All | LinkedIn free tier (limited filters) |
 | Hunter.io | Email verification | ~$49/mo (free tier ~25/mo) | All | Apollo's built-in verification |
-| Google Maps + Google Business Profile | Local business prospecting | Free | Strong for India, UAE | — |
-| JustDial / IndiaMART | Indian SME directory | Free | India | — |
-| Companies House | UK company data by SIC code | Free | UK | — |
-| ABR (Australian Business Register) | AU business data | Free | Australia | — |
+| Google Maps + Google Business Profile | Local business prospecting | Free | Strong for India, UAE | n/a — this source is already free to use |
+| JustDial / IndiaMART | Indian SME directory | Free | India | n/a — this source is already free to use |
+| Companies House | UK company data by SIC code | Free | UK | n/a — this source is already free to use |
+| ABR (Australian Business Register) | AU business data | Free | Australia | n/a — this source is already free to use |
 | Crunchbase | Funded startup data | Freemium/paid tiers | Strong for US | LinkedIn company pages |
-| Product Hunt | Tech/SaaS company discovery | Free | Global, US-heavy | — |
+| Product Hunt | Tech/SaaS company discovery | Free | Global, US-heavy | n/a — this source is already free to use |
 
 ---
 

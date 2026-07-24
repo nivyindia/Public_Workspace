@@ -6,14 +6,14 @@
 
 | Tool | Purpose | Pricing (approx., verify current) | OSS/Free Alt | API/Automation Support |
 |---|---|---|---|---|
-| HubSpot CRM (Free tier) | Contact properties, manual "Lead Score" custom field, activity feed | Free | — | REST API, webhooks (Free tier has API rate limits) |
-| HubSpot Starter/Professional | Native automated lead scoring engine | ~$20-90/mo+ | — | Full API + native scoring workflows |
+| HubSpot CRM (Free tier) | Contact properties, manual "Lead Score" custom field, activity feed | Free | Odoo Community (CRM module, self-hosted, free) | REST API, webhooks (Free tier has API rate limits) |
+| HubSpot Starter/Professional | Native automated lead scoring engine | ~$20-90/mo+ | No direct match in the declared OSS stack (Odoo/Mautic/Documenso/NocoDB-Baserow/Ollama) — evaluate case-by-case rather than force-fit | Full API + native scoring workflows |
 | n8n | Webhook-triggered scoring automation, CRM field updates | Free (self-hosted) / ~$20/mo (cloud) | Self-hosted is the free/OSS option | Native — this is the automation layer |
 | Google Sheets | Manual/formula-based scoring for pre-CRM teams | Free | N/A — already free/OSS-equivalent | Apps Script, Sheets API |
 | Slack | Hot-lead alerting | Free tier sufficient for alert use case | Discord/WhatsApp group as free alt | Incoming Webhooks (used by n8n alert step) |
-| Salesforce | Native scoring (Einstein predictive scoring at higher tiers) | Enterprise pricing, verify current | — | Full API, well-documented |
-| Pipedrive | Native deal/lead scoring | ~$14-49/mo+ | — | REST API |
-| Claude / GPT-4-class LLM (via API or chat) | Qualitative fit scoring, bulk backlog scoring, score-reason summaries | Usage-based API pricing / subscription for chat | N/A | API — used in AI-assisted methods above |
+| Salesforce | Native scoring (Einstein predictive scoring at higher tiers) | Enterprise pricing, verify current | No direct match in the declared OSS stack (Odoo/Mautic/Documenso/NocoDB-Baserow/Ollama) — evaluate case-by-case rather than force-fit | Full API, well-documented |
+| Pipedrive | Native deal/lead scoring | ~$14-49/mo+ | No direct match in the declared OSS stack (Odoo/Mautic/Documenso/NocoDB-Baserow/Ollama) — evaluate case-by-case rather than force-fit | REST API |
+| Claude / GPT-4-class LLM (via API or chat) | Qualitative fit scoring, bulk backlog scoring, score-reason summaries | Usage-based API pricing / subscription for chat | Ollama / Open WebUI (self-hosted LLM — avoids sending data to a paid API) | API — used in AI-assisted methods above |
 
 ---
 

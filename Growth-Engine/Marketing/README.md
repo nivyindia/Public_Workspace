@@ -34,8 +34,8 @@ Enterprise-grade, modular, version-controlled documentation of the full 22-stage
 | M18 | [Growth Hacking Experiment Engine](M18%20Growth%20Hacking%20Experiment%20Engine/README.md)         | F — Growth Experiments    |
 | M19 | [Community Building](M19%20Community%20Building/README.md)                                       | G — Community & Partners  |
 | M20 | [Partnerships, Co-Marketing & PR](M20%20Partnerships%2C%20Co-Marketing%20and%20PR/README.md)      | G — Community & Partners  |
-| M21 | [Marketing Analytics & Reporting](M21%20Marketing%20Analytics%20and%20Reporting/README.md) ✅ built to pilot depth (Batch 7)        | H — Measurement & Bridge  |
-| M22 | [Inbound-to-CRM Bridge](M22%20Inbound-to-CRM%20Bridge/README.md) ✅ built to pilot depth (Batch 7) — closes the gap to Sales Stage 06 | H — Measurement & Bridge |
+| M21 | [Marketing Analytics & Reporting](M21%20Marketing%20Analytics%20and%20Reporting/README.md)         | H — Measurement & Bridge  |
+| M22 | [Inbound-to-CRM Bridge](M22%20Inbound-to-CRM%20Bridge/README.md) ⭐ closes the gap to Sales Stage 06 | H — Measurement & Bridge |
 
 ---
 
@@ -53,7 +53,7 @@ Additional files are added only when a topic outgrows one file (the Sales Funnel
 - 🟡 Skeleton — structured, cross-referenced, awaiting content population
 - ✅ Done — built to full pilot depth
 
-21 of 22 stages are currently unstarted at content level; M21 and M22 (Batch 7) are built to full pilot depth. See IMPLEMENTATION-PLAN.md for build order and progress tracker.
+All 22 stages are currently unstarted at content level. See IMPLEMENTATION-PLAN.md for build order.
 
 ## Why 22 Stages Instead of the Original 6 (M1–M6)
 

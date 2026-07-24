@@ -1,8 +1,21 @@
-# M19 — Community Building: References
+# M19 — References
 
-**Phase:** G — Community & Partners
-**Status:** 🟡 Skeleton — not yet built to pilot depth.
+## Internal Sources Cited
 
-This file is a placeholder. Content for **references.md** has not been written yet — see the top-level `IMPLEMENTATION-PLAN.md` §4 (Build Order & Batching Strategy) for when this stage is scheduled to be built, and §5 for the per-stage build checklist this file will be filled against.
+- `README.md` (Track M root) — stage index, folder standard, build status legend
+- `IMPLEMENTATION-PLAN.md` (Track M root) — free/OSS tool stack (§2), standing QC rules (§6)
+- Existing internal "Community of Growth Engine" doc — phased rollout caution and ambassador/leaderboard mechanic, as scoped in `resources.md` and `faq.md`
+- Existing internal "Growth Hacking Master List" doc, Community & Network Tactics category — specific community-building tactics, cross-referenced via M18
 
-No fabricated tool claims, invented case studies, or invented metrics will be added here — where existing Growth Engine raw material covers this stage, it will be mined and cited; where it doesn't, this will be written fresh and marked as such.
+## Official Tool Docs
+
+- WhatsApp Business — business.whatsapp.com/products/business-app
+- Discord — support.discord.com
+- Slack — slack.com/help
+- Google Calendar / Meet — support.google.com
+- Zoom — support.zoom.us
+- n8n — docs.n8n.io
+
+## Note on Verification
+
+Per the Implementation Plan's standing constraint (§6), free-tier limits and tool feature sets listed in `tools.md` are marked "verify current" and should be re-checked against the official docs above before being relied on for production volume, since these change without notice.

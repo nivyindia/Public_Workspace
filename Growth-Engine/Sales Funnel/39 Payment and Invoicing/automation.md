@@ -2,6 +2,8 @@
 
 [⬅ Back to README](README.md)
 
+**n8n template(s):** "Airtable to Google Sheets Auto-Sync" did not resolve to one stable, specific n8n.io/GitHub template under that exact name — closest verified matches are generic Airtable↔Sheets sync patterns, not a single canonical build. Use the category browse instead: [n8n.io Airtable integration templates](https://n8n.io/integrations/airtable/). For the Stripe/Odoo webhook half of this line, pair with this stage's own already-linked [QuickBooks/Stripe invoice automation family](https://www.intuz.com/blog/best-n8n-workflow-templates/) referenced in [N8N-AUTOMATION-INDEX.md](../N8N-AUTOMATION-INDEX.md) — same pattern applies to an Odoo Accounting webhook trigger. Checked 23 Jul 2026.
+
 ## Manual
 Reviewing and approving any late-fee waiver or payment-plan exception — this should route through Stage 38 (Deal Desk and Approval Workflows), not be decided ad hoc by whoever is chasing the payment.
 

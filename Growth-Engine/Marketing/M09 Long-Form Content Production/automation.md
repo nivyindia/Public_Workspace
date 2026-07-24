@@ -1,5 +1,7 @@
 # M09 — Automation
 
+**n8n template(s):** [Automate Blog Creation in Brand Voice with AI](https://github.com/enescingoz/awesome-n8n-templates/blob/main/WordPress/Automate%20Blog%20Creation%20in%20Brand%20Voice%20with%20AI.json) — generates a full post while holding a defined brand-voice profile, closest match to this stage's brand-consistency requirement across drafts. [Write a WordPress post with AI (starting from a few keywords)](https://github.com/enescingoz/awesome-n8n-templates/blob/main/WordPress/Write%20a%20WordPress%20post%20with%20AI%20(starting%20from%20a%20few%20keywords).json) — lighter-weight version for the Tier 2/3 semi-automated drafting steps below, where only a keyword seed exists yet. Verified 23 Jul 2026.
+
 Progression from manual to full n8n workflow, mirroring the four methods in `methods.md`. Every tier below terminates at the same human-review QC gate — automation here accelerates drafting and handoff, it never removes the review step.
 
 ## Tier 1 — Manual (no automation)

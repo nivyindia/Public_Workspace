@@ -2,6 +2,8 @@
 
 [⬅ Back to README](README.md)
 
+**n8n template(s):** [Add positive feedback messages to a table in Notion](https://github.com/enescingoz/awesome-n8n-templates/blob/main/Notion/Add%20positive%20feedback%20messages%20to%20a%20table%20in%20Notion.json) — captures Typeform feedback, scores sentiment with Google Cloud Natural Language, logs it to a Notion table, and Slack-notifies the team on high-scoring (promoter-level) responses; maps directly onto this stage's NPS-survey-response → sentiment-score → dashboard pipeline. Verified 23 Jul 2026.
+
 ## Manual
 Detractor follow-up outreach — always human, regardless of how the message was drafted.
 

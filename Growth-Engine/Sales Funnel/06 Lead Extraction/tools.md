@@ -9,12 +9,12 @@
 
 | Tool | Purpose | Pricing (approx.) | Free/OSS Alt | API | Automation | Learning Curve | Docs |
 |---|---|---|---|---|---|---|---|
-| **Apollo.io** ⭐ | Best all-round B2B contact database + sequencing | ~$49–99/mo | — | Yes (Apollo API) | Sequences, Zapier/Make | Low | apollo.io/docs |
+| **Apollo.io** ⭐ | Best all-round B2B contact database + sequencing | ~$49–99/mo | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | Yes (Apollo API) | Sequences, Zapier/Make | Low | apollo.io/docs |
 | ZoomInfo | Enterprise-grade firmographic + contact accuracy | High (enterprise, custom quote) | Apollo/RocketReach as budget substitute | Yes | Yes | Medium | zoominfo.com |
-| Lusha | Direct-dial phone + email enrichment | Free tier + paid | — | Yes | Chrome extension | Low | lusha.com |
-| Snov.io | Email finding + verification + drip campaigns | Free tier + paid | — | Yes | Yes | Low | snov.io |
-| RocketReach | Personal + work email lookup | Free tier + paid | — | Yes | Limited | Low | rocketreach.co |
-| Clearbit | Company + person enrichment for CRM | Paid | — | Yes (Clearbit API) | Yes | Medium | clearbit.com |
+| Lusha | Direct-dial phone + email enrichment | Free tier + paid | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | Yes | Chrome extension | Low | lusha.com |
+| Snov.io | Email finding + verification + drip campaigns | Free tier + paid | Mautic (OSS marketing automation) | Yes | Yes | Low | snov.io |
+| RocketReach | Personal + work email lookup | Free tier + paid | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | Yes | Limited | Low | rocketreach.co |
+| Clearbit | Company + person enrichment for CRM | Paid | Odoo Community (CRM module, self-hosted, free) | Yes (Clearbit API) | Yes | Medium | clearbit.com |
 
 ---
 
@@ -23,13 +23,13 @@
 | Tool | Purpose | Pricing | Free Alt | API | Automation | Learning Curve |
 |---|---|---|---|---|---|---|
 | LinkedIn Sales Navigator | Advanced role/company search + saved lead lists | ~$80/mo | Free LinkedIn search (limited filters) | No public API | HubSpot native integration | Medium |
-| Phantombuster | Export LinkedIn search results, profiles, followers at scale | Free trial + paid | — | Yes | Full scheduling | Medium |
-| TexAu | LinkedIn scraping + enrichment automation chains | Free credits + paid | — | Yes | Multi-step workflows | Medium |
-| Evaboot | Clean, structured exports from Sales Navigator searches | Low–mid | — | No | Upload-URL based | Low |
+| Phantombuster | Export LinkedIn search results, profiles, followers at scale | Free trial + paid | No OSS equivalent — carries LinkedIn ToS risk regardless of tool; Airscale/Instant Data Scraper (free tier) is the lowest-cost option available | Yes | Full scheduling | Medium |
+| TexAu | LinkedIn scraping + enrichment automation chains | Free credits + paid | No OSS equivalent — carries LinkedIn ToS risk regardless of tool; Airscale/Instant Data Scraper (free tier) is the lowest-cost option available | Yes | Multi-step workflows | Medium |
+| Evaboot | Clean, structured exports from Sales Navigator searches | Low–mid | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | No | Upload-URL based | Low |
 | Airscale | Budget Sales Navigator scraper (unlimited leads via extension) | Free/very low | This *is* the budget alt | No | Chrome extension | Low |
-| Linked Helper | Desktop automation: profile visiting + saving + messaging | Trial + paid | — | No | Semi-automated | Medium |
-| Waalaxy | LinkedIn leads + automated outreach sequencing | Paid | — | Limited | Yes | Low |
-| SalesQL | LinkedIn profile → email/phone enrichment | Low–mid | — | Yes | Chrome extension | Low |
+| Linked Helper | Desktop automation: profile visiting + saving + messaging | Trial + paid | No direct match in the declared OSS stack (Odoo/Mautic/Documenso/NocoDB-Baserow/Ollama) — evaluate case-by-case rather than force-fit | No | Semi-automated | Medium |
+| Waalaxy | LinkedIn leads + automated outreach sequencing | Paid | No OSS equivalent — carries LinkedIn ToS risk regardless of tool; Airscale/Instant Data Scraper (free tier) is the lowest-cost option available | Limited | Yes | Low |
+| SalesQL | LinkedIn profile → email/phone enrichment | Low–mid | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | Yes | Chrome extension | Low |
 
 ---
 
@@ -38,10 +38,10 @@
 | Tool | Purpose | Pricing | Free Alt | API | Automation |
 |---|---|---|---|---|---|
 | Apify (Google Maps Scraper Actor) | Business name/phone/website/address/category at scale | Free + paid credits | Instant Data Scraper (manual, small batches) | Yes (Apify API) | Cloud scheduling |
-| Outscraper | Maps + reviews + websites bulk export | Free credits + paid | — | Yes | Yes |
+| Outscraper | Maps + reviews + websites bulk export | Free credits + paid | Instant Data Scraper (Chrome, free) or a self-hosted Playwright/Puppeteer script via n8n's Code node | Yes | Yes |
 | Instant Data Scraper (Chrome) | Any visible page table → export | Free | — this is the free option | No | Manual trigger |
-| Octoparse | No-code scraping of Maps/directories | Free + paid | — | Limited | Scheduled tasks |
-| ParseHub | JavaScript-heavy / dynamic sites | Free + paid | — | Yes | Scheduled |
+| Octoparse | No-code scraping of Maps/directories | Free + paid | Instant Data Scraper (Chrome, free) or a self-hosted Playwright/Puppeteer script via n8n's Code node | Limited | Scheduled tasks |
+| ParseHub | JavaScript-heavy / dynamic sites | Free + paid | Instant Data Scraper (Chrome, free) or a self-hosted Playwright/Puppeteer script via n8n's Code node | Yes | Scheduled |
 
 ---
 
@@ -49,13 +49,13 @@
 
 | Tool | Purpose | Pricing | Free Alt | API |
 |---|---|---|---|---|
-| Hunter.io | Find emails by domain/name | Free (25/mo) + paid | — | Yes |
-| Prospeo | Cheap email + LinkedIn enrichment | Low paid | — | Yes |
-| FindThatLead | Website/LinkedIn email finder | Free + paid | — | Yes |
-| VoilaNorbert | High-accuracy email finding | Paid | — | Yes |
-| NeverBounce | Bulk email verification | Paid | — | Yes |
-| ZeroBounce | Verification + scoring | Free trial + paid | — | Yes |
-| BriteVerify | Enterprise-scale verification | Paid | — | Yes |
+| Hunter.io | Find emails by domain/name | Free (25/mo) + paid | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | Yes |
+| Prospeo | Cheap email + LinkedIn enrichment | Low paid | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | Yes |
+| FindThatLead | Website/LinkedIn email finder | Free + paid | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | Yes |
+| VoilaNorbert | High-accuracy email finding | Paid | No OSS equivalent for paid contact/lead databases — stack free tiers (e.g. Hunter.io 25/mo, Snov.io free tier) instead of one paid tool | Yes |
+| NeverBounce | Bulk email verification | Paid | check-if-email-exists (OSS CLI/API, self-hosted SMTP verification) | Yes |
+| ZeroBounce | Verification + scoring | Free trial + paid | check-if-email-exists (OSS CLI/API, self-hosted SMTP verification) | Yes |
+| BriteVerify | Enterprise-scale verification | Paid | check-if-email-exists (OSS CLI/API, self-hosted SMTP verification) | Yes |
 
 **Data quality rule (applies across all of the above):** never send to an unverified email — bounce rates above ~3% should trigger a pause-and-clean cycle. Verification connects forward to [10 Lead Verification](../10 Lead Verification/README.md).
 

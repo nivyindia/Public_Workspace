@@ -2,6 +2,8 @@
 
 [⬅ Back to README](README.md)
 
+**n8n template(s):** [Auto-label incoming Gmail messages with AI nodes](https://github.com/enescingoz/awesome-n8n-templates/blob/main/Gmail_and_Email_Automation/Auto-label%20incoming%20Gmail%20messages%20with%20AI%20nodes.json) — AI reads each incoming reply and applies a label (adapt the label set to Interested/Objection/Not Interested/Auto-reply for this stage's triage categories). [InboxZero Lite – AI Email Classifier](https://github.com/enescingoz/awesome-n8n-templates/blob/main/Gmail_and_Email_Automation/InboxZero%20Lite%20-%20AI%20Email%20Classifier.json) — lighter single-workflow classifier (urgent/important/info/spam) with Google Sheets logging, useful where a full label taxonomy is overkill. Verified 23 Jul 2026.
+
 ## Manual
 Sending the final response to any Interested or Objection-classified reply — always human-sent, even if AI-drafted.
 

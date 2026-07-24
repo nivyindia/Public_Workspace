@@ -2,6 +2,8 @@
 
 [⬅ Back to README](README.md)
 
+**n8n template(s):** [Invoice data extraction with LlamaParse and OpenAI](https://github.com/enescingoz/awesome-n8n-templates/blob/main/PDF_and_Document_Processing/Invoice%20data%20extraction%20with%20LlamaParse%20and%20OpenAI.json) — adapted pattern: this template's LlamaParse-in / structured-output-parser flow (parse a document → extract structured fields via OpenAI) inverts cleanly into a proposal *generation* flow (CRM fields → structured template → merged doc) rather than its native extraction direction; treat it as a reference for the parse/structure nodes, not a drop-in. Verified 23 Jul 2026.
+
 ## Manual
 Final review of pricing, terms, and tone before sending — always human, given the commercial/legal weight of this document.
 

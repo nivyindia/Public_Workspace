@@ -2,6 +2,8 @@
 
 > Part of Stage 06 (Lead Extraction). See [README.md](README.md) for the stage overview.
 
+**n8n template(s):** [Qualify new leads in Google Sheets via OpenAI's GPT-4](https://n8n.io/workflows/2163-qualify-new-leads-in-google-sheets-via-openais-gpt-4/) — a Google Sheets–triggered flow where an OpenAI node scores each new row against qualification rules and writes the result back; generalizes directly to scoring/pre-qualifying rows landing here from Section 1–5's extraction methods before they move to Stage 07/08. Verified 23 Jul 2026.
+
 For each method family below: manual → semi-automated → fully automated → AI-assisted workflow, required tools/APIs, expected output, common errors, recovery.
 
 ---

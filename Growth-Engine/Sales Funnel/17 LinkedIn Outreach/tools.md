@@ -7,10 +7,10 @@ _Pricing figures are approximate — verify current pricing before purchase._
 | Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
 |---|---|---|---|---|
 | LinkedIn Sales Navigator | Advanced search/filtering by title, company size, industry | ~$99-135/user/mo | LinkedIn free search (limited) | Limited enterprise API |
-| PhantomBuster | Automated connection requests, DM sending, profile export | ~$56-128/mo | — | Yes, scenario-based |
-| Dux-Soup | Browser-extension LinkedIn automation | ~$15-99/mo | — | Limited |
+| PhantomBuster | Automated connection requests, DM sending, profile export | ~$56-128/mo | No direct match in the declared OSS stack (Odoo/Mautic/Documenso/NocoDB-Baserow/Ollama) — evaluate case-by-case rather than force-fit | Yes, scenario-based |
+| Dux-Soup | Browser-extension LinkedIn automation | ~$15-99/mo | No OSS equivalent — carries LinkedIn ToS risk regardless of tool; Airscale/Instant Data Scraper (free tier) is the lowest-cost option available | Limited |
 | n8n | Orchestrating PhantomBuster output into CRM/sheet | Free (self-host) / ~$20+/mo cloud | Self-hosted free | Yes |
-| Google Sheets | Interim export/tracking layer between PhantomBuster and CRM | Free | — | Yes, via Sheets API |
+| Google Sheets | Interim export/tracking layer between PhantomBuster and CRM | Free | Odoo Community (CRM module, self-hosted, free) | Yes, via Sheets API |
 
 ## Selection Notes
 - Sales Navigator materially improves targeting precision over free LinkedIn search and is close to mandatory for volume outreach at this stage.

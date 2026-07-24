@@ -6,10 +6,10 @@ _Pricing figures are approximate — verify current pricing before purchase._
 
 | Tool | Purpose | Pricing (approx., verify) | OSS/Free Alt | API/Automation |
 |---|---|---|---|---|
-| WhatsApp Business App | Manual, low-volume sending | Free | — | None |
-| WATI | WhatsApp Business API platform, templated sends, CRM sync | ~$40-80/mo+ | — | API |
-| Interakt | WhatsApp Business API + CRM features | ~$15-50/mo+ | — | API |
-| Twilio WhatsApp API | Developer-level WhatsApp Business API access | Usage-based | — | Full API |
+| WhatsApp Business App | Manual, low-volume sending | Free | Evolution API / Wuzapi (OSS WhatsApp API) | None |
+| WATI | WhatsApp Business API platform, templated sends, CRM sync | ~$40-80/mo+ | Odoo Community (CRM module, self-hosted, free) | API |
+| Interakt | WhatsApp Business API + CRM features | ~$15-50/mo+ | Odoo Community (CRM module, self-hosted, free) | API |
+| Twilio WhatsApp API | Developer-level WhatsApp Business API access | Usage-based | Evolution API / Wuzapi (OSS WhatsApp API) | Full API |
 | n8n | Orchestrating WhatsApp sends and reply routing | Free (self-host) / ~$20+/mo cloud | Self-hosted free | Yes |
 
 ## Selection Notes

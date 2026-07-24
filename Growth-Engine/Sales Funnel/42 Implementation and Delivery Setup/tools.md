@@ -8,7 +8,7 @@ _Pricing figures are approximate — verify current pricing before purchase._
 |---|---|---|---|---|
 | Notion / ClickUp | Task board setup from the service-specific delivery SOP template | Free / free tier | Notion free tier generous | API |
 | Google Analytics 4 | Baseline tracking setup and goal configuration | Free | Free | API |
-| Meta Business Suite / Ads Manager | Ad account and pixel setup verification | Free | — | API |
+| Meta Business Suite / Ads Manager | Ad account and pixel setup verification | Free | check-if-email-exists (OSS CLI/API, self-hosted SMTP verification) | API |
 | Google Tag Manager | UTM/tracking implementation | Free | Free | API |
 | Slack / Telegram | Internal team assignment and briefing notification | Free tier | Telegram fully free | API/webhook |
 | n8n | Task-board auto-creation, tracking-verification checks | Free (self-hosted) | Fully OSS | Native |
