@@ -1,0 +1,358 @@
+{
+  "name": "2.2 - Nurture Sequence",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "n1-daily-trigger",
+      "name": "Daily 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Leads jo turant qualified/booked nahi hue (warm/cold score) aur abhi nurture drip me hain\nSELECT *\nFROM clients_master\nWHERE status IN ('Qualified', 'Contacted', 'Nurtured')\n  AND score IN ('warm', 'cold')\n  AND COALESCE(nurture_step, 0) < 3\n  AND (\n    last_nurture_sent IS NULL\n    OR last_nurture_sent < now() - (CASE COALESCE(nurture_step, 0)\n                                       WHEN 0 THEN INTERVAL '3 days'\n                                       WHEN 1 THEN INTERVAL '7 days'\n                                       ELSE INTERVAL '14 days'\n                                     END)\n  )\nLIMIT 50;",
+        "options": {}
+      },
+      "id": "n2-fetch-due",
+      "name": "Fetch Leads Due for Nurture",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "3-step drip: Step 0 -> 3 din baad, Step 1 -> 7 din baad, Step 2 -> 14 din baad. Setup section me ALTER TABLE se nurture_step/last_nurture_sent columns add karne honge (agar abhi tak nahi hain)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Har lead ke liye is baar ka nurture step number nikaalo taaki Ollama ko content-type bataya ja sake\nconst step = $json.nurture_step || 0;\nconst stepThemes = {\n  0: 'share a genuinely useful tip or mini case study related to their service interest, no pitch',\n  1: 'share a relevant client success story/result with a soft call to action to book a quick call',\n  2: 'a friendly last check-in, ask if priorities changed, offer a small no-obligation audit/consultation'\n};\nreturn [{\n  json: {\n    ...$json,\n    nurture_step: step,\n    step_theme: stepThemes[step] || stepThemes[2]\n  }\n}];"
+      },
+      "id": "n3-compute-step",
+      "name": "Compute Step Theme",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are writing a nurture-sequence message for a digital agency (Nivy International). This is drip step {{$json.nurture_step + 1}} of 3.\\n\\nLead name: {{$json.name}}\\nCompany: {{$json.company}}\\nService interest: {{$json.service_type}}\\nGoal for this message: {{$json.step_theme}}\\n\\nReturn ONLY a valid JSON object with exactly these keys: email_subject (under 60 chars), email_body (100-150 words, plain text, warm and low-pressure tone), whatsapp_message (under 250 chars, casual).\"\n}"
+      },
+      "id": "n4-ollama-nurture",
+      "name": "Ollama - Generate Nurture Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { email_subject: '', email_body: '', whatsapp_message: '' };\n}\nconst lead = $('Compute Step Theme').item.json;\nreturn [{\n  json: {\n    odoo_lead_id: lead.odoo_lead_id,\n    name: lead.name,\n    email: lead.email,\n    phone: lead.phone,\n    nurture_step: lead.nurture_step,\n    email_subject: parsed.email_subject || 'Quick thought for you',\n    email_body: parsed.email_body || '',\n    whatsapp_message: parsed.whatsapp_message || ''\n  }\n}];"
+      },
+      "id": "n5-parse-nurture",
+      "name": "Parse Nurture JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "emailFormat": "text",
+        "text": "={{$json.email_body}}",
+        "options": {}
+      },
+      "id": "n6-send-nurture-email",
+      "name": "Send Nurture Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1280,
+        200
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.WAHA_URL}}/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Api-Key",
+              "value": "={{$env.WAHA_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session\": \"{{$env.WAHA_SESSION}}\",\n  \"chatId\": \"{{$json.phone.replace(/[^0-9]/g, '')}}@c.us\",\n  \"text\": {{JSON.stringify($json.whatsapp_message)}}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n7-send-nurture-whatsapp",
+      "name": "Send Nurture WhatsApp (Waha)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET nurture_step = COALESCE(nurture_step, 0) + 1,\n    last_nurture_sent = now(),\n    status = CASE WHEN COALESCE(nurture_step, 0) + 1 >= 3 THEN 'Nurture Complete' ELSE 'Nurtured' END,\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n8-update-nurture-step",
+      "name": "Update Nurture Step",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1500,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$('Parse Nurture JSON').item.json.nurture_step}}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n9-if-last-step",
+      "name": "IF Final Nurture Step",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1720,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Nurture sequence complete for ' + $('Parse Nurture JSON').item.json.name + ' - no response after 3 touches. Consider manual follow-up or archive.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n10-discuss-nurture-done",
+      "name": "Odoo Discuss - Nurture Complete Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        320
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 9AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Leads Due for Nurture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Leads Due for Nurture": {
+      "main": [
+        [
+          {
+            "node": "Compute Step Theme",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Step Theme": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Generate Nurture Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Generate Nurture Content": {
+      "main": [
+        [
+          {
+            "node": "Parse Nurture JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Nurture JSON": {
+      "main": [
+        [
+          {
+            "node": "Send Nurture Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Nurture WhatsApp (Waha)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Nurture Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Update Nurture Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Nurture WhatsApp (Waha)": {
+      "main": [
+        [
+          {
+            "node": "Update Nurture Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Nurture Step": {
+      "main": [
+        [
+          {
+            "node": "IF Final Nurture Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Final Nurture Step": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Nurture Complete Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "59bf120556870457"
+}

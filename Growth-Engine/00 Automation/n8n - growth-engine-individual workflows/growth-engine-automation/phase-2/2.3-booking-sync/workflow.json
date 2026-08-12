@@ -1,0 +1,230 @@
+{
+  "name": "2.3 - Booking Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "calcom-booking",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n1-calcom-webhook",
+      "name": "Cal.com Booking Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 380],
+      "webhookId": "calcom-booking",
+      "notes": "Cal.com -> Settings -> Webhooks me is node ka Production URL add karo. Trigger events: BOOKING_CREATED aur BOOKING_CANCELLED dono select karo."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Cal.com payload normalize karo (BOOKING_CREATED ya BOOKING_CANCELLED)\nconst body = $input.item.json.body || $input.item.json;\nconst triggerEvent = body.triggerEvent || body.type || '';\nconst payload = body.payload || body;\nconst attendee = (payload.attendees && payload.attendees[0]) || {};\n\nreturn [{\n  json: {\n    trigger_event: triggerEvent,\n    booking_uid: payload.uid || payload.uuid || '',\n    attendee_email: (attendee.email || '').toLowerCase().trim(),\n    attendee_name: attendee.name || '',\n    start_time: payload.startTime || '',\n    end_time: payload.endTime || '',\n    meeting_url: payload.location || payload.videoCallUrl || '',\n    title: payload.title || 'Discovery Call'\n  }\n}];"
+      },
+      "id": "n2-normalize",
+      "name": "Normalize Cal.com Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 380]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.trigger_event}}",
+              "rightValue": "BOOKING_CANCELLED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n3-if-cancelled",
+      "name": "IF Cancelled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [620, 380]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE lower(email) = lower('{{$json.attendee_email}}') LIMIT 1;",
+        "options": {}
+      },
+      "id": "n4-find-lead-booked",
+      "name": "Find Lead (Booked Path)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [860, 260],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"calendar.event\",\n      \"create\",\n      [ {\n        \"name\": {{JSON.stringify($('Normalize Cal.com Payload').item.json.title + ' - ' + $('Normalize Cal.com Payload').item.json.attendee_name)}},\n        \"start\": {{JSON.stringify($('Normalize Cal.com Payload').item.json.start_time.replace('T',' ').replace('Z',''))}},\n        \"stop\": {{JSON.stringify($('Normalize Cal.com Payload').item.json.end_time.replace('T',' ').replace('Z',''))}},\n        \"description\": {{JSON.stringify('Cal.com booking UID: ' + $('Normalize Cal.com Payload').item.json.booking_uid + '\\nMeeting link: ' + $('Normalize Cal.com Payload').item.json.meeting_url)}},\n        \"opportunity_id\": {{$json.odoo_lead_id || 'false'}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {}
+      },
+      "id": "n5-odoo-create-event",
+      "name": "Odoo - Create Calendar Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 260],
+      "notes": "opportunity_id sirf tab set hota hai jab lead already Odoo CRM me convert ho chuki ho aur clients_master.odoo_lead_id us CRM lead/opportunity ID se match kare."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Booked',\n    updated_at = now()\nWHERE lower(email) = lower('{{$('Normalize Cal.com Payload').item.json.attendee_email}}');",
+        "options": {}
+      },
+      "id": "n6-update-booked",
+      "name": "Postgres - Mark Booked",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1300, 260],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "IF lead clients_master me nahi mila (koi row update nahi hui), matlab ye ek naya/unknown booking hai jo form se nahi aaya tha -- Known Limitations me dekho."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('New booking confirmed: ' + $('Normalize Cal.com Payload').item.json.attendee_name + ' (' + $('Normalize Cal.com Payload').item.json.attendee_email + ') - ' + $('Normalize Cal.com Payload').item.json.start_time)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": { "response": { "neverError": true } }
+        }
+      },
+      "id": "n7-discuss-booked",
+      "name": "Odoo Discuss - Booking Confirmed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1520, 260]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Nurtured',\n    nurture_step = 0,\n    last_nurture_sent = NULL,\n    updated_at = now()\nWHERE lower(email) = lower('{{$('Normalize Cal.com Payload').item.json.attendee_email}}');",
+        "options": {}
+      },
+      "id": "n8-update-cancelled",
+      "name": "Postgres - Revert to Nurture",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [860, 500],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Cancel hone par lead ko wapas nurture drip me daal dete hain (nurture_step reset) taaki reschedule follow-up ho sake."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Booking CANCELLED: ' + $('Normalize Cal.com Payload').item.json.attendee_name + ' (' + $('Normalize Cal.com Payload').item.json.attendee_email + ') - reschedule needed')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": { "response": { "neverError": true } }
+        }
+      },
+      "id": "n9-discuss-cancelled",
+      "name": "Odoo Discuss - Booking Cancelled",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "n10-respond",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1740, 380]
+    }
+  ],
+  "connections": {
+    "Cal.com Booking Webhook": {
+      "main": [[{ "node": "Normalize Cal.com Payload", "type": "main", "index": 0 }]]
+    },
+    "Normalize Cal.com Payload": {
+      "main": [[{ "node": "IF Cancelled", "type": "main", "index": 0 }]]
+    },
+    "IF Cancelled": {
+      "main": [
+        [{ "node": "Postgres - Revert to Nurture", "type": "main", "index": 0 }],
+        [{ "node": "Find Lead (Booked Path)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Find Lead (Booked Path)": {
+      "main": [[{ "node": "Odoo - Create Calendar Event", "type": "main", "index": 0 }]]
+    },
+    "Odoo - Create Calendar Event": {
+      "main": [[{ "node": "Postgres - Mark Booked", "type": "main", "index": 0 }]]
+    },
+    "Postgres - Mark Booked": {
+      "main": [[{ "node": "Odoo Discuss - Booking Confirmed", "type": "main", "index": 0 }]]
+    },
+    "Odoo Discuss - Booking Confirmed": {
+      "main": [[{ "node": "Respond 200 OK", "type": "main", "index": 0 }]]
+    },
+    "Postgres - Revert to Nurture": {
+      "main": [[{ "node": "Odoo Discuss - Booking Cancelled", "type": "main", "index": 0 }]]
+    },
+    "Odoo Discuss - Booking Cancelled": {
+      "main": [[{ "node": "Respond 200 OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

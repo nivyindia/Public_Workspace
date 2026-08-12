@@ -1,0 +1,206 @@
+{
+  "name": "Google Map Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=yourtokenhere",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"includeWebResults\": false,\n    \"language\": \"en\",\n    \"locationQuery\": \"{{ $json.City }},{{ $json.Country }} \",\n    \"maxCrawledPlacesPerSearch\": 25,\n    \"maxImages\": 0,\n    \"maximumLeadsEnrichmentRecords\": 0,\n    \"scrapeContacts\": true,\n    \"scrapeDirectories\": false,\n    \"scrapeImageAuthors\": false,\n    \"scrapePlaceDetailPage\": false,\n    \"scrapeReviewsPersonalData\": true,\n    \"scrapeTableReservationProvider\": false,\n    \"searchStringsArray\": [\n        \"{{ $json['Search Query'] }}\"\n    ],\n    \"skipClosedPlaces\": false,\n    \"website\": \"withWebsite\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -340,
+        -80
+      ],
+      "id": "2ec7af37-3960-49d3-8401-7a2ee1a55d3e",
+      "name": "Call APIFY Actor"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ddb43b31-a96f-4415-8ad3-373a12271ba0",
+              "leftValue": "={{ $json.emails }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -120,
+        -80
+      ],
+      "id": "368d2b5c-01b0-4bf6-b188-e03139804716",
+      "name": "Filter Entries With Emails"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "contacts",
+        "options": {
+          "delimiter": ",",
+          "fileName": "contacts.csv",
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        100,
+        -80
+      ],
+      "id": "85117f2d-9169-4d73-b501-9797d7e967b4",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "formTitle": "Google Maps Scraper",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Search Query",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "City",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Country",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Your Email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -560,
+        -80
+      ],
+      "id": "34ad4761-dbd5-4a12-9e12-abb82aaa35f5",
+      "name": "On form submission",
+      "webhookId": "90a7fc7a-b281-438e-b643-925d7c0dabbe"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $node['On form submission'].json['Your Email'] }}",
+        "subject": "Your Google Maps Leads Are Here",
+        "message": "Please find the attached leads",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "contacts"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        -80
+      ],
+      "id": "169fef09-8f71-40a2-a615-f6c709f33bcd",
+      "name": "Gmail",
+      "webhookId": "d3321ffd-dc1f-4c85-9d93-d3e070d4b17e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RRuT8Jrz0jD5PY3B",
+          "name": "Buddha Gmail Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Call APIFY Actor": {
+      "main": [
+        [
+          {
+            "node": "Filter Entries With Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Entries With Emails": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Call APIFY Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c4711263-74b0-4943-bb2c-2edfc69f0e6c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2863b4f9783089814d603565fa1f4d0b50d870004e5badc434ac8942ad49ba47"
+  },
+  "id": "LFP3MXxMct1PkZeO",
+  "tags": [
+    {
+      "createdAt": "2025-04-26T03:07:52.593Z",
+      "updatedAt": "2025-04-26T03:07:52.593Z",
+      "id": "1Ub6auawM61rJ4PA",
+      "name": "tutorials"
+    }
+  ]
+}

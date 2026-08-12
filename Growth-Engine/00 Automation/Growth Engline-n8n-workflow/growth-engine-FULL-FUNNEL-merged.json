@@ -1,0 +1,5387 @@
+{
+  "name": "Nivy Growth Engine — Full Funnel (Marketing + Sales, Merged)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "m11__n1-schedule-trigger",
+      "name": "[1.1] Every 30 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT bp.id, bp.name, bp.subtitle, bp.content, bp.write_date\nFROM blog_post bp\nLEFT JOIN n8n_processed_posts pp ON pp.post_id = bp.id\nWHERE bp.is_published = true\n  AND pp.post_id IS NULL\nORDER BY bp.write_date ASC\nLIMIT 5;",
+        "options": {}
+      },
+      "id": "m11__n2-get-new-posts",
+      "name": "[1.1] Get New Published Blog Posts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "NOTE: blog_post is Odoo's actual table for Website Blog posts. Run this once first: CREATE TABLE n8n_processed_posts (post_id INTEGER PRIMARY KEY, processed_at TIMESTAMP DEFAULT now());"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a social media copywriter for a digital marketing/IT/AI agency called Nivy. Rewrite the following blog post into 4 platform-specific social posts.\\n\\nBlog Title: {{$json.name.replace(/\\\"/g, '\\\\\\\"')}}\\nBlog Content: {{$json.content.replace(/<[^>]*>/g, ' ').replace(/\\\"/g, '\\\\\\\"').slice(0,2500)}}\\n\\nReturn ONLY a valid JSON object with exactly these 4 keys, no other text before or after: linkedin (150-200 words, professional tone, 2-3 relevant hashtags), twitter (under 280 characters, punchy hook), instagram (casual tone with emojis, 5-8 hashtags at the end), facebook (80-120 words, conversational tone).\"\n}"
+      },
+      "id": "m11__n3-ollama-rewrite",
+      "name": "[1.1] Ollama - Rewrite for All Platforms",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { linkedin: '', twitter: '', instagram: '', facebook: '' };\n}\n\nconst original = $('Get New Published Blog Posts').item.json;\n\nreturn [{\n  json: {\n    post_id: original.id,\n    post_title: original.name,\n    post_url: 'https://REPLACE-WITH-YOUR-DOMAIN.com/blog/' + original.id,\n    linkedin: parsed.linkedin || '',\n    twitter: parsed.twitter || '',\n    instagram: parsed.instagram || '',\n    facebook: parsed.facebook || ''\n  }\n}];"
+      },
+      "id": "m11__n4-parse-json",
+      "name": "[1.1] Parse Platform Posts JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.MIXPOST_URL}}/api/{{$env.MIXPOST_WORKSPACE_UUID}}/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MIXPOST_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"accounts\": [\"{{$env.MIXPOST_LINKEDIN_ACCOUNT_ID}}\"],\n  \"content\": [ { \"body\": {{JSON.stringify($json.linkedin + '\\n\\n' + $json.post_url)}} } ],\n  \"schedule\": { \"now\": true }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m11__n5-mixpost-linkedin",
+      "name": "[1.1] Mixpost - Post LinkedIn",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        120
+      ],
+      "notes": "VERIFY exact body schema against https://docs.mixpost.app/api/posts/create/ for your installed Mixpost version before going live."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.MIXPOST_URL}}/api/{{$env.MIXPOST_WORKSPACE_UUID}}/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MIXPOST_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"accounts\": [\"{{$env.MIXPOST_X_ACCOUNT_ID}}\"],\n  \"content\": [ { \"body\": {{JSON.stringify($json.twitter)}} } ],\n  \"schedule\": { \"now\": true }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m11__n6-mixpost-x",
+      "name": "[1.1] Mixpost - Post X",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.MIXPOST_URL}}/api/{{$env.MIXPOST_WORKSPACE_UUID}}/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MIXPOST_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"accounts\": [\"{{$env.MIXPOST_INSTAGRAM_ACCOUNT_ID}}\"],\n  \"content\": [ { \"body\": {{JSON.stringify($json.instagram)}} } ],\n  \"schedule\": { \"now\": true }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m11__n7-mixpost-instagram",
+      "name": "[1.1] Mixpost - Post Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.MIXPOST_URL}}/api/{{$env.MIXPOST_WORKSPACE_UUID}}/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MIXPOST_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"accounts\": [\"{{$env.MIXPOST_FACEBOOK_ACCOUNT_ID}}\"],\n  \"content\": [ { \"body\": {{JSON.stringify($json.facebook + '\\n\\n' + $json.post_url)}} } ],\n  \"schedule\": { \"now\": true }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m11__n8-mixpost-facebook",
+      "name": "[1.1] Mixpost - Post Facebook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO n8n_processed_posts (post_id, processed_at)\nVALUES ({{$json.post_id}}, now())\nON CONFLICT (post_id) DO NOTHING;",
+        "options": {}
+      },
+      "id": "m11__n9-mark-processed",
+      "name": "[1.1] Mark Post as Processed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1140,
+        680
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "id": "m12__s1-weekly-trigger",
+      "name": "[1.2] Weekly - Monday 6AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        1150
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://searchconsole.googleapis.com/webmasters/v3/sites/{{encodeURIComponent($env.GSC_SITE_URL)}}/searchAnalytics/query",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startDate\": \"{{$now.minus({days:28}).toFormat('yyyy-MM-dd')}}\",\n  \"endDate\": \"{{$now.minus({days:1}).toFormat('yyyy-MM-dd')}}\",\n  \"dimensions\": [\"query\", \"page\"],\n  \"rowLimit\": 200\n}"
+      },
+      "id": "m12__s2-gsc-query",
+      "name": "[1.2] GSC - Get Search Analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        990
+      ],
+      "notes": "Google Search Console API credential (OAuth2) required. Site must be verified in GSC."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are an SEO analyst. Here is 28-day Google Search Console data (queries + pages + clicks + impressions + position) for a digital marketing/AI/IT agency website: {{JSON.stringify($json.rows || []).slice(0,6000)}}\\n\\nReturn ONLY a valid JSON object with keys: top_opportunity_keywords (array of up to 10 objects with keyword, current_position, suggested_action), content_gap_topics (array of up to 5 topic ideas the site should write about based on what's ranking on page 2-3). No text outside the JSON.\"\n}"
+      },
+      "id": "m12__s3-ollama-cluster",
+      "name": "[1.2] Ollama - Cluster Keywords",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        990
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { top_opportunity_keywords: [], content_gap_topics: [] };\n}\nreturn [{ json: parsed }];"
+      },
+      "id": "m12__s4-parse-clusters",
+      "name": "[1.2] Parse Keyword Clusters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        990
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, meta_description\nFROM website_page\nWHERE is_published = true\n  AND (meta_description IS NULL OR meta_description = '')\nLIMIT 20;",
+        "options": {}
+      },
+      "id": "m12__s5-get-pages-missing-meta",
+      "name": "[1.2] Get Pages Missing Meta Description",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        1310
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "website_page is Odoo's table for website pages. Adjust table/column names if your Odoo version differs (check via pgAdmin/psql first)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"Write a compelling SEO meta description (max 155 characters) for a webpage titled: {{$json.name.replace(/\\\"/g,'')}}. This is for a digital marketing/AI/IT agency called Nivy. Return ONLY the meta description text, nothing else, no quotes.\"\n}"
+      },
+      "id": "m12__s6-ollama-meta",
+      "name": "[1.2] Ollama - Generate Meta Description",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        1310
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE website_page\nSET meta_description = {{JSON.stringify($json.response.trim().slice(0,155))}}\nWHERE id = {{$('Get Pages Missing Meta Description').item.json.id}};",
+        "options": {}
+      },
+      "id": "m12__s7-update-meta",
+      "name": "[1.2] Update Page Meta Description",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        840,
+        1310
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://REPLACE-WITH-YOUR-DOMAIN.com/sitemap.xml",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "m12__s8-fetch-sitemap",
+      "name": "[1.2] Fetch Sitemap XML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        1510
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const xml = $input.item.json.data || $input.item.json.body || '';\nconst matches = [...xml.matchAll(/<loc>(.*?)<\\/loc>/g)].map(m => m[1]);\nconst limited = matches.slice(0, 100);\nreturn limited.map(url => ({ json: { url } }));"
+      },
+      "id": "m12__s9-extract-urls",
+      "name": "[1.2] Extract URLs from Sitemap",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        1510
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "id": "m12__s10-split-batches",
+      "name": "[1.2] Loop URLs (batch 10)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        840,
+        1510
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$json.url}}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 8000
+        }
+      },
+      "id": "m12__s11-check-status",
+      "name": "[1.2] Check URL Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        1450
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.statusCode}}",
+              "rightValue": 400,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m12__s12-if-broken",
+      "name": "[1.2] Is Broken (>=400)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        1450
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { broken_url: $json.url, status_code: $json.statusCode } }];"
+      },
+      "id": "m12__s13-collect-broken",
+      "name": "[1.2] Collect Broken Link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        1390
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const clusters = $('Parse Keyword Clusters').item.json;\nconst metaUpdatedCount = $('Get Pages Missing Meta Description').all().length;\nconst brokenLinks = $('Collect Broken Link').all().map(i => i.json);\n\nconst html = `\n  <h2>Weekly SEO Report</h2>\n  <h3>Top Keyword Opportunities</h3>\n  <ul>${(clusters.top_opportunity_keywords || []).map(k => `<li><b>${k.keyword}</b> - position ${k.current_position} - ${k.suggested_action}</li>`).join('')}</ul>\n  <h3>Content Gap Topics</h3>\n  <ul>${(clusters.content_gap_topics || []).map(t => `<li>${t}</li>`).join('')}</ul>\n  <h3>Meta Descriptions Auto-Generated</h3>\n  <p>${metaUpdatedCount} pages updated this week</p>\n  <h3>Broken Links Found</h3>\n  <ul>${brokenLinks.length ? brokenLinks.map(b => `<li>${b.broken_url} (status ${b.status_code})</li>`).join('') : '<li>None found 🎉</li>'}</ul>\n`;\n\nreturn [{ json: { reportHtml: html } }];"
+      },
+      "id": "m12__s14-build-report",
+      "name": "[1.2] Build Weekly SEO Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        1630
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "reports@REPLACE-WITH-YOUR-DOMAIN.com",
+        "toEmail": "REPLACE-WITH-YOUR-EMAIL@example.com",
+        "subject": "Weekly SEO Report - {{$now.toFormat('dd MMM yyyy')}}",
+        "html": "={{$json.reportHtml}}",
+        "options": {}
+      },
+      "id": "m12__s15-send-report",
+      "name": "[1.2] Send Weekly SEO Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1280,
+        1630
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "typebot-lead-capture",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "m13__n1-webhook",
+      "name": "[1.3] Typebot Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        1800
+      ],
+      "notes": "Typebot ke 'Webhook' block me is URL ko paste karo (n8n webhook production URL). Trigger tab hoga jab visitor conversation complete karega."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\n\n// Typebot generally sends answers as an array of {key, value} or a flat object depending on setup.\n// Normalize into a flat lead object - adjust field names to match your actual Typebot block variable names.\nconst answers = body.answers || body;\n\nreturn [{\n  json: {\n    name: answers.name || answers.Name || 'Unknown',\n    email: answers.email || answers.Email || '',\n    phone: answers.phone || answers.Phone || '',\n    company: answers.company || answers.Company || '',\n    raw_message: answers.message || answers.query || JSON.stringify(answers),\n    source: 'typebot_website_chat',\n    submitted_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "m13__n2-normalize",
+      "name": "[1.3] Normalize Typebot Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a lead classifier for a digital agency called Nivy International (services: SEO, AI Automation, Virtual Assistant/VA services, Design, Video). Read the visitor's message and classify it.\\n\\nVisitor message: {{$json.raw_message.replace(/\\\"/g, '\\\\\\\"').slice(0,1000)}}\\n\\nReturn ONLY a valid JSON object with exactly these keys, no other text: service_type (one of: SEO, AI Automation, VA, Design, Video, Other), intent_summary (1 sentence, what the visitor actually wants), urgency (one of: immediate, exploring, just_browsing).\"\n}"
+      },
+      "id": "m13__n3-ollama-classify",
+      "name": "[1.3] Ollama - Classify Service Type",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { service_type: 'Other', intent_summary: '', urgency: 'exploring' };\n}\n\nconst lead = $('Normalize Typebot Payload').item.json;\n\nreturn [{\n  json: {\n    ...lead,\n    service_type: parsed.service_type || 'Other',\n    intent_summary: parsed.intent_summary || '',\n    urgency: parsed.urgency || 'exploring'\n  }\n}];"
+      },
+      "id": "m13__n4-parse-classification",
+      "name": "[1.3] Parse Classification JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"crm.lead\",\n      \"create\",\n      [ {\n        \"name\": {{JSON.stringify($json.name + ' - ' + $json.service_type + ' (Typebot)')}},\n        \"contact_name\": {{JSON.stringify($json.name)}},\n        \"email_from\": {{JSON.stringify($json.email)}},\n        \"phone\": {{JSON.stringify($json.phone)}},\n        \"partner_name\": {{JSON.stringify($json.company)}},\n        \"description\": {{JSON.stringify($json.intent_summary + ' | Raw: ' + $json.raw_message)}},\n        \"source_id\": false,\n        \"tag_ids\": [[6, 0, []]]\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {}
+      },
+      "id": "m13__n5-odoo-create-lead",
+      "name": "[1.3] Odoo - Create CRM Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        1800
+      ],
+      "notes": "Odoo JSON-RPC via /jsonrpc endpoint. ODOO_UID = internal user id of the API user (get once via login RPC). Isse simpler alternative: Odoo Website Forms module already auto-creates leads for native forms - ye node sirf Typebot (external) leads ke liye zaroori hai."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO clients_master (odoo_lead_id, name, email, phone, company, service_type, intent_summary, urgency, source, status, created_at, updated_at)\nVALUES (\n  {{$json.result.id}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.name)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.email)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.phone)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.company)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.service_type)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.intent_summary)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.urgency)}},\n  'typebot_website_chat',\n  'New',\n  now(), now()\n)\nON CONFLICT (odoo_lead_id) DO NOTHING;",
+        "options": {}
+      },
+      "id": "m13__n6-insert-master",
+      "name": "[1.3] Insert into clients_master",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1320,
+        1800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Ek baar pehle ye control table banao (README dekho): clients_master. Ye central table hai jo poore funnel (1.1-2.9) ke status ko ek jagah track karta hai."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"received\",\n  \"lead_id\": {{$('Odoo - Create CRM Lead').item.json.result.id}}\n}",
+        "options": {}
+      },
+      "id": "m13__n7-respond",
+      "name": "[1.3] Respond to Typebot",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-qualification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "m14__n1-webhook",
+      "name": "[1.4] Lead Event Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        2570
+      ],
+      "notes": "Ye webhook 2 jagah se call hota hai: (1) Module 1.3 ke baad (Typebot leads), (2) Odoo Website Form submit par - Odoo Automation Rule (Settings > Technical > Automation Rules) me 'Execute Python Code' ya webhook action add karke isi URL par POST karo jab crm.lead record create ho via website form."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.body.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "m14__n2-fetch-lead",
+      "name": "[1.4] Fetch Lead from clients_master",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        420,
+        2570
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Agar lead abhi 1.3 se nahi aaya (direct Odoo Website Form submission hai), to ye query khali result dega - agla IF node isko handle karta hai."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m14__n3-if-known-lead",
+      "name": "[1.4] IF Lead Already in clients_master",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        2570
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Direct Odoo Website Form submission - lead not yet in clients_master, pull fields from webhook body directly\nconst body = $('Lead Event Webhook').item.json.body;\nreturn [{\n  json: {\n    odoo_lead_id: body.odoo_lead_id,\n    name: body.name || body.contact_name || 'Unknown',\n    email: body.email_from || body.email || '',\n    phone: body.phone || '',\n    company: body.partner_name || '',\n    raw_message: body.description || body.message || '',\n    source: 'odoo_website_form'\n  }\n}];"
+      },
+      "id": "m14__n4-fallback-fields",
+      "name": "[1.4] Build Fields from Webhook (Fallback)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        2710
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge point: normalize whichever branch fired into one shape\nconst j = $input.item.json;\nreturn [{\n  json: {\n    odoo_lead_id: j.odoo_lead_id,\n    name: j.name,\n    email: j.email,\n    phone: j.phone,\n    company: j.company,\n    raw_message: j.raw_message || j.intent_summary || '',\n    service_type: j.service_type || 'Other',\n    source: j.source || 'odoo_website_form'\n  }\n}];"
+      },
+      "id": "m14__n5-normalize-merged",
+      "name": "[1.4] Normalize Merged Lead",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1080,
+        2570
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a lead scoring assistant for a digital agency (Nivy International). Services offered: SEO, AI Automation, VA, Design, Video.\\n\\nLead details:\\nName: {{$json.name}}\\nCompany: {{$json.company}}\\nService interest: {{$json.service_type}}\\nMessage: {{$json.raw_message.replace(/\\\"/g, '\\\\\\\"').slice(0,800)}}\\n\\nScore this lead. Return ONLY a valid JSON object with exactly these keys: score (one of: hot, warm, cold), reason (1 sentence why), suggested_next_step (1 short sentence).\"\n}"
+      },
+      "id": "m14__n6-ollama-score",
+      "name": "[1.4] Ollama - Score Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        2570
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { score: 'warm', reason: '', suggested_next_step: '' };\n}\nconst lead = $('Normalize Merged Lead').item.json;\nreturn [{ json: { ...lead, score: parsed.score || 'warm', reason: parsed.reason || '', suggested_next_step: parsed.suggested_next_step || '' } }];"
+      },
+      "id": "m14__n7-parse-score",
+      "name": "[1.4] Parse Score JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        2570
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET score = {{JSON.stringify($json.score)}},\n    score_reason = {{JSON.stringify($json.reason)}},\n    status = 'Qualified',\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m14__n8-update-master",
+      "name": "[1.4] Update clients_master with Score",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1740,
+        2570
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"crm.lead\",\n      \"write\",\n      [ [ {{$json.odoo_lead_id}} ], {\n        \"priority\": \"={{$json.score === 'hot' ? '3' : ($json.score === 'warm' ? '2' : '1')}}\",\n        \"description\": {{JSON.stringify($json.reason + ' | Next: ' + $json.suggested_next_step)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m14__n9-odoo-update-lead",
+      "name": "[1.4] Odoo - Update Lead Priority",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        2570
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$('Parse Score JSON').item.json.score}}",
+              "rightValue": "hot",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m14__n10-if-hot",
+      "name": "[1.4] IF Hot Lead",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2180,
+        2570
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify(' HOT lead: ' + $('Parse Score JSON').item.json.name + ' (' + $('Parse Score JSON').item.json.company + ') - ' + $('Parse Score JSON').item.json.reason)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m14__n11-discuss-alert",
+      "name": "[1.4] Odoo Discuss - Alert Sales Team",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        2470
+      ],
+      "notes": "ODOO_DISCUSS_CHANNEL_ID = sales team ke Discuss channel ka ID (Settings > Technical > Discuss Channels se milega)."
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$('Parse Score JSON').item.json.email}}",
+        "subject": "Thanks for reaching out to Nivy International!",
+        "emailFormat": "text",
+        "text": "=Hi {{$('Parse Score JSON').item.json.name}},\n\nThanks for your interest in {{$('Parse Score JSON').item.json.service_type}}! One of our specialists will reach out shortly to discuss next steps.\n\nIn the meantime, feel free to book a slot directly: {{$env.CALCOM_BOOKING_LINK}}\n\nBest,\nNivy International Agency",
+        "options": {}
+      },
+      "id": "m14__n12-auto-response",
+      "name": "[1.4] Send Auto-Response (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2400,
+        2670
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "m15__n1-schedule",
+      "name": "[1.5] Every 5 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        3320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Odoo CRM stage change detect: compare crm.lead.stage_id (Odoo) against last-known stage in clients_master\nSELECT\n  cl.id AS odoo_lead_id,\n  cl.name,\n  cl.email_from AS email,\n  cl.phone,\n  cl.partner_name AS company,\n  st.name AS current_stage,\n  cm.status AS last_known_status\nFROM crm_lead cl\nJOIN crm_stage st ON st.id = cl.stage_id\nLEFT JOIN clients_master cm ON cm.odoo_lead_id = cl.id\nWHERE cm.odoo_lead_id IS NULL\n   OR st.name != cm.status\nORDER BY cl.write_date DESC\nLIMIT 25;",
+        "options": {}
+      },
+      "id": "m15__n2-detect-changes",
+      "name": "[1.5] Detect CRM Stage Changes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        3320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "crm_lead aur crm_stage Odoo ke actual Postgres tables hain (same DB). st.name Odoo me aapke pipeline stages ke exact naam se match hone chahiye: New, Qualified, Contacted, Nurtured, Booked, Proposal Sent, Won, Onboarded, Delivered, Renewal - Section 1 wale funnel status ke mutabiq CRM pipeline stages rename kar lena."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO clients_master (odoo_lead_id, name, email, phone, company, status, created_at, updated_at)\nVALUES ({{$json.odoo_lead_id}}, {{JSON.stringify($json.name)}}, {{JSON.stringify($json.email)}}, {{JSON.stringify($json.phone)}}, {{JSON.stringify($json.company)}}, {{JSON.stringify($json.current_stage)}}, now(), now())\nON CONFLICT (odoo_lead_id) DO UPDATE\nSET status = EXCLUDED.status, updated_at = now();",
+        "options": {}
+      },
+      "id": "m15__n3-upsert-master",
+      "name": "[1.5] Upsert clients_master",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        620,
+        3320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Ye woh 'single source of truth sync' hai jiska zikr Master Plan ke Section 5.1 me hai - har module isi table ko read/write karta hai."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.current_stage}}",
+              "rightValue": "Qualified",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m15__n4-if-qualified",
+      "name": "[1.5] IF Stage = Qualified",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        3180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.current_stage}}",
+              "rightValue": "Won",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m15__n5-if-won",
+      "name": "[1.5] IF Stage = Won",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        3340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.current_stage}}",
+              "rightValue": "Proposal Sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m15__n6-if-proposal",
+      "name": "[1.5] IF Stage = Proposal Sent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        3460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.current_stage}}",
+              "rightValue": "Booked",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m15__n6b-if-booked",
+      "name": "[1.5] IF Stage = Booked",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        3580
+      ],
+      "notes": "Module 2.3 (Booking Sync) status ko 'Booked' set karta hai jab Cal.com booking confirm hoti hai. Ye branch tabhi 2.4 (Proposal Generation) trigger karta hai."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Stage change: ' + $json.name + ' -> ' + $json.current_stage)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m15__n10-discuss-notify",
+      "name": "[1.5] Odoo Discuss - Notify Stage Change",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        3320
+      ],
+      "notes": "Har major stage change par team ko Discuss me alert - Master Plan Section 5.4 (human checkpoint / QA reminder)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "m21__n2-fetch-lead",
+      "name": "[2.1] Fetch Lead Detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "service_type, intent_summary, score jaisi details yahan se milti hain taaki outreach message personalized ho (1.3/1.4 me already save ho chuki hain)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a sales development rep for a digital agency called Nivy International (services: SEO, AI Automation, VA, Design, Video). Write a personalized first-touch outreach for this lead.\\n\\nName: {{$json.name}}\\nCompany: {{$json.company}}\\nService interest: {{$json.service_type}}\\nWhat they said: {{($json.intent_summary || '').replace(/\\\"/g, '\\\\\\\"').slice(0,500)}}\\n\\nReturn ONLY a valid JSON object with exactly these keys, no other text: email_subject (under 60 chars), email_body (120-180 words, friendly, ends with a clear call to book a call, plain text no markdown), linkedin_message (under 300 chars, casual, no hard sell), whatsapp_message (under 300 chars, casual, friendly opener).\"\n}"
+      },
+      "id": "m21__n3-ollama-generate",
+      "name": "[2.1] Ollama - Generate Outreach Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3220,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { email_subject: '', email_body: '', linkedin_message: '', whatsapp_message: '' };\n}\nconst lead = $('Fetch Lead Detail').item.json;\nreturn [{\n  json: {\n    odoo_lead_id: lead.odoo_lead_id,\n    name: lead.name,\n    email: lead.email,\n    phone: lead.phone,\n    company: lead.company,\n    email_subject: parsed.email_subject || 'Following up on your enquiry',\n    email_body: parsed.email_body || '',\n    linkedin_message: parsed.linkedin_message || '',\n    whatsapp_message: parsed.whatsapp_message || ''\n  }\n}];"
+      },
+      "id": "m21__n4-parse-outreach",
+      "name": "[2.1] Parse Outreach JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "emailFormat": "text",
+        "text": "={{$json.email_body}}",
+        "options": {}
+      },
+      "id": "m21__n5-send-email",
+      "name": "[2.1] Send Outreach Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3660,
+        160
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.WAHA_URL}}/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Api-Key",
+              "value": "={{$env.WAHA_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session\": \"{{$env.WAHA_SESSION}}\",\n  \"chatId\": \"{{$json.phone.replace(/[^0-9]/g, '')}}@c.us\",\n  \"text\": {{JSON.stringify($json.whatsapp_message)}}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m21__n6-send-whatsapp",
+      "name": "[2.1] Send WhatsApp (Waha)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3660,
+        320
+      ],
+      "notes": "Waha ka /api/sendText endpoint aur auth header version ke hisaab se thoda differ kar sakta hai - https://waha.devlike.pro/docs ki official API reference se confirm kar lena. Agar lead ka phone number nahi hai to ye node skip ho jaayega (empty result, error nahi)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.activity\",\n      \"create\",\n      [ {\n        \"res_model\": \"crm.lead\",\n        \"res_id\": {{$json.odoo_lead_id}},\n        \"activity_type_id\": {{$env.ODOO_LINKEDIN_ACTIVITY_TYPE_ID}},\n        \"summary\": \"Send LinkedIn outreach message (AI-drafted)\",\n        \"note\": {{JSON.stringify($json.linkedin_message)}},\n        \"user_id\": {{$env.ODOO_SALES_USER_ID}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {}
+      },
+      "id": "m21__n7-linkedin-task",
+      "name": "[2.1] Odoo - Create LinkedIn Task (Semi-Automated)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3660,
+        480
+      ],
+      "notes": "LinkedIn par direct automated messaging LinkedIn ke Terms of Service ke against hai aur account ban ka risk hai. Isliye ye step LinkedIn message khud nahi bhejta - Ollama-drafted message ke saath Odoo me ek activity/task bana deta hai jise sales rep 1-click me copy-paste karke manually LinkedIn par bhej sakta hai. Agar aap apna khud ka LinkedIn automation tool (jaise Unipile/PhantomBuster - apne risk par) use karna chahte ho to yahan HTTP node replace kar sakte ho."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Contacted',\n    last_outreach_at = now(),\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m21__n8-update-master",
+      "name": "[2.1] Update clients_master (Contacted)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3880,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "postal-reply-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "m21__n9-reply-webhook",
+      "name": "[2.1] Postal Inbound Reply Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        640
+      ],
+      "notes": "Postal me Settings > Webhooks me 'MessageBounced'/'MessageDeliveryFailed' ke alawa inbound route bhi configure karo taaki reply aane par ye URL call ho. Postal docs: https://docs.postalserver.io/"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Replied', updated_at = now()\nWHERE email = {{JSON.stringify($json.body.mail_from || $json.body.from)}}\nRETURNING odoo_lead_id, name;",
+        "options": {}
+      },
+      "id": "m21__n10-mark-replied",
+      "name": "[2.1] Mark Lead as Replied",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        640
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Postal ka inbound webhook payload field name (from/mail_from) apne Postal version ke actual payload se confirm kar lena test email bhej ke."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Lead replied: ' + ($json.name || 'unknown') + ' - check inbox and follow up!')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m21__n11-discuss-reply-alert",
+      "name": "[2.1] Odoo Discuss - Notify Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3220,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\" }",
+        "options": {}
+      },
+      "id": "m21__n12-respond-postal",
+      "name": "[2.1] Respond to Postal",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3440,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "m22__n1-daily-trigger",
+      "name": "[2.2] Daily 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        2780,
+        1070
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Leads jo turant qualified/booked nahi hue (warm/cold score) aur abhi nurture drip me hain\nSELECT *\nFROM clients_master\nWHERE status IN ('Qualified', 'Contacted', 'Nurtured')\n  AND score IN ('warm', 'cold')\n  AND COALESCE(nurture_step, 0) < 3\n  AND (\n    last_nurture_sent IS NULL\n    OR last_nurture_sent < now() - (CASE COALESCE(nurture_step, 0)\n                                       WHEN 0 THEN INTERVAL '3 days'\n                                       WHEN 1 THEN INTERVAL '7 days'\n                                       ELSE INTERVAL '14 days'\n                                     END)\n  )\nLIMIT 50;",
+        "options": {}
+      },
+      "id": "m22__n2-fetch-due",
+      "name": "[2.2] Fetch Leads Due for Nurture",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        1070
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "3-step drip: Step 0 -> 3 din baad, Step 1 -> 7 din baad, Step 2 -> 14 din baad. Setup section me ALTER TABLE se nurture_step/last_nurture_sent columns add karne honge (agar abhi tak nahi hain)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Har lead ke liye is baar ka nurture step number nikaalo taaki Ollama ko content-type bataya ja sake\nconst step = $json.nurture_step || 0;\nconst stepThemes = {\n  0: 'share a genuinely useful tip or mini case study related to their service interest, no pitch',\n  1: 'share a relevant client success story/result with a soft call to action to book a quick call',\n  2: 'a friendly last check-in, ask if priorities changed, offer a small no-obligation audit/consultation'\n};\nreturn [{\n  json: {\n    ...$json,\n    nurture_step: step,\n    step_theme: stepThemes[step] || stepThemes[2]\n  }\n}];"
+      },
+      "id": "m22__n3-compute-step",
+      "name": "[2.2] Compute Step Theme",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3220,
+        1070
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are writing a nurture-sequence message for a digital agency (Nivy International). This is drip step {{$json.nurture_step + 1}} of 3.\\n\\nLead name: {{$json.name}}\\nCompany: {{$json.company}}\\nService interest: {{$json.service_type}}\\nGoal for this message: {{$json.step_theme}}\\n\\nReturn ONLY a valid JSON object with exactly these keys: email_subject (under 60 chars), email_body (100-150 words, plain text, warm and low-pressure tone), whatsapp_message (under 250 chars, casual).\"\n}"
+      },
+      "id": "m22__n4-ollama-nurture",
+      "name": "[2.2] Ollama - Generate Nurture Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3440,
+        1070
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { email_subject: '', email_body: '', whatsapp_message: '' };\n}\nconst lead = $('Compute Step Theme').item.json;\nreturn [{\n  json: {\n    odoo_lead_id: lead.odoo_lead_id,\n    name: lead.name,\n    email: lead.email,\n    phone: lead.phone,\n    nurture_step: lead.nurture_step,\n    email_subject: parsed.email_subject || 'Quick thought for you',\n    email_body: parsed.email_body || '',\n    whatsapp_message: parsed.whatsapp_message || ''\n  }\n}];"
+      },
+      "id": "m22__n5-parse-nurture",
+      "name": "[2.2] Parse Nurture JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3660,
+        1070
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "emailFormat": "text",
+        "text": "={{$json.email_body}}",
+        "options": {}
+      },
+      "id": "m22__n6-send-nurture-email",
+      "name": "[2.2] Send Nurture Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3880,
+        950
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.WAHA_URL}}/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Api-Key",
+              "value": "={{$env.WAHA_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session\": \"{{$env.WAHA_SESSION}}\",\n  \"chatId\": \"{{$json.phone.replace(/[^0-9]/g, '')}}@c.us\",\n  \"text\": {{JSON.stringify($json.whatsapp_message)}}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m22__n7-send-nurture-whatsapp",
+      "name": "[2.2] Send Nurture WhatsApp (Waha)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3880,
+        1090
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET nurture_step = COALESCE(nurture_step, 0) + 1,\n    last_nurture_sent = now(),\n    status = CASE WHEN COALESCE(nurture_step, 0) + 1 >= 3 THEN 'Nurture Complete' ELSE 'Nurtured' END,\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m22__n8-update-nurture-step",
+      "name": "[2.2] Update Nurture Step",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4100,
+        1070
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$('Parse Nurture JSON').item.json.nurture_step}}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m22__n9-if-last-step",
+      "name": "[2.2] IF Final Nurture Step",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4320,
+        1070
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Nurture sequence complete for ' + $('Parse Nurture JSON').item.json.name + ' - no response after 3 touches. Consider manual follow-up or archive.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m22__n10-discuss-nurture-done",
+      "name": "[2.2] Odoo Discuss - Nurture Complete Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4540,
+        1070
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "calcom-booking",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "m23__n1-calcom-webhook",
+      "name": "[2.3] Cal.com Booking Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        1880
+      ],
+      "webhookId": "calcom-booking",
+      "notes": "Cal.com -> Settings -> Webhooks me is node ka Production URL add karo. Trigger events: BOOKING_CREATED aur BOOKING_CANCELLED dono select karo."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Cal.com payload normalize karo (BOOKING_CREATED ya BOOKING_CANCELLED)\nconst body = $input.item.json.body || $input.item.json;\nconst triggerEvent = body.triggerEvent || body.type || '';\nconst payload = body.payload || body;\nconst attendee = (payload.attendees && payload.attendees[0]) || {};\n\nreturn [{\n  json: {\n    trigger_event: triggerEvent,\n    booking_uid: payload.uid || payload.uuid || '',\n    attendee_email: (attendee.email || '').toLowerCase().trim(),\n    attendee_name: attendee.name || '',\n    start_time: payload.startTime || '',\n    end_time: payload.endTime || '',\n    meeting_url: payload.location || payload.videoCallUrl || '',\n    title: payload.title || 'Discovery Call'\n  }\n}];"
+      },
+      "id": "m23__n2-normalize",
+      "name": "[2.3] Normalize Cal.com Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        1880
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.trigger_event}}",
+              "rightValue": "BOOKING_CANCELLED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m23__n3-if-cancelled",
+      "name": "[2.3] IF Cancelled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3220,
+        1880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE lower(email) = lower('{{$json.attendee_email}}') LIMIT 1;",
+        "options": {}
+      },
+      "id": "m23__n4-find-lead-booked",
+      "name": "[2.3] Find Lead (Booked Path)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3460,
+        1760
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"calendar.event\",\n      \"create\",\n      [ {\n        \"name\": {{JSON.stringify($('Normalize Cal.com Payload').item.json.title + ' - ' + $('Normalize Cal.com Payload').item.json.attendee_name)}},\n        \"start\": {{JSON.stringify($('Normalize Cal.com Payload').item.json.start_time.replace('T',' ').replace('Z',''))}},\n        \"stop\": {{JSON.stringify($('Normalize Cal.com Payload').item.json.end_time.replace('T',' ').replace('Z',''))}},\n        \"description\": {{JSON.stringify('Cal.com booking UID: ' + $('Normalize Cal.com Payload').item.json.booking_uid + '\\nMeeting link: ' + $('Normalize Cal.com Payload').item.json.meeting_url)}},\n        \"opportunity_id\": {{$json.odoo_lead_id || 'false'}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {}
+      },
+      "id": "m23__n5-odoo-create-event",
+      "name": "[2.3] Odoo - Create Calendar Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3680,
+        1760
+      ],
+      "notes": "opportunity_id sirf tab set hota hai jab lead already Odoo CRM me convert ho chuki ho aur clients_master.odoo_lead_id us CRM lead/opportunity ID se match kare."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Booked',\n    updated_at = now()\nWHERE lower(email) = lower('{{$('Normalize Cal.com Payload').item.json.attendee_email}}');",
+        "options": {}
+      },
+      "id": "m23__n6-update-booked",
+      "name": "[2.3] Postgres - Mark Booked",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3900,
+        1760
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "IF lead clients_master me nahi mila (koi row update nahi hui), matlab ye ek naya/unknown booking hai jo form se nahi aaya tha -- Known Limitations me dekho."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('New booking confirmed: ' + $('Normalize Cal.com Payload').item.json.attendee_name + ' (' + $('Normalize Cal.com Payload').item.json.attendee_email + ') - ' + $('Normalize Cal.com Payload').item.json.start_time)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m23__n7-discuss-booked",
+      "name": "[2.3] Odoo Discuss - Booking Confirmed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4120,
+        1760
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Nurtured',\n    nurture_step = 0,\n    last_nurture_sent = NULL,\n    updated_at = now()\nWHERE lower(email) = lower('{{$('Normalize Cal.com Payload').item.json.attendee_email}}');",
+        "options": {}
+      },
+      "id": "m23__n8-update-cancelled",
+      "name": "[2.3] Postgres - Revert to Nurture",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3460,
+        2000
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Cancel hone par lead ko wapas nurture drip me daal dete hain (nurture_step reset) taaki reschedule follow-up ho sake."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Booking CANCELLED: ' + $('Normalize Cal.com Payload').item.json.attendee_name + ' (' + $('Normalize Cal.com Payload').item.json.attendee_email + ') - reschedule needed')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m23__n9-discuss-cancelled",
+      "name": "[2.3] Odoo Discuss - Booking Cancelled",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3680,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "m23__n10-respond",
+      "name": "[2.3] Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4340,
+        1880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "m24__n2-fetch-lead",
+      "name": "[2.4] Fetch Lead Detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        2630
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a proposal writer for a digital agency (Nivy International). Draft a service proposal for this lead.\\n\\nLead name: {{$json.name}}\\nCompany: {{$json.company}}\\nService interest: {{$json.service_type}}\\nIntent summary: {{$json.intent_summary}}\\n\\nReturn ONLY a valid JSON object with exactly these keys: proposal_title (short), scope_summary (2-3 sentences), deliverables (array of 4-6 short strings), timeline_weeks (integer estimate), pricing_tiers (array of exactly 3 objects each with keys: tier_name, price_inr (integer, realistic for an Indian digital agency), includes (short string)), recommended_tier (one of the 3 tier_name values), email_intro (80-120 words, warm, professional, inviting them to review the attached proposal and book a follow-up call if needed).\"\n}"
+      },
+      "id": "m24__n3-ollama-proposal",
+      "name": "[2.4] Ollama - Draft Proposal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3220,
+        2630
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : {};\n}\nconst lead = $('Fetch Lead Detail').item.json;\nconst tiers = Array.isArray(parsed.pricing_tiers) ? parsed.pricing_tiers : [];\nconst recommended = tiers.find(t => t.tier_name === parsed.recommended_tier) || tiers[0] || { price_inr: 0, tier_name: 'Standard' };\nconst customThreshold = parseInt($env.PROPOSAL_CUSTOM_THRESHOLD_INR || '150000', 10);\n\nreturn [{\n  json: {\n    odoo_lead_id: lead.odoo_lead_id,\n    name: lead.name,\n    email: lead.email,\n    company: lead.company,\n    proposal_title: parsed.proposal_title || 'Proposal for ' + lead.company,\n    scope_summary: parsed.scope_summary || '',\n    deliverables: parsed.deliverables || [],\n    timeline_weeks: parsed.timeline_weeks || 4,\n    pricing_tiers: tiers,\n    recommended_tier: recommended.tier_name,\n    recommended_price: recommended.price_inr,\n    email_intro: parsed.email_intro || 'Please find our proposal attached.',\n    use_custom_pdf: recommended.price_inr >= customThreshold\n  }\n}];"
+      },
+      "id": "m24__n4-parse-decide",
+      "name": "[2.4] Parse + Decide Simple vs Custom",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        2630
+      ],
+      "notes": "PROPOSAL_CUSTOM_THRESHOLD_INR se zyada value wale deals ke liye custom-branded PDF (Gotenberg), chhote deals ke liye seedha Odoo Sales Quotation (simple, fast)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.use_custom_pdf}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "m24__n5-if-custom",
+      "name": "[2.4] IF Custom Branded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3660,
+        2630
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"sale.order\",\n      \"create\",\n      [ {\n        \"partner_id\": {{$json.odoo_partner_id || $env.ODOO_FALLBACK_PARTNER_ID}},\n        \"opportunity_id\": {{$json.odoo_lead_id}},\n        \"order_line\": [ [0, 0, {\n          \"name\": {{JSON.stringify($json.proposal_title + ' - ' + $json.recommended_tier)}},\n          \"product_uom_qty\": 1,\n          \"price_unit\": {{$json.recommended_price}}\n        }] ]\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m24__n6-odoo-quotation",
+      "name": "[2.4] Odoo - Create Sales Quotation (Simple)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3880,
+        2510
+      ],
+      "notes": "partner_id zaroori hai -- clients_master me abhi odoo_partner_id column nahi hai (Setup section 1 me ALTER TABLE diya hai), tab tak ODOO_FALLBACK_PARTNER_ID env var use hoti hai."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Odoo simple quotation ka portal link banao\nconst quoteId = $input.item.json.result;\nreturn [{\n  json: {\n    ...$('Parse + Decide Simple vs Custom').item.json,\n    proposal_url: `${$env.ODOO_URL}/my/orders/${quoteId}`\n  }\n}];"
+      },
+      "id": "m24__n7-build-simple-link",
+      "name": "[2.4] Build Portal Link (Simple)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4100,
+        2510
+      ],
+      "notes": "Portal link direct access ke liye Odoo customer portal par lead ka contact already invited/valid hona chahiye, ya login-less access_token read karke URL me add karna hoga (v2)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gotenberg ke liye simple HTML proposal document banao\nconst d = $('Parse + Decide Simple vs Custom').item.json;\nconst rows = (d.pricing_tiers || []).map(t => `<tr><td>${t.tier_name}</td><td>Rs. ${t.price_inr}</td><td>${t.includes}</td></tr>`).join('');\nconst deliverables = (d.deliverables || []).map(x => `<li>${x}</li>`).join('');\nconst html = `<html><body style=\"font-family:Arial;padding:40px;\">\n<h1>${d.proposal_title}</h1>\n<p><b>Prepared for:</b> ${d.name} - ${d.company}</p>\n<h2>Scope</h2><p>${d.scope_summary}</p>\n<h2>Deliverables</h2><ul>${deliverables}</ul>\n<h2>Timeline</h2><p>${d.timeline_weeks} weeks (estimated)</p>\n<h2>Pricing</h2><table border=\"1\" cellpadding=\"8\" style=\"border-collapse:collapse;width:100%\"><tr><th>Tier</th><th>Price (INR)</th><th>Includes</th></tr>${rows}</table>\n<p><i>Recommended: ${d.recommended_tier}</i></p>\n</body></html>`;\nreturn [{ json: { ...d, proposal_html: html } }];"
+      },
+      "id": "m24__n8-build-html",
+      "name": "[2.4] Build Proposal HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3880,
+        2750
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.GOTENBERG_URL}}/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "index_html"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m24__n9-gotenberg",
+      "name": "[2.4] Gotenberg - HTML to PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4100,
+        2750
+      ],
+      "notes": "Gotenberg ko file field 'index.html' chahiye -- is node se pehle ek Code/Set node se binary 'index_html' bana lena hoga jiska filename index.html ho (n8n binary conversion step, standard Gotenberg pattern)."
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{$env.NEXTCLOUD_URL}}/remote.php/dav/files/{{$env.NEXTCLOUD_USER}}/Proposals/{{$('Parse + Decide Simple vs Custom').item.json.odoo_lead_id}}-proposal.pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "m24__n10-nextcloud-upload",
+      "name": "[2.4] Nextcloud - Upload PDF (WebDAV)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4320,
+        2750
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Nextcloud WebDAV"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEXTCLOUD_URL}}/ocs/v2.php/apps/files_sharing/api/v1/shares",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "OCS-APIRequest",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"/Proposals/{{$('Parse + Decide Simple vs Custom').item.json.odoo_lead_id}}-proposal.pdf\",\n  \"shareType\": 3,\n  \"format\": \"json\"\n}",
+        "options": {}
+      },
+      "id": "m24__n11-nextcloud-share",
+      "name": "[2.4] Nextcloud - Create Public Share Link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4540,
+        2750
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Nextcloud WebDAV"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const shareUrl = $input.item.json.ocs?.data?.url || '';\nreturn [{\n  json: {\n    ...$('Parse + Decide Simple vs Custom').item.json,\n    proposal_url: shareUrl\n  }\n}];"
+      },
+      "id": "m24__n12-build-custom-link",
+      "name": "[2.4] Build Share Link (Custom)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4760,
+        2750
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.proposal_title}}",
+        "emailFormat": "text",
+        "text": "={{$json.email_intro}}\n\nView your proposal here: {{$json.proposal_url}}\n\nReady to move ahead? Accept it here: {{$env.PROPOSAL_ACCEPT_BASE_URL}}/webhook/proposal-accept?lead_id={{$json.odoo_lead_id}}",
+        "options": {}
+      },
+      "id": "m24__n13-send-proposal-email",
+      "name": "[2.4] Send Proposal Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4760,
+        2630
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      },
+      "notes": "Accept link Module 2.5 ke 'Proposal Accept Webhook' ko point karta hai -- yahi se Contract + E-sign flow shuru hota hai."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Proposal Sent',\n    proposal_url = '{{$json.proposal_url}}',\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m24__n14-update-proposal-sent",
+      "name": "[2.4] Postgres - Mark Proposal Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4980,
+        2630
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Proposal sent to ' + $json.name + ' (' + $json.company + ') - Rs. ' + $json.recommended_price)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m24__n15-discuss-proposal",
+      "name": "[2.4] Odoo Discuss - Proposal Sent Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5200,
+        2630
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "proposal-accept",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "m25__n1-accept-webhook",
+      "name": "[2.5] Proposal Accept Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        3260
+      ],
+      "webhookId": "proposal-accept",
+      "notes": "Module 2.4 ke proposal email me ye link hota hai: {PROPOSAL_ACCEPT_BASE_URL}/webhook/proposal-accept?lead_id={id}. Client click karega to ye flow shuru hoga."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.query.lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "m25__n2-fetch-lead",
+      "name": "[2.5] Fetch Lead + Proposal",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        3260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DOCUMENSO_API_URL}}/api/v1/documents",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.DOCUMENSO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": {{JSON.stringify('Service Agreement - ' + $json.company)}},\n  \"templateId\": {{$env.DOCUMENSO_CONTRACT_TEMPLATE_ID}},\n  \"externalId\": \"lead-{{$json.odoo_lead_id}}\",\n  \"recipients\": [ {\n    \"email\": {{JSON.stringify($json.email)}},\n    \"name\": {{JSON.stringify($json.name)}},\n    \"role\": \"SIGNER\"\n  } ],\n  \"meta\": {\n    \"webhookUrl\": {{JSON.stringify($env.PROPOSAL_ACCEPT_BASE_URL + '/webhook/documenso-signed')}}\n  }\n}",
+        "options": {}
+      },
+      "id": "m25__n3-documenso-create",
+      "name": "[2.5] Documenso - Create Document from Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3220,
+        3260
+      ],
+      "notes": "DOCUMENSO_CONTRACT_TEMPLATE_ID ek pehle se Documenso me banaya hua contract template hai (standard Nivy service agreement, merge-fields ke saath). externalId se hum lead ko document se map karte hain."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DOCUMENSO_API_URL}}/api/v1/documents/{{$json.documentId || $json.id}}/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.DOCUMENSO_API_KEY}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m25__n4-documenso-send",
+      "name": "[2.5] Documenso - Send for Signature",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3440,
+        3260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Contract Sent',\n    updated_at = now()\nWHERE odoo_lead_id = {{$('Fetch Lead + Proposal').item.json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m25__n5-mark-contract-sent",
+      "name": "[2.5] Postgres - Mark Contract Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3660,
+        3260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Proposal accepted! Contract sent for e-sign to ' + $('Fetch Lead + Proposal').item.json.name + ' (' + $('Fetch Lead + Proposal').item.json.company + ')')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m25__n6-discuss-accepted",
+      "name": "[2.5] Odoo Discuss - Proposal Accepted",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3880,
+        3260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=Thanks {{$('Fetch Lead + Proposal').item.json.name}}! Your contract has been sent to {{$('Fetch Lead + Proposal').item.json.email}} for e-signature. Please check your inbox.",
+        "options": {}
+      },
+      "id": "m25__n7-respond-accept",
+      "name": "[2.5] Respond - Thank You Page",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4100,
+        3260
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "documenso-signed",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "m25__n8-signed-webhook",
+      "name": "[2.5] Documenso Signed Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        3520
+      ],
+      "webhookId": "documenso-signed",
+      "notes": "Documenso document 'COMPLETED' event par ye webhook call hota hai (Node 3 me hi webhookUrl set kiya tha)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\nconst externalId = body.data?.externalId || body.externalId || '';\nconst leadId = (externalId.match(/lead-(\\d+)/) || [])[1];\nreturn [{ json: { odoo_lead_id: leadId ? parseInt(leadId, 10) : null } }];"
+      },
+      "id": "m25__n9-extract-leadid",
+      "name": "[2.5] Extract Lead ID from Document",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        3520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Won',\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}}\nRETURNING *;",
+        "options": {}
+      },
+      "id": "m25__n10-mark-won",
+      "name": "[2.5] Postgres - Mark Won",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3220,
+        3520
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"crm.lead\",\n      \"write\",\n      [ [{{$json.odoo_lead_id}}], { \"stage_id\": {{$env.ODOO_WON_STAGE_ID}} } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m25__n11-odoo-mark-won",
+      "name": "[2.5] Odoo - Set CRM Stage to Won",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3440,
+        3520
+      ],
+      "notes": "ODOO_WON_STAGE_ID = 'Won' stage ki Odoo internal ID (Configuration -> Stages me dekho)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Contract SIGNED! Deal Won - lead #' + $('Postgres - Mark Won').item.json.odoo_lead_id + '. Invoice flow triggered.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m25__n13-discuss-won",
+      "name": "[2.5] Odoo Discuss - Deal Won Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3880,
+        3520
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "m25__n14-respond-signed",
+      "name": "[2.5] Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4100,
+        3520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "m26__n2-fetch-lead",
+      "name": "[2.6] Fetch Lead + Deal Detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        4010
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"account.move\",\n      \"create\",\n      [ {\n        \"move_type\": \"out_invoice\",\n        \"partner_id\": {{$json.odoo_partner_id || $env.ODOO_FALLBACK_PARTNER_ID}},\n        \"invoice_origin\": {{JSON.stringify('Nivy deal - ' + $json.company)}},\n        \"invoice_line_ids\": [ [0, 0, {\n          \"name\": {{JSON.stringify('Services - ' + $json.company)}},\n          \"quantity\": 1,\n          \"price_unit\": {{$json.recommended_price || $json.deal_value || 0}}\n        }] ]\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m26__n3-odoo-create-invoice",
+      "name": "[2.6] Odoo - Create Draft Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3220,
+        4010
+      ],
+      "notes": "recommended_price Module 2.4 ke proposal se aana chahiye -- agar clients_master me alag column (deal_value) me store kar rahe ho to wahi use karo. Setup section 1 dekho."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"account.move\",\n      \"action_post\",\n      [ [{{$json.result}}] ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m26__n4-odoo-post-invoice",
+      "name": "[2.6] Odoo - Post/Validate Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3440,
+        4010
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"account.move\",\n      \"read\",\n      [ [{{$('Odoo - Create Draft Invoice').item.json.result}}], [\"access_token\", \"name\", \"amount_total\"] ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m26__n5-odoo-read-invoice",
+      "name": "[2.6] Odoo - Read Invoice (portal token)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3660,
+        4010
+      ],
+      "notes": "Odoo Community me account.move par access_token field standard nahi hai (Enterprise portal feature ke close hai) -- agar khali aaye to Known Limitations dekho, fallback plain portal-login link use karo."
+    },
+    {
+      "parameters": {
+        "jsCode": "const inv = $input.item.json.result?.[0] || {};\nconst lead = $('Fetch Lead + Deal Detail').item.json;\nconst invoiceId = $('Odoo - Create Draft Invoice').item.json.result;\nconst token = inv.access_token;\nconst paymentUrl = token\n  ? `${$env.ODOO_URL}/my/invoices/${invoiceId}?access_token=${token}`\n  : `${$env.ODOO_URL}/my/invoices/${invoiceId}`;\n\nreturn [{\n  json: {\n    ...lead,\n    odoo_invoice_id: invoiceId,\n    invoice_number: inv.name || '',\n    amount_total: inv.amount_total || lead.recommended_price || 0,\n    payment_url: paymentUrl\n  }\n}];"
+      },
+      "id": "m26__n6-build-payment-link",
+      "name": "[2.6] Build Payment Link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3880,
+        4010
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Invoice {{$json.invoice_number}} - Nivy International",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\nThank you for confirming! Your invoice {{$json.invoice_number}} for Rs. {{$json.amount_total}} is ready.\n\nPay securely here: {{$json.payment_url}}\n\nOnce payment is received you'll get an automatic receipt and our onboarding team will reach out.",
+        "options": {}
+      },
+      "id": "m26__n7-send-invoice-email",
+      "name": "[2.6] Send Invoice Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4100,
+        4010
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Invoiced',\n    odoo_invoice_id = {{$json.odoo_invoice_id}},\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m26__n8-mark-invoiced",
+      "name": "[2.6] Postgres - Mark Invoiced",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4320,
+        4010
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Invoice ' + $json.invoice_number + ' sent to ' + $json.name + ' - Rs. ' + $json.amount_total)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m26__n9-discuss-invoiced",
+      "name": "[2.6] Odoo Discuss - Invoice Sent Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4540,
+        4010
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-received",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "m26__n10-payment-webhook",
+      "name": "[2.6] Payment Received Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        4270
+      ],
+      "webhookId": "payment-received",
+      "notes": "Odoo portal payment confirmation (ya Razorpay/Stripe agar payment gateway alag se use ho raha hai) is webhook ko call karega. Payload structure gateway ke hisaab se Node 11 me adjust karo."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\nreturn [{\n  json: {\n    odoo_invoice_id: body.invoice_id || body.reference || null,\n    amount_paid: body.amount || 0,\n    transaction_id: body.transaction_id || body.payment_id || ''\n  }\n}];"
+      },
+      "id": "m26__n11-parse-payment",
+      "name": "[2.6] Parse Payment Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        4270
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_invoice_id = {{$json.odoo_invoice_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "m26__n12-find-lead-by-invoice",
+      "name": "[2.6] Find Lead by Invoice ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3220,
+        4270
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"account.move\",\n      \"action_register_payment\",\n      [ [{{$('Parse Payment Payload').item.json.odoo_invoice_id}}] ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {}
+      },
+      "id": "m26__n13-odoo-register-payment",
+      "name": "[2.6] Odoo - Register Payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3440,
+        4270
+      ],
+      "notes": "Odoo Community me action_register_payment seedha default amount le leta hai (invoice ka full amount) -- partial payment support ke liye account.payment.register wizard model use karna padega (v2)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Paid',\n    updated_at = now()\nWHERE odoo_invoice_id = {{$('Parse Payment Payload').item.json.odoo_invoice_id}};",
+        "options": {}
+      },
+      "id": "m26__n14-mark-paid",
+      "name": "[2.6] Postgres - Mark Paid",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3660,
+        4270
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$('Find Lead by Invoice ID').item.json.email}}",
+        "subject": "Payment Received - Thank You!",
+        "emailFormat": "text",
+        "text": "=Hi {{$('Find Lead by Invoice ID').item.json.name}},\n\nWe've received your payment of Rs. {{$('Parse Payment Payload').item.json.amount_paid}} (Transaction ID: {{$('Parse Payment Payload').item.json.transaction_id}}). Thank you!\n\nOur onboarding team will reach out shortly to get started.",
+        "options": {}
+      },
+      "id": "m26__n15-send-receipt",
+      "name": "[2.6] Send Receipt Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3880,
+        4270
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Payment RECEIVED: ' + $('Find Lead by Invoice ID').item.json.name + ' paid Rs. ' + $('Parse Payment Payload').item.json.amount_paid + '. Ready for onboarding!')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m26__n16-discuss-paid",
+      "name": "[2.6] Odoo Discuss - Payment Received Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4100,
+        4270
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "m26__n17-respond-payment",
+      "name": "[2.6] Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4320,
+        4270
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "m27__n2-fetch-lead",
+      "name": "[2.7] Fetch Lead + Deal Detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        4760
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "MKCOL",
+        "url": "={{$env.NEXTCLOUD_URL}}/remote.php/dav/files/{{$env.NEXTCLOUD_USER}}/Clients/{{$json.company}}-{{$json.odoo_lead_id}}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m27__n3-nextcloud-mkcol",
+      "name": "[2.7] Nextcloud - Create Client Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3220,
+        4760
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Nextcloud WebDAV"
+        }
+      },
+      "notes": "neverError=true kyunki agar folder pehle se exist karta hai to Nextcloud 405 dega -- wo ignore karna hai, blocker nahi hai."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEXTCLOUD_URL}}/ocs/v2.php/apps/files_sharing/api/v1/shares",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "OCS-APIRequest",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"/Clients/{{$('Fetch Lead + Deal Detail').item.json.company}}-{{$('Fetch Lead + Deal Detail').item.json.odoo_lead_id}}\",\n  \"shareType\": 3,\n  \"format\": \"json\"\n}",
+        "options": {}
+      },
+      "id": "m27__n4-nextcloud-share",
+      "name": "[2.7] Nextcloud - Create Client Share Link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3440,
+        4760
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Nextcloud WebDAV"
+        }
+      },
+      "notes": "Ye link client ko welcome email me diya jaayega, aur delivery team bhi isi folder me deliverables daalegi."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"project.project\",\n      \"create\",\n      [ {\n        \"name\": {{JSON.stringify($('Fetch Lead + Deal Detail').item.json.company + ' - Delivery')}},\n        \"partner_id\": {{$('Fetch Lead + Deal Detail').item.json.odoo_partner_id || $env.ODOO_FALLBACK_PARTNER_ID}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m27__n5-odoo-create-project",
+      "name": "[2.7] Odoo - Create Project",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3660,
+        4760
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const projectId = $input.item.json.result;\nconst lead = $('Fetch Lead + Deal Detail').item.json;\nconst today = new Date();\nfunction plusDays(n) {\n  const d = new Date(today);\n  d.setDate(d.getDate() + n);\n  return d.toISOString().slice(0, 10);\n}\n\n// Standard onboarding task template -- v1 fixed list, v2: pull from a per-service_type template table\nconst tasks = [\n  { name: 'Kickoff call scheduled', days: 2 },\n  { name: 'Collect access & credentials (website, ad accounts, socials)', days: 3 },\n  { name: 'Collect brand assets (logo, guidelines, past creatives)', days: 3 },\n  { name: 'Assign delivery team + internal handoff note', days: 1 },\n  { name: 'Draft 30-day strategy doc', days: 7 },\n  { name: 'First deliverable due', days: 14 }\n];\n\nreturn [{\n  json: {\n    ...lead,\n    odoo_project_id: projectId,\n    task_create_args: tasks.map(t => ({\n      name: t.name,\n      project_id: projectId,\n      date_deadline: plusDays(t.days)\n    }))\n  }\n}];"
+      },
+      "id": "m27__n6-build-tasks",
+      "name": "[2.7] Build Onboarding Task List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3880,
+        4760
+      ],
+      "notes": "v1 fixed 6-task template hai. v2: service_type ke hisaab se alag templates (SEO vs Design vs VA) Postgres table se pull karo."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"project.task\",\n      \"create\",\n      [ {{JSON.stringify($json.task_create_args)}} ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m27__n7-odoo-create-tasks",
+      "name": "[2.7] Odoo - Create Onboarding Tasks (batch)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4100,
+        4760
+      ],
+      "notes": "Odoo 17+ ka create() method dicts ki list accept karke ids ki list return karta hai. Agar aapka Odoo version isse support na kare, to har task ke liye alag create call (loop) karna hoga -- Known Limitations dekho."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"create\",\n      [ {\n        \"name\": {{JSON.stringify('Client - ' + $('Fetch Lead + Deal Detail').item.json.company)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m27__n8-odoo-create-channel",
+      "name": "[2.7] Odoo - Create Client Discuss Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4320,
+        4760
+      ],
+      "notes": "Kuch Odoo versions me model 'discuss.channel' hai (mail.channel purane versions me). Apne Odoo version ke hisaab se model name confirm/adjust karo."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"add_members\",\n      [ [{{$json.result}}], {{$env.ODOO_DELIVERY_TEAM_PARTNER_IDS}} ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m27__n9-odoo-invite-team",
+      "name": "[2.7] Odoo - Add Delivery Team to Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4540,
+        4760
+      ],
+      "notes": "ODOO_DELIVERY_TEAM_PARTNER_IDS = comma-separated Odoo partner IDs array string e.g. [12,15,18] -- delivery/account-management team jo har client channel me by-default honi chahiye."
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $('Fetch Lead + Deal Detail').item.json;\nlet shareUrl = '';\ntry {\n  shareUrl = JSON.parse($('Nextcloud - Create Client Share Link').item.json.data || '{}').ocs?.data?.url || '';\n} catch (e) {\n  shareUrl = $('Nextcloud - Create Client Share Link').item.json.url || '';\n}\n\nreturn [{\n  json: {\n    ...lead,\n    client_folder_url: shareUrl,\n    odoo_project_id: $('Build Onboarding Task List').item.json.odoo_project_id,\n    odoo_discuss_channel_id: $('Odoo - Create Client Discuss Channel').item.json.result\n  }\n}];"
+      },
+      "id": "m27__n10-build-welcome-info",
+      "name": "[2.7] Build Welcome Email Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4760,
+        4760
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Welcome to Nivy, {{$json.name}}! Here's what happens next",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\nWelcome aboard! Your project is now set up and our delivery team has been notified.\n\nYour shared folder (assets, deliverables, reports will live here): {{$json.client_folder_url}}\n\nOver the next few days we'll reach out to schedule a kickoff call and collect access/brand assets. If anything's urgent, just reply to this email.\n\nExcited to get started!\nTeam Nivy",
+        "options": {}
+      },
+      "id": "m27__n11-send-welcome-email",
+      "name": "[2.7] Send Welcome Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4980,
+        4760
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Onboarded',\n    nextcloud_folder_url = {{JSON.stringify($json.client_folder_url)}},\n    odoo_project_id = {{$json.odoo_project_id}},\n    odoo_discuss_channel_id = {{$json.odoo_discuss_channel_id}},\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m27__n12-mark-onboarded",
+      "name": "[2.7] Postgres - Mark Onboarded",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        5200,
+        4760
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Client onboarded: ' + $json.company + ' -- Project #' + $json.odoo_project_id + ' created, folder + Discuss channel ready.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m27__n13-discuss-onboarded-alert",
+      "name": "[2.7] Odoo Discuss - Onboarding Complete Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5420,
+        4760
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "m28__n1-weekly-trigger",
+      "name": "[2.8] Weekly - Monday 8AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        2780,
+        5510
+      ],
+      "notes": "Monthly clients ke liye alag ek Schedule Trigger (monthly interval) add kar sakte ho, same downstream chain reuse karke -- v1 me sirf weekly rakha hai."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE status IN ('Onboarded', 'Active');",
+        "options": {}
+      },
+      "id": "m28__n2-fetch-active-clients",
+      "name": "[2.8] Fetch Active Clients",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        5510
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Har row ek alag item banta hai -- n8n is item ko baaki poori chain se independently pass karega (per-client execution), koi explicit loop node nahi chahiye."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.METABASE_URL}}/api/card/{{$env.METABASE_CLIENT_CARD_ID}}/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-API-KEY",
+              "value": "={{$env.METABASE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"parameters\": [\n    { \"type\": \"category\", \"target\": [\"variable\", [\"template-tag\", \"client_id\"]], \"value\": \"{{$json.odoo_lead_id}}\" }\n  ]\n}",
+        "options": {}
+      },
+      "id": "m28__n3-metabase-query-metrics",
+      "name": "[2.8] Metabase - Query Client Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3220,
+        5510
+      ],
+      "notes": "METABASE_CLIENT_CARD_ID = ek saved Metabase question jisme 'client_id' naam ka SQL template-tag filter hai (leads/traffic/rankings ya jo bhi metrics client ko dikhani hain). Metabase >=0.49 me X-API-KEY header se auth hoti hai (Settings -> Admin -> API Keys)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const client = $('Fetch Active Clients').item.json;\nconst raw = $input.item.json;\nconst cols = (raw.data?.cols || []).map(c => c.name);\nconst rows = raw.data?.rows || [];\nconst metrics = rows.map(r => Object.fromEntries(cols.map((c, i) => [c, r[i]])));\n\n// Locked/filtered public dashboard link the client can click to view live data\nconst dashboardUrl = `${$env.METABASE_URL}/public/dashboard/${$env.METABASE_CLIENT_DASHBOARD_PUBLIC_UUID}?client_id=${client.odoo_lead_id}`;\n\nreturn [{\n  json: {\n    ...client,\n    metrics_json: JSON.stringify(metrics).slice(0, 4000),\n    dashboard_url: dashboardUrl\n  }\n}];"
+      },
+      "id": "m28__n4-build-dashboard-link",
+      "name": "[2.8] Parse Metrics + Build Dashboard Link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        5510
+      ],
+      "notes": "Metabase Community edition me first-class 'export as PDF via API' nahi hai (wo Enterprise Dashboard Subscriptions feature hai). v1 me isliye ek locked/filtered PUBLIC dashboard link bhej rahe hain instead of PDF attachment -- Known Limitations me detail hai."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You write short, friendly weekly client update emails for a digital marketing/AI agency. Client: {{$json.company}}. Raw weekly metrics data (JSON): {{$json.metrics_json}}.\\n\\nReturn ONLY a valid JSON object with keys: headline (one sentence, the single best result this week), bullet_points (array of up to 4 short strings, plain language, no jargon), next_week_focus (one sentence). No text outside the JSON.\"\n}"
+      },
+      "id": "m28__n5-ollama-summarize",
+      "name": "[2.8] Ollama - Summarize Weekly Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3660,
+        5510
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let parsed;\ntry {\n  const raw = $input.item.json.response || '{}';\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  parsed = JSON.parse(match ? match[0] : raw);\n} catch (e) {\n  parsed = { headline: 'Here is your weekly update.', bullet_points: [], next_week_focus: '' };\n}\n\nreturn [{\n  json: {\n    ...$('Parse Metrics + Build Dashboard Link').item.json,\n    headline: parsed.headline || '',\n    bullet_points: parsed.bullet_points || [],\n    next_week_focus: parsed.next_week_focus || ''\n  }\n}];"
+      },
+      "id": "m28__n6-parse-summary",
+      "name": "[2.8] Parse Ollama Summary JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3880,
+        5510
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Your weekly update from Nivy - {{$json.company}}",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\n{{$json.headline}}\n\nThis week:\n{{$json.bullet_points.map(b => '- ' + b).join('\\n')}}\n\nNext week we're focused on: {{$json.next_week_focus}}\n\nFull live dashboard: {{$json.dashboard_url}}\n\nQuestions? Just reply.\nTeam Nivy",
+        "options": {}
+      },
+      "id": "m28__n7-send-report-email",
+      "name": "[2.8] Send Weekly Report Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4100,
+        5510
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET last_report_sent_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m28__n8-log-report-sent",
+      "name": "[2.8] Postgres - Log Report Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4320,
+        5510
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "m29__n1-daily-trigger",
+      "name": "[2.9] Daily 7AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        2780,
+        6260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master\nWHERE status IN ('Onboarded', 'Active')\n  AND renewal_date IS NOT NULL\n  AND renewal_date BETWEEN now() AND now() + interval '30 days'\n  AND (renewal_reminder_sent_at IS NULL OR renewal_reminder_sent_at < now() - interval '7 days');",
+        "options": {}
+      },
+      "id": "m29__n2-fetch-renewals-due",
+      "name": "[2.9] Fetch Renewals Due (30 days)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        6160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.activity\",\n      \"create\",\n      [ {\n        \"res_model\": \"crm.lead\",\n        \"res_id\": {{$json.odoo_lead_id}},\n        \"activity_type_id\": {{$env.ODOO_RENEWAL_ACTIVITY_TYPE_ID}},\n        \"user_id\": {{$env.ODOO_SALES_USER_ID}},\n        \"summary\": {{JSON.stringify('Renewal call - ' + $json.company)}},\n        \"date_deadline\": \"={{$json.renewal_date}}\"\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "m29__n3-odoo-renewal-activity",
+      "name": "[2.9] Odoo - Create Renewal Call Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3220,
+        6160
+      ],
+      "notes": "ODOO_RENEWAL_ACTIVITY_TYPE_ID = Odoo Activity Type (Settings -> Technical -> Activity Types), e.g. 'Call'. Sales rep ko is date par CRM me task dikhega."
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Quick check-in ahead of your renewal, {{$json.name}}",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\nYour current term with Nivy is coming up for renewal on {{$json.renewal_date}}. We'd love to review results so far and talk through what's next.\n\nOur team will reach out to schedule a quick call -- or feel free to grab time directly if you'd rather not wait.\n\nTeam Nivy",
+        "options": {}
+      },
+      "id": "m29__n4-send-renewal-reminder",
+      "name": "[2.9] Send Renewal Reminder Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3440,
+        6160
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET renewal_reminder_sent_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m29__n5-mark-reminder-sent",
+      "name": "[2.9] Postgres - Mark Renewal Reminder Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3660,
+        6160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Renewal reminder sent: ' + $json.company + ' -- renews ' + $json.renewal_date + '. Call activity created for sales rep.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m29__n6-discuss-renewal-alert",
+      "name": "[2.9] Odoo Discuss - Renewal Reminder Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3880,
+        6160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master\nWHERE status IN ('Onboarded', 'Active')\n  AND renewal_date IS NOT NULL\n  AND renewal_date < now();",
+        "options": {}
+      },
+      "id": "m29__n7-fetch-overdue",
+      "name": "[2.9] Fetch Overdue (Past Renewal Date)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3000,
+        6400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "renewal_date beet chuki hai aur status abhi bhi Onboarded/Active hai (renew nahi hua) -- churn risk flag."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Churn Risk'\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "m29__n8-mark-churn-risk",
+      "name": "[2.9] Postgres - Mark Churn Risk",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3220,
+        6400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('CHURN RISK: ' + $json.company + ' renewal date (' + $json.renewal_date + ') has passed with no renewal. Needs urgent follow-up.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m29__n9-discuss-churn-alert",
+      "name": "[2.9] Odoo Discuss - Churn Risk Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3440,
+        6400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-failed",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "m29__n10-failed-payment-webhook",
+      "name": "[2.9] Failed Payment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        6560
+      ],
+      "webhookId": "payment-failed",
+      "notes": "Odoo portal payment gateway acquirer (ya Razorpay/Stripe) ka 'payment failed / declined' callback isi URL par point karo. Payload field names Node 11 me apne gateway ke hisaab se adjust karo."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\nreturn [{\n  json: {\n    invoice_id: body.invoice_id,\n    amount_attempted: body.amount,\n    failure_reason: body.failure_reason || body.reason || 'unknown',\n    transaction_id: body.transaction_id\n  }\n}];"
+      },
+      "id": "m29__n11-parse-failed-payment",
+      "name": "[2.9] Parse Failed Payment Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        6560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_invoice_id = {{$json.invoice_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "m29__n12-find-lead-by-invoice",
+      "name": "[2.9] Find Lead by Invoice ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3220,
+        6560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Payment Failed',\n    dunning_attempts = COALESCE(dunning_attempts, 0) + 1,\n    updated_at = now()\nWHERE odoo_invoice_id = {{$('Parse Failed Payment Payload').item.json.invoice_id}}\nRETURNING *;",
+        "options": {}
+      },
+      "id": "m29__n13-mark-payment-failed",
+      "name": "[2.9] Postgres - Mark Payment Failed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3440,
+        6560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Payment issue on your recent invoice - {{$json.company}}",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\nWe tried to process your payment but it didn't go through ({{$('Parse Failed Payment Payload').item.json.failure_reason}}). This can happen for a few reasons (card expiry, bank decline, etc).\n\nCould you try again or update your payment method here: {{$json.payment_url}}\n\nLet us know if you run into any trouble.\nTeam Nivy",
+        "options": {}
+      },
+      "id": "m29__n14-send-dunning-email",
+      "name": "[2.9] Send Dunning Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3660,
+        6560
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('PAYMENT FAILED: ' + $json.company + ' -- attempt #' + $json.dunning_attempts + '. Dunning email sent.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "m29__n15-discuss-payment-failed-alert",
+      "name": "[2.9] Odoo Discuss - Payment Failed Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3880,
+        6560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "m29__n16-respond-payment-failed",
+      "name": "[2.9] Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4100,
+        6560
+      ]
+    }
+  ],
+  "connections": {
+    "[1.1] Every 30 Min": {
+      "main": [
+        [
+          {
+            "node": "[1.1] Get New Published Blog Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.1] Get New Published Blog Posts": {
+      "main": [
+        [
+          {
+            "node": "[1.1] Ollama - Rewrite for All Platforms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.1] Ollama - Rewrite for All Platforms": {
+      "main": [
+        [
+          {
+            "node": "[1.1] Parse Platform Posts JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.1] Parse Platform Posts JSON": {
+      "main": [
+        [
+          {
+            "node": "[1.1] Mixpost - Post LinkedIn",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.1] Mixpost - Post X",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.1] Mixpost - Post Instagram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.1] Mixpost - Post Facebook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.1] Mark Post as Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Weekly - Monday 6AM": {
+      "main": [
+        [
+          {
+            "node": "[1.2] GSC - Get Search Analytics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.2] Get Pages Missing Meta Description",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.2] Fetch Sitemap XML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] GSC - Get Search Analytics": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Ollama - Cluster Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Ollama - Cluster Keywords": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Parse Keyword Clusters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Get Pages Missing Meta Description": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Ollama - Generate Meta Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Ollama - Generate Meta Description": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Update Page Meta Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Fetch Sitemap XML": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Extract URLs from Sitemap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Extract URLs from Sitemap": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Loop URLs (batch 10)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Loop URLs (batch 10)": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Build Weekly SEO Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[1.2] Check URL Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Check URL Status": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Is Broken (>=400)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Is Broken (>=400)": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Collect Broken Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[1.2] Loop URLs (batch 10)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Collect Broken Link": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Loop URLs (batch 10)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.2] Build Weekly SEO Report": {
+      "main": [
+        [
+          {
+            "node": "[1.2] Send Weekly SEO Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.3] Typebot Webhook": {
+      "main": [
+        [
+          {
+            "node": "[1.3] Normalize Typebot Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.3] Normalize Typebot Payload": {
+      "main": [
+        [
+          {
+            "node": "[1.3] Ollama - Classify Service Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.3] Ollama - Classify Service Type": {
+      "main": [
+        [
+          {
+            "node": "[1.3] Parse Classification JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.3] Parse Classification JSON": {
+      "main": [
+        [
+          {
+            "node": "[1.3] Odoo - Create CRM Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.3] Odoo - Create CRM Lead": {
+      "main": [
+        [
+          {
+            "node": "[1.3] Insert into clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.3] Insert into clients_master": {
+      "main": [
+        [
+          {
+            "node": "[1.3] Respond to Typebot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] Lead Event Webhook": {
+      "main": [
+        [
+          {
+            "node": "[1.4] Fetch Lead from clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] Fetch Lead from clients_master": {
+      "main": [
+        [
+          {
+            "node": "[1.4] IF Lead Already in clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] IF Lead Already in clients_master": {
+      "main": [
+        [
+          {
+            "node": "[1.4] Normalize Merged Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[1.4] Build Fields from Webhook (Fallback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] Build Fields from Webhook (Fallback)": {
+      "main": [
+        [
+          {
+            "node": "[1.4] Normalize Merged Lead",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "[1.4] Normalize Merged Lead": {
+      "main": [
+        [
+          {
+            "node": "[1.4] Ollama - Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] Ollama - Score Lead": {
+      "main": [
+        [
+          {
+            "node": "[1.4] Parse Score JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] Parse Score JSON": {
+      "main": [
+        [
+          {
+            "node": "[1.4] Update clients_master with Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] Update clients_master with Score": {
+      "main": [
+        [
+          {
+            "node": "[1.4] Odoo - Update Lead Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] Odoo - Update Lead Priority": {
+      "main": [
+        [
+          {
+            "node": "[1.4] IF Hot Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.4] IF Hot Lead": {
+      "main": [
+        [
+          {
+            "node": "[1.4] Odoo Discuss - Alert Sales Team",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.4] Send Auto-Response (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[1.4] Send Auto-Response (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.5] Every 5 Min": {
+      "main": [
+        [
+          {
+            "node": "[1.5] Detect CRM Stage Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.5] Detect CRM Stage Changes": {
+      "main": [
+        [
+          {
+            "node": "[1.5] Upsert clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.5] Upsert clients_master": {
+      "main": [
+        [
+          {
+            "node": "[1.5] IF Stage = Qualified",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.5] IF Stage = Won",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.5] IF Stage = Proposal Sent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.5] IF Stage = Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[1.5] IF Stage = Booked": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Fetch Lead Detail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.5] Odoo Discuss - Notify Stage Change",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "[1.5] IF Stage = Qualified": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Fetch Lead Detail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.5] Odoo Discuss - Notify Stage Change",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "[1.5] IF Stage = Won": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Fetch Lead + Deal Detail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[1.5] Odoo Discuss - Notify Stage Change",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "[1.5] IF Stage = Proposal Sent": {
+      "main": [
+        [
+          {
+            "node": "[1.5] Odoo Discuss - Notify Stage Change",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "[2.1] Fetch Lead Detail": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Ollama - Generate Outreach Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.1] Ollama - Generate Outreach Messages": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Parse Outreach JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.1] Parse Outreach JSON": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Send Outreach Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[2.1] Send WhatsApp (Waha)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[2.1] Odoo - Create LinkedIn Task (Semi-Automated)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.1] Send Outreach Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Update clients_master (Contacted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.1] Send WhatsApp (Waha)": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Update clients_master (Contacted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.1] Odoo - Create LinkedIn Task (Semi-Automated)": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Update clients_master (Contacted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.1] Postal Inbound Reply Webhook": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Mark Lead as Replied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.1] Mark Lead as Replied": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Odoo Discuss - Notify Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.1] Odoo Discuss - Notify Reply": {
+      "main": [
+        [
+          {
+            "node": "[2.1] Respond to Postal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] Daily 9AM": {
+      "main": [
+        [
+          {
+            "node": "[2.2] Fetch Leads Due for Nurture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] Fetch Leads Due for Nurture": {
+      "main": [
+        [
+          {
+            "node": "[2.2] Compute Step Theme",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] Compute Step Theme": {
+      "main": [
+        [
+          {
+            "node": "[2.2] Ollama - Generate Nurture Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] Ollama - Generate Nurture Content": {
+      "main": [
+        [
+          {
+            "node": "[2.2] Parse Nurture JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] Parse Nurture JSON": {
+      "main": [
+        [
+          {
+            "node": "[2.2] Send Nurture Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[2.2] Send Nurture WhatsApp (Waha)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] Send Nurture Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.2] Update Nurture Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] Send Nurture WhatsApp (Waha)": {
+      "main": [
+        [
+          {
+            "node": "[2.2] Update Nurture Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] Update Nurture Step": {
+      "main": [
+        [
+          {
+            "node": "[2.2] IF Final Nurture Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.2] IF Final Nurture Step": {
+      "main": [
+        [
+          {
+            "node": "[2.2] Odoo Discuss - Nurture Complete Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "[2.3] Cal.com Booking Webhook": {
+      "main": [
+        [
+          {
+            "node": "[2.3] Normalize Cal.com Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.3] Normalize Cal.com Payload": {
+      "main": [
+        [
+          {
+            "node": "[2.3] IF Cancelled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.3] IF Cancelled": {
+      "main": [
+        [
+          {
+            "node": "[2.3] Postgres - Revert to Nurture",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[2.3] Find Lead (Booked Path)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.3] Find Lead (Booked Path)": {
+      "main": [
+        [
+          {
+            "node": "[2.3] Odoo - Create Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.3] Odoo - Create Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "[2.3] Postgres - Mark Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.3] Postgres - Mark Booked": {
+      "main": [
+        [
+          {
+            "node": "[2.3] Odoo Discuss - Booking Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.3] Odoo Discuss - Booking Confirmed": {
+      "main": [
+        [
+          {
+            "node": "[2.3] Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.3] Postgres - Revert to Nurture": {
+      "main": [
+        [
+          {
+            "node": "[2.3] Odoo Discuss - Booking Cancelled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.3] Odoo Discuss - Booking Cancelled": {
+      "main": [
+        [
+          {
+            "node": "[2.3] Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Fetch Lead Detail": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Ollama - Draft Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Ollama - Draft Proposal": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Parse + Decide Simple vs Custom",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Parse + Decide Simple vs Custom": {
+      "main": [
+        [
+          {
+            "node": "[2.4] IF Custom Branded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] IF Custom Branded": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Build Proposal HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[2.4] Odoo - Create Sales Quotation (Simple)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Odoo - Create Sales Quotation (Simple)": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Build Portal Link (Simple)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Build Portal Link (Simple)": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Send Proposal Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Build Proposal HTML": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Gotenberg - HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Gotenberg - HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Nextcloud - Upload PDF (WebDAV)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Nextcloud - Upload PDF (WebDAV)": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Nextcloud - Create Public Share Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Nextcloud - Create Public Share Link": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Build Share Link (Custom)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Build Share Link (Custom)": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Send Proposal Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Send Proposal Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Postgres - Mark Proposal Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.4] Postgres - Mark Proposal Sent": {
+      "main": [
+        [
+          {
+            "node": "[2.4] Odoo Discuss - Proposal Sent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Proposal Accept Webhook": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Fetch Lead + Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Fetch Lead + Proposal": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Documenso - Create Document from Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Documenso - Create Document from Template": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Documenso - Send for Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Documenso - Send for Signature": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Postgres - Mark Contract Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Postgres - Mark Contract Sent": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Odoo Discuss - Proposal Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Odoo Discuss - Proposal Accepted": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Respond - Thank You Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Documenso Signed Webhook": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Extract Lead ID from Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Extract Lead ID from Document": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Postgres - Mark Won",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Postgres - Mark Won": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Odoo - Set CRM Stage to Won",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Odoo - Set CRM Stage to Won": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Fetch Lead + Deal Detail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[2.5] Odoo Discuss - Deal Won Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.5] Odoo Discuss - Deal Won Alert": {
+      "main": [
+        [
+          {
+            "node": "[2.5] Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Fetch Lead + Deal Detail": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Odoo - Create Draft Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Odoo - Create Draft Invoice": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Odoo - Post/Validate Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Odoo - Post/Validate Invoice": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Odoo - Read Invoice (portal token)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Odoo - Read Invoice (portal token)": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Build Payment Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Build Payment Link": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Send Invoice Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Send Invoice Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Postgres - Mark Invoiced",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Postgres - Mark Invoiced": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Odoo Discuss - Invoice Sent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Payment Received Webhook": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Parse Payment Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Parse Payment Payload": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Find Lead by Invoice ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Find Lead by Invoice ID": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Odoo - Register Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Odoo - Register Payment": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Postgres - Mark Paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Postgres - Mark Paid": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Send Receipt Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[2.7] Fetch Lead + Deal Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Send Receipt Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Odoo Discuss - Payment Received Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.6] Odoo Discuss - Payment Received Alert": {
+      "main": [
+        [
+          {
+            "node": "[2.6] Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Fetch Lead + Deal Detail": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Nextcloud - Create Client Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Nextcloud - Create Client Folder": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Nextcloud - Create Client Share Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Nextcloud - Create Client Share Link": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Odoo - Create Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Odoo - Create Project": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Build Onboarding Task List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Build Onboarding Task List": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Odoo - Create Onboarding Tasks (batch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Odoo - Create Onboarding Tasks (batch)": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Odoo - Create Client Discuss Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Odoo - Create Client Discuss Channel": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Odoo - Add Delivery Team to Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Odoo - Add Delivery Team to Channel": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Build Welcome Email Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Build Welcome Email Info": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Send Welcome Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Send Welcome Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Postgres - Mark Onboarded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.7] Postgres - Mark Onboarded": {
+      "main": [
+        [
+          {
+            "node": "[2.7] Odoo Discuss - Onboarding Complete Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.8] Weekly - Monday 8AM": {
+      "main": [
+        [
+          {
+            "node": "[2.8] Fetch Active Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.8] Fetch Active Clients": {
+      "main": [
+        [
+          {
+            "node": "[2.8] Metabase - Query Client Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.8] Metabase - Query Client Metrics": {
+      "main": [
+        [
+          {
+            "node": "[2.8] Parse Metrics + Build Dashboard Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.8] Parse Metrics + Build Dashboard Link": {
+      "main": [
+        [
+          {
+            "node": "[2.8] Ollama - Summarize Weekly Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.8] Ollama - Summarize Weekly Report": {
+      "main": [
+        [
+          {
+            "node": "[2.8] Parse Ollama Summary JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.8] Parse Ollama Summary JSON": {
+      "main": [
+        [
+          {
+            "node": "[2.8] Send Weekly Report Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.8] Send Weekly Report Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.8] Postgres - Log Report Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Daily 7AM": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Fetch Renewals Due (30 days)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[2.9] Fetch Overdue (Past Renewal Date)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Fetch Renewals Due (30 days)": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Odoo - Create Renewal Call Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Odoo - Create Renewal Call Activity": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Send Renewal Reminder Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Send Renewal Reminder Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Postgres - Mark Renewal Reminder Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Postgres - Mark Renewal Reminder Sent": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Odoo Discuss - Renewal Reminder Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Fetch Overdue (Past Renewal Date)": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Postgres - Mark Churn Risk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Postgres - Mark Churn Risk": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Odoo Discuss - Churn Risk Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Failed Payment Webhook": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Parse Failed Payment Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Parse Failed Payment Payload": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Find Lead by Invoice ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Find Lead by Invoice ID": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Postgres - Mark Payment Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Postgres - Mark Payment Failed": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Send Dunning Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Send Dunning Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Odoo Discuss - Payment Failed Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[2.9] Odoo Discuss - Payment Failed Alert": {
+      "main": [
+        [
+          {
+            "node": "[2.9] Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

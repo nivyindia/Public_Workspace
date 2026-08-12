@@ -1,0 +1,464 @@
+{
+  "name": "2.5 - Contract + E-sign",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "proposal-accept",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n1-accept-webhook",
+      "name": "Proposal Accept Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        260
+      ],
+      "webhookId": "proposal-accept",
+      "notes": "Module 2.4 ke proposal email me ye link hota hai: {PROPOSAL_ACCEPT_BASE_URL}/webhook/proposal-accept?lead_id={id}. Client click karega to ye flow shuru hoga."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.query.lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "n2-fetch-lead",
+      "name": "Fetch Lead + Proposal",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DOCUMENSO_API_URL}}/api/v1/documents",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.DOCUMENSO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": {{JSON.stringify('Service Agreement - ' + $json.company)}},\n  \"templateId\": {{$env.DOCUMENSO_CONTRACT_TEMPLATE_ID}},\n  \"externalId\": \"lead-{{$json.odoo_lead_id}}\",\n  \"recipients\": [ {\n    \"email\": {{JSON.stringify($json.email)}},\n    \"name\": {{JSON.stringify($json.name)}},\n    \"role\": \"SIGNER\"\n  } ],\n  \"meta\": {\n    \"webhookUrl\": {{JSON.stringify($env.PROPOSAL_ACCEPT_BASE_URL + '/webhook/documenso-signed')}}\n  }\n}",
+        "options": {}
+      },
+      "id": "n3-documenso-create",
+      "name": "Documenso - Create Document from Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        260
+      ],
+      "notes": "DOCUMENSO_CONTRACT_TEMPLATE_ID ek pehle se Documenso me banaya hua contract template hai (standard Nivy service agreement, merge-fields ke saath). externalId se hum lead ko document se map karte hain."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DOCUMENSO_API_URL}}/api/v1/documents/{{$json.documentId || $json.id}}/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.DOCUMENSO_API_KEY}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n4-documenso-send",
+      "name": "Documenso - Send for Signature",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Contract Sent',\n    updated_at = now()\nWHERE odoo_lead_id = {{$('Fetch Lead + Proposal').item.json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n5-mark-contract-sent",
+      "name": "Postgres - Mark Contract Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1060,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Proposal accepted! Contract sent for e-sign to ' + $('Fetch Lead + Proposal').item.json.name + ' (' + $('Fetch Lead + Proposal').item.json.company + ')')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n6-discuss-accepted",
+      "name": "Odoo Discuss - Proposal Accepted",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=Thanks {{$('Fetch Lead + Proposal').item.json.name}}! Your contract has been sent to {{$('Fetch Lead + Proposal').item.json.email}} for e-signature. Please check your inbox.",
+        "options": {}
+      },
+      "id": "n7-respond-accept",
+      "name": "Respond - Thank You Page",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1500,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "documenso-signed",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n8-signed-webhook",
+      "name": "Documenso Signed Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        520
+      ],
+      "webhookId": "documenso-signed",
+      "notes": "Documenso document 'COMPLETED' event par ye webhook call hota hai (Node 3 me hi webhookUrl set kiya tha)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\nconst externalId = body.data?.externalId || body.externalId || '';\nconst leadId = (externalId.match(/lead-(\\d+)/) || [])[1];\nreturn [{ json: { odoo_lead_id: leadId ? parseInt(leadId, 10) : null } }];"
+      },
+      "id": "n9-extract-leadid",
+      "name": "Extract Lead ID from Document",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Won',\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}}\nRETURNING *;",
+        "options": {}
+      },
+      "id": "n10-mark-won",
+      "name": "Postgres - Mark Won",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        620,
+        520
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"crm.lead\",\n      \"write\",\n      [ [{{$json.odoo_lead_id}}], { \"stage_id\": {{$env.ODOO_WON_STAGE_ID}} } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n11-odoo-mark-won",
+      "name": "Odoo - Set CRM Stage to Won",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        520
+      ],
+      "notes": "ODOO_WON_STAGE_ID = 'Won' stage ki Odoo internal ID (Configuration -> Stages me dekho)."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "56554944d9702690",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "value": {
+            "odoo_lead_id": "={{$('Postgres - Mark Won').item.json.odoo_lead_id}}"
+          }
+        },
+        "options": {}
+      },
+      "id": "n12-execute-2-6",
+      "name": "Execute Workflow - 2.6 Invoice + Payment",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Contract SIGNED! Deal Won - lead #' + $('Postgres - Mark Won').item.json.odoo_lead_id + '. Invoice flow triggered.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n13-discuss-won",
+      "name": "Odoo Discuss - Deal Won Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "n14-respond-signed",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1500,
+        520
+      ]
+    }
+  ],
+  "connections": {
+    "Proposal Accept Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Lead + Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Lead + Proposal": {
+      "main": [
+        [
+          {
+            "node": "Documenso - Create Document from Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documenso - Create Document from Template": {
+      "main": [
+        [
+          {
+            "node": "Documenso - Send for Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documenso - Send for Signature": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Contract Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Contract Sent": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Proposal Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo Discuss - Proposal Accepted": {
+      "main": [
+        [
+          {
+            "node": "Respond - Thank You Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documenso Signed Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Lead ID from Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Lead ID from Document": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Won",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Won": {
+      "main": [
+        [
+          {
+            "node": "Odoo - Set CRM Stage to Won",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Set CRM Stage to Won": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - 2.6 Invoice + Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - 2.6 Invoice + Payment": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Deal Won Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo Discuss - Deal Won Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "6a06f8d9cae8f2f1"
+}

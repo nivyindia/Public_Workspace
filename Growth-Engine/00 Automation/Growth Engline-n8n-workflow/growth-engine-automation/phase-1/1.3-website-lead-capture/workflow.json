@@ -1,0 +1,212 @@
+{
+  "name": "1.3 - Website Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "typebot-lead-capture",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n1-webhook",
+      "name": "Typebot Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "notes": "Typebot ke 'Webhook' block me is URL ko paste karo (n8n webhook production URL). Trigger tab hoga jab visitor conversation complete karega."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\n\n// Typebot generally sends answers as an array of {key, value} or a flat object depending on setup.\n// Normalize into a flat lead object - adjust field names to match your actual Typebot block variable names.\nconst answers = body.answers || body;\n\nreturn [{\n  json: {\n    name: answers.name || answers.Name || 'Unknown',\n    email: answers.email || answers.Email || '',\n    phone: answers.phone || answers.Phone || '',\n    company: answers.company || answers.Company || '',\n    raw_message: answers.message || answers.query || JSON.stringify(answers),\n    source: 'typebot_website_chat',\n    submitted_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "n2-normalize",
+      "name": "Normalize Typebot Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a lead classifier for a digital agency called Nivy International (services: SEO, AI Automation, Virtual Assistant/VA services, Design, Video). Read the visitor's message and classify it.\\n\\nVisitor message: {{$json.raw_message.replace(/\\\"/g, '\\\\\\\"').slice(0,1000)}}\\n\\nReturn ONLY a valid JSON object with exactly these keys, no other text: service_type (one of: SEO, AI Automation, VA, Design, Video, Other), intent_summary (1 sentence, what the visitor actually wants), urgency (one of: immediate, exploring, just_browsing).\"\n}"
+      },
+      "id": "n3-ollama-classify",
+      "name": "Ollama - Classify Service Type",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { service_type: 'Other', intent_summary: '', urgency: 'exploring' };\n}\n\nconst lead = $('Normalize Typebot Payload').item.json;\n\nreturn [{\n  json: {\n    ...lead,\n    service_type: parsed.service_type || 'Other',\n    intent_summary: parsed.intent_summary || '',\n    urgency: parsed.urgency || 'exploring'\n  }\n}];"
+      },
+      "id": "n4-parse-classification",
+      "name": "Parse Classification JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"crm.lead\",\n      \"create\",\n      [ {\n        \"name\": {{JSON.stringify($json.name + ' - ' + $json.service_type + ' (Typebot)')}},\n        \"contact_name\": {{JSON.stringify($json.name)}},\n        \"email_from\": {{JSON.stringify($json.email)}},\n        \"phone\": {{JSON.stringify($json.phone)}},\n        \"partner_name\": {{JSON.stringify($json.company)}},\n        \"description\": {{JSON.stringify($json.intent_summary + ' | Raw: ' + $json.raw_message)}},\n        \"source_id\": false,\n        \"tag_ids\": [[6, 0, []]]\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {}
+      },
+      "id": "n5-odoo-create-lead",
+      "name": "Odoo - Create CRM Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ],
+      "notes": "Odoo JSON-RPC via /jsonrpc endpoint. ODOO_UID = internal user id of the API user (get once via login RPC). Isse simpler alternative: Odoo Website Forms module already auto-creates leads for native forms - ye node sirf Typebot (external) leads ke liye zaroori hai."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO clients_master (odoo_lead_id, name, email, phone, company, service_type, intent_summary, urgency, source, status, created_at, updated_at)\nVALUES (\n  {{$json.result.id}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.name)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.email)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.phone)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.company)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.service_type)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.intent_summary)}},\n  {{JSON.stringify($('Parse Classification JSON').item.json.urgency)}},\n  'typebot_website_chat',\n  'New',\n  now(), now()\n)\nON CONFLICT (odoo_lead_id) DO NOTHING;",
+        "options": {}
+      },
+      "id": "n6-insert-master",
+      "name": "Insert into clients_master",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1320,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Ek baar pehle ye control table banao (README dekho): clients_master. Ye central table hai jo poore funnel (1.1-2.9) ke status ko ek jagah track karta hai."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"received\",\n  \"lead_id\": {{$('Odoo - Create CRM Lead').item.json.result.id}}\n}",
+        "options": {}
+      },
+      "id": "n7-respond",
+      "name": "Respond to Typebot",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Typebot Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Typebot Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Typebot Payload": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Classify Service Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Classify Service Type": {
+      "main": [
+        [
+          {
+            "node": "Parse Classification JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Classification JSON": {
+      "main": [
+        [
+          {
+            "node": "Odoo - Create CRM Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Create CRM Lead": {
+      "main": [
+        [
+          {
+            "node": "Insert into clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert into clients_master": {
+      "main": [
+        [
+          {
+            "node": "Respond to Typebot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "337c9aa1aa3ffde1"
+}

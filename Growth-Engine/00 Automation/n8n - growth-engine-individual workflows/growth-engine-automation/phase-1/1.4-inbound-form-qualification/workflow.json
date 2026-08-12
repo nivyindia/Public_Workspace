@@ -1,0 +1,411 @@
+{
+  "name": "1.4 - Inbound Form Qualification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-qualification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n1-webhook",
+      "name": "Lead Event Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        320
+      ],
+      "notes": "Ye webhook 2 jagah se call hota hai: (1) Module 1.3 ke baad (Typebot leads), (2) Odoo Website Form submit par - Odoo Automation Rule (Settings > Technical > Automation Rules) me 'Execute Python Code' ya webhook action add karke isi URL par POST karo jab crm.lead record create ho via website form."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.body.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "n2-fetch-lead",
+      "name": "Fetch Lead from clients_master",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        420,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Agar lead abhi 1.3 se nahi aaya (direct Odoo Website Form submission hai), to ye query khali result dega - agla IF node isko handle karta hai."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n3-if-known-lead",
+      "name": "IF Lead Already in clients_master",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Direct Odoo Website Form submission - lead not yet in clients_master, pull fields from webhook body directly\nconst body = $('Lead Event Webhook').item.json.body;\nreturn [{\n  json: {\n    odoo_lead_id: body.odoo_lead_id,\n    name: body.name || body.contact_name || 'Unknown',\n    email: body.email_from || body.email || '',\n    phone: body.phone || '',\n    company: body.partner_name || '',\n    raw_message: body.description || body.message || '',\n    source: 'odoo_website_form'\n  }\n}];"
+      },
+      "id": "n4-fallback-fields",
+      "name": "Build Fields from Webhook (Fallback)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge point: normalize whichever branch fired into one shape\nconst j = $input.item.json;\nreturn [{\n  json: {\n    odoo_lead_id: j.odoo_lead_id,\n    name: j.name,\n    email: j.email,\n    phone: j.phone,\n    company: j.company,\n    raw_message: j.raw_message || j.intent_summary || '',\n    service_type: j.service_type || 'Other',\n    source: j.source || 'odoo_website_form'\n  }\n}];"
+      },
+      "id": "n5-normalize-merged",
+      "name": "Normalize Merged Lead",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1080,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a lead scoring assistant for a digital agency (Nivy International). Services offered: SEO, AI Automation, VA, Design, Video.\\n\\nLead details:\\nName: {{$json.name}}\\nCompany: {{$json.company}}\\nService interest: {{$json.service_type}}\\nMessage: {{$json.raw_message.replace(/\\\"/g, '\\\\\\\"').slice(0,800)}}\\n\\nScore this lead. Return ONLY a valid JSON object with exactly these keys: score (one of: hot, warm, cold), reason (1 sentence why), suggested_next_step (1 short sentence).\"\n}"
+      },
+      "id": "n6-ollama-score",
+      "name": "Ollama - Score Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { score: 'warm', reason: '', suggested_next_step: '' };\n}\nconst lead = $('Normalize Merged Lead').item.json;\nreturn [{ json: { ...lead, score: parsed.score || 'warm', reason: parsed.reason || '', suggested_next_step: parsed.suggested_next_step || '' } }];"
+      },
+      "id": "n7-parse-score",
+      "name": "Parse Score JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET score = {{JSON.stringify($json.score)}},\n    score_reason = {{JSON.stringify($json.reason)}},\n    status = 'Qualified',\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n8-update-master",
+      "name": "Update clients_master with Score",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1740,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"crm.lead\",\n      \"write\",\n      [ [ {{$json.odoo_lead_id}} ], {\n        \"priority\": \"={{$json.score === 'hot' ? '3' : ($json.score === 'warm' ? '2' : '1')}}\",\n        \"description\": {{JSON.stringify($json.reason + ' | Next: ' + $json.suggested_next_step)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n9-odoo-update-lead",
+      "name": "Odoo - Update Lead Priority",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$('Parse Score JSON').item.json.score}}",
+              "rightValue": "hot",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n10-if-hot",
+      "name": "IF Hot Lead",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2180,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify(' HOT lead: ' + $('Parse Score JSON').item.json.name + ' (' + $('Parse Score JSON').item.json.company + ') - ' + $('Parse Score JSON').item.json.reason)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n11-discuss-alert",
+      "name": "Odoo Discuss - Alert Sales Team",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        220
+      ],
+      "notes": "ODOO_DISCUSS_CHANNEL_ID = sales team ke Discuss channel ka ID (Settings > Technical > Discuss Channels se milega)."
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$('Parse Score JSON').item.json.email}}",
+        "subject": "Thanks for reaching out to Nivy International!",
+        "emailFormat": "text",
+        "text": "=Hi {{$('Parse Score JSON').item.json.name}},\n\nThanks for your interest in {{$('Parse Score JSON').item.json.service_type}}! One of our specialists will reach out shortly to discuss next steps.\n\nIn the meantime, feel free to book a slot directly: {{$env.CALCOM_BOOKING_LINK}}\n\nBest,\nNivy International Agency",
+        "options": {}
+      },
+      "id": "n12-auto-response",
+      "name": "Send Auto-Response (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2400,
+        420
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Lead Event Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Lead from clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Lead from clients_master": {
+      "main": [
+        [
+          {
+            "node": "IF Lead Already in clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Lead Already in clients_master": {
+      "main": [
+        [
+          {
+            "node": "Normalize Merged Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Fields from Webhook (Fallback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Fields from Webhook (Fallback)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Merged Lead",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Normalize Merged Lead": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Score Lead": {
+      "main": [
+        [
+          {
+            "node": "Parse Score JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Score JSON": {
+      "main": [
+        [
+          {
+            "node": "Update clients_master with Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update clients_master with Score": {
+      "main": [
+        [
+          {
+            "node": "Odoo - Update Lead Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Update Lead Priority": {
+      "main": [
+        [
+          {
+            "node": "IF Hot Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Hot Lead": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Alert Sales Team",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Auto-Response (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Auto-Response (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

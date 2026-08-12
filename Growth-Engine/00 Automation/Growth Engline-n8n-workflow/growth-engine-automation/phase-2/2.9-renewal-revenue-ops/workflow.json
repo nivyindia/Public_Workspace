@@ -1,0 +1,527 @@
+{
+  "name": "2.9 - Renewal + Revenue Ops",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "n1-daily-trigger",
+      "name": "Daily 7AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master\nWHERE status IN ('Onboarded', 'Active')\n  AND renewal_date IS NOT NULL\n  AND renewal_date BETWEEN now() AND now() + interval '30 days'\n  AND (renewal_reminder_sent_at IS NULL OR renewal_reminder_sent_at < now() - interval '7 days');",
+        "options": {}
+      },
+      "id": "n2-fetch-renewals-due",
+      "name": "Fetch Renewals Due (30 days)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.activity\",\n      \"create\",\n      [ {\n        \"res_model\": \"crm.lead\",\n        \"res_id\": {{$json.odoo_lead_id}},\n        \"activity_type_id\": {{$env.ODOO_RENEWAL_ACTIVITY_TYPE_ID}},\n        \"user_id\": {{$env.ODOO_SALES_USER_ID}},\n        \"summary\": {{JSON.stringify('Renewal call - ' + $json.company)}},\n        \"date_deadline\": \"={{$json.renewal_date}}\"\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n3-odoo-renewal-activity",
+      "name": "Odoo - Create Renewal Call Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        160
+      ],
+      "notes": "ODOO_RENEWAL_ACTIVITY_TYPE_ID = Odoo Activity Type (Settings -> Technical -> Activity Types), e.g. 'Call'. Sales rep ko is date par CRM me task dikhega."
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Quick check-in ahead of your renewal, {{$json.name}}",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\nYour current term with Nivy is coming up for renewal on {{$json.renewal_date}}. We'd love to review results so far and talk through what's next.\n\nOur team will reach out to schedule a quick call -- or feel free to grab time directly if you'd rather not wait.\n\nTeam Nivy",
+        "options": {}
+      },
+      "id": "n4-send-renewal-reminder",
+      "name": "Send Renewal Reminder Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        840,
+        160
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET renewal_reminder_sent_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n5-mark-reminder-sent",
+      "name": "Postgres - Mark Renewal Reminder Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1060,
+        160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Renewal reminder sent: ' + $json.company + ' -- renews ' + $json.renewal_date + '. Call activity created for sales rep.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n6-discuss-renewal-alert",
+      "name": "Odoo Discuss - Renewal Reminder Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master\nWHERE status IN ('Onboarded', 'Active')\n  AND renewal_date IS NOT NULL\n  AND renewal_date < now();",
+        "options": {}
+      },
+      "id": "n7-fetch-overdue",
+      "name": "Fetch Overdue (Past Renewal Date)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "renewal_date beet chuki hai aur status abhi bhi Onboarded/Active hai (renew nahi hua) -- churn risk flag."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Churn Risk'\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n8-mark-churn-risk",
+      "name": "Postgres - Mark Churn Risk",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        620,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('CHURN RISK: ' + $json.company + ' renewal date (' + $json.renewal_date + ') has passed with no renewal. Needs urgent follow-up.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n9-discuss-churn-alert",
+      "name": "Odoo Discuss - Churn Risk Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-failed",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n10-failed-payment-webhook",
+      "name": "Failed Payment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        560
+      ],
+      "webhookId": "payment-failed",
+      "notes": "Odoo portal payment gateway acquirer (ya Razorpay/Stripe) ka 'payment failed / declined' callback isi URL par point karo. Payload field names Node 11 me apne gateway ke hisaab se adjust karo."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\nreturn [{\n  json: {\n    invoice_id: body.invoice_id,\n    amount_attempted: body.amount,\n    failure_reason: body.failure_reason || body.reason || 'unknown',\n    transaction_id: body.transaction_id\n  }\n}];"
+      },
+      "id": "n11-parse-failed-payment",
+      "name": "Parse Failed Payment Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_invoice_id = {{$json.invoice_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "n12-find-lead-by-invoice",
+      "name": "Find Lead by Invoice ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        620,
+        560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Payment Failed',\n    dunning_attempts = COALESCE(dunning_attempts, 0) + 1,\n    updated_at = now()\nWHERE odoo_invoice_id = {{$('Parse Failed Payment Payload').item.json.invoice_id}}\nRETURNING *;",
+        "options": {}
+      },
+      "id": "n13-mark-payment-failed",
+      "name": "Postgres - Mark Payment Failed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        840,
+        560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Payment issue on your recent invoice - {{$json.company}}",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\nWe tried to process your payment but it didn't go through ({{$('Parse Failed Payment Payload').item.json.failure_reason}}). This can happen for a few reasons (card expiry, bank decline, etc).\n\nCould you try again or update your payment method here: {{$json.payment_url}}\n\nLet us know if you run into any trouble.\nTeam Nivy",
+        "options": {}
+      },
+      "id": "n14-send-dunning-email",
+      "name": "Send Dunning Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1060,
+        560
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('PAYMENT FAILED: ' + $json.company + ' -- attempt #' + $json.dunning_attempts + '. Dunning email sent.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n15-discuss-payment-failed-alert",
+      "name": "Odoo Discuss - Payment Failed Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "n16-respond-payment-failed",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1500,
+        560
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 7AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Renewals Due (30 days)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Overdue (Past Renewal Date)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Renewals Due (30 days)": {
+      "main": [
+        [
+          {
+            "node": "Odoo - Create Renewal Call Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Create Renewal Call Activity": {
+      "main": [
+        [
+          {
+            "node": "Send Renewal Reminder Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Renewal Reminder Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Renewal Reminder Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Renewal Reminder Sent": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Renewal Reminder Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Overdue (Past Renewal Date)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Churn Risk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Churn Risk": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Churn Risk Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed Payment Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Failed Payment Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Failed Payment Payload": {
+      "main": [
+        [
+          {
+            "node": "Find Lead by Invoice ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Lead by Invoice ID": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Payment Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Payment Failed": {
+      "main": [
+        [
+          {
+            "node": "Send Dunning Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Dunning Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Payment Failed Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo Discuss - Payment Failed Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "60bf05193682479a"
+}

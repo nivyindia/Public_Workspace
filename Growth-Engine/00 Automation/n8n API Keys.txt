@@ -1,0 +1,339 @@
+Haan. n8n me sab services connect karne ke liye tumhe API keys, tokens, passwords, ya webhook URLs chahiye honge. Good news: jo stack tum use kar rahe ho usme zyada tar keys service install hone ke baad admin panel me milti hain, koi paid SaaS account ki zarurat nahi.
+
+Neeche maine service-wise exact location diya hai jahan se key milegi aur n8n me kaunsa credential type use karna hai.
+
+### Quick map
+
+| Service    | Key kahan milegi                        | n8n credential |
+| ---------- | --------------------------------------- | -------------- |
+| PostgreSQL | Docker env vars                         | Postgres       |
+| Odoo       | Odoo user settings → API Keys           | HTTP Basic     |
+| Postal     | Postal → Credentials → SMTP/API         | SMTP / HTTP    |
+| Nextcloud  | User Settings → Security → App password | WebDAV         |
+| Documenso  | Settings → API Keys                     | HTTP Header    |
+| Metabase   | Admin → Settings → API Keys             | HTTP Header    |
+| Cal.com    | Settings → Developer → API Keys         | HTTP Header    |
+| WAHA       | Docker env WAHA_API_KEY                 | HTTP Header    |
+| Typebot    | Workspace → Settings → API Tokens       | HTTP Header    |
+| Mixpost    | Settings → API                          | HTTP Header    |
+| Gotenberg  | Usually no key                          | HTTP Request   |
+| Ollama     | No key (local URL)                      | HTTP Request   |
+| Redis      | Docker env REDIS_PASSWORD               | Redis          |
+
+### 1. PostgreSQL
+
+Docker compose me jo set karoge wahi credentials hain.
+
+YAML
+
+```
+environment:
+  POSTGRES_DB: nivy
+  POSTGRES_USER: nivy
+  POSTGRES_PASSWORD: StrongPassword123
+```
+
+n8n → Credentials → PostgreSQL me:
+
+* Host: `postgres`
+
+* Database: `nivy`
+
+* User: `nivy`
+
+* Password: `StrongPassword123`
+
+* Port: `5432`
+
+### 2. Odoo (important)
+
+Odoo install hone ke baad:
+
+* Login as admin
+
+* Top-right avatar → My Profile
+
+* Account Security
+
+* New API Key
+
+* Name do (e.g. `n8n-integration`) → Generate
+
+Tumhe ek long API key milegi. Odoo XML-RPC/JSON-RPC me generally:
+
+* Username = Odoo login email
+
+* Password = generated API key
+
+n8n me HTTP Basic Auth use karo.
+
+Example endpoint:
+
+```
+https://odoo.yourdomain.com/jsonrpc
+```
+
+### 3. Postal (SMTP + API)
+
+Postal admin panel:
+
+* Login
+
+* Organizations → Your Org → Credentials
+
+* SMTP username/password copy karo
+
+* API Tokens section se API token banao
+
+n8n email node:
+
+* Host: `postal`
+
+* Port: `587`
+
+* User: SMTP username
+
+* Password: SMTP password
+
+API calls me header:
+
+```
+Authorization: Bearer POSTAL_API_TOKEN
+```
+
+### 4. Nextcloud
+
+* Login
+
+* Avatar → Settings
+
+* Security
+
+* Create new app password
+
+WebDAV URL:
+
+```
+https://cloud.yourdomain.com/remote.php/dav/files/USERNAME/
+```
+
+n8n → WebDAV credential:
+
+* Username: Nextcloud username
+
+* Password: app password
+
+### 5. Documenso
+
+* Login as admin
+
+* Settings → API Keys
+
+* Generate new key
+
+n8n HTTP header:
+
+```
+Authorization: Bearer DOCUMENSO_API_KEY
+```
+
+### 6. Metabase
+
+* Admin gear icon
+
+* Settings → Authentication → API Keys
+
+* Create key
+
+Header:
+
+```
+x-api-key: METABASE_API_KEY
+```
+
+### 7. Cal.com
+
+* Login
+
+* Settings → Developer → API Keys
+
+* Create API key
+
+Header:
+
+```
+Authorization: Bearer CAL_API_KEY
+```
+
+### 8. WAHA (WhatsApp gateway)
+
+Install time par key set karo:
+
+YAML
+
+```
+environment:
+  WAHA_API_KEY: supersecretwaha
+```
+
+Request:
+
+```
+POST http://waha:3000/api/sendText
+X-Api-Key: supersecretwaha
+```
+
+n8n me HTTP Header Auth use karo.
+
+### 9. Typebot
+
+* Open Typebot
+
+* Workspace Settings → API Tokens
+
+* Create token
+
+Header:
+
+```
+Authorization: Bearer TYPEBOT_TOKEN
+```
+
+### 10. Mixpost
+
+* Admin → Settings → API
+
+* Generate API token
+
+Header:
+
+```
+Authorization: Bearer MIXPOST_TOKEN
+```
+
+### 11. Gotenberg
+
+Default install me authentication nahi hota.
+
+n8n HTTP Request node:
+
+```
+POST http://gotenberg:3000/forms/chromium/convert/url
+```
+
+Agar internet expose karoge to reverse proxy + basic auth lagana better hai.
+
+### 12. Ollama
+
+By default no API key.
+
+n8n HTTP Request:
+
+```
+POST http://ollama:11434/api/generate
+```
+
+Body example:
+
+JSON
+
+```
+{
+  "model": "qwen2.5:7b",
+  "prompt": "Write a cold email"
+}
+```
+
+### 13. Redis
+
+Docker env:
+
+YAML
+
+```
+environment:
+  REDIS_PASSWORD: redisStrongPass
+```
+
+n8n Redis credential:
+
+* Host: `redis`
+
+* Password: `redisStrongPass`
+
+* Port: `6379`
+
+### n8n me credentials kahan save karte hain?
+
+* n8n open karo
+
+* Left sidebar → Credentials
+
+* New Credential
+
+* Service select karo
+
+* Values paste karo
+
+* Save
+
+* Workflow node me credential select karo
+
+### Recommended internal URLs (Docker network)
+
+Agar sab same Docker network me hain to ye hostnames use karo:
+
+| Service   | Internal URL                                               |
+| --------- | ---------------------------------------------------------- |
+| Odoo      | [http://odoo:8069](http://odoo:8069)                       |
+| n8n       | [http://n8n:5678](http://n8n:5678)                         |
+| Postgres  | postgres:5432                                              |
+| Postal    | [http://postal](http://postal)                             |
+| Nextcloud | [http://nextcloud](http://nextcloud)                       |
+| Metabase  | [http://metabase:3000](http://metabase:3000)               |
+| Cal.com   | [http://calcom:3000](http://calcom:3000)                   |
+| WAHA      | [http://waha:3000](http://waha:3000)                       |
+| Typebot   | [http://typebot-builder:3000](http://typebot-builder:3000) |
+| Mixpost   | [http://mixpost](http://mixpost)                           |
+| Gotenberg | [http://gotenberg:3000](http://gotenberg:3000)             |
+| Ollama    | [http://ollama:11434](http://ollama:11434)                 |
+
+### Sabse pehle kya connect karo?
+
+Is order me test karo:
+
+Step 1
+
+PostgreSQL
+
+Step 2
+
+Odoo
+
+Step 3
+
+Ollama
+
+Step 4
+
+Postal
+
+Step 5
+
+Nextcloud
+
+Step 6
+
+WAHA
+
+Step 7
+
+Cal.com
+
+Step 8
+
+Metabase
+
+Ye 8 services connect ho gayin to tumhara lead → outreach → booking → reporting pipeline chalna start ho jayega.
+
+Agar chaho to next message me main tumhare liye complete docker-compose.yml with all environment variables placeholders bana deta hoon, jisme har service ka username/password/API key ek hi `.env` file me manage hoga.

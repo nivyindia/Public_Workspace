@@ -1,0 +1,266 @@
+{
+  "name": "1.2 - SEO Automation (Weekly)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [1],
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "id": "s1-weekly-trigger",
+      "name": "Weekly - Monday 6AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://searchconsole.googleapis.com/webmasters/v3/sites/{{encodeURIComponent($env.GSC_SITE_URL)}}/searchAnalytics/query",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startDate\": \"{{$now.minus({days:28}).toFormat('yyyy-MM-dd')}}\",\n  \"endDate\": \"{{$now.minus({days:1}).toFormat('yyyy-MM-dd')}}\",\n  \"dimensions\": [\"query\", \"page\"],\n  \"rowLimit\": 200\n}"
+      },
+      "id": "s2-gsc-query",
+      "name": "GSC - Get Search Analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 240],
+      "notes": "Google Search Console API credential (OAuth2) required. Site must be verified in GSC."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are an SEO analyst. Here is 28-day Google Search Console data (queries + pages + clicks + impressions + position) for a digital marketing/AI/IT agency website: {{JSON.stringify($json.rows || []).slice(0,6000)}}\\n\\nReturn ONLY a valid JSON object with keys: top_opportunity_keywords (array of up to 10 objects with keyword, current_position, suggested_action), content_gap_topics (array of up to 5 topic ideas the site should write about based on what's ranking on page 2-3). No text outside the JSON.\"\n}"
+      },
+      "id": "s3-ollama-cluster",
+      "name": "Ollama - Cluster Keywords",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [620, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { top_opportunity_keywords: [], content_gap_topics: [] };\n}\nreturn [{ json: parsed }];"
+      },
+      "id": "s4-parse-clusters",
+      "name": "Parse Keyword Clusters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 240]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, meta_description\nFROM website_page\nWHERE is_published = true\n  AND (meta_description IS NULL OR meta_description = '')\nLIMIT 20;",
+        "options": {}
+      },
+      "id": "s5-get-pages-missing-meta",
+      "name": "Get Pages Missing Meta Description",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [400, 560],
+      "credentials": {
+        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Odoo Postgres" }
+      },
+      "notes": "website_page is Odoo's table for website pages. Adjust table/column names if your Odoo version differs (check via pgAdmin/psql first)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"Write a compelling SEO meta description (max 155 characters) for a webpage titled: {{$json.name.replace(/\\\"/g,'')}}. This is for a digital marketing/AI/IT agency called Nivy. Return ONLY the meta description text, nothing else, no quotes.\"\n}"
+      },
+      "id": "s6-ollama-meta",
+      "name": "Ollama - Generate Meta Description",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [620, 560]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE website_page\nSET meta_description = {{JSON.stringify($json.response.trim().slice(0,155))}}\nWHERE id = {{$('Get Pages Missing Meta Description').item.json.id}};",
+        "options": {}
+      },
+      "id": "s7-update-meta",
+      "name": "Update Page Meta Description",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [840, 560],
+      "credentials": {
+        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Odoo Postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://REPLACE-WITH-YOUR-DOMAIN.com/sitemap.xml",
+        "options": { "response": { "response": { "responseFormat": "text" } } }
+      },
+      "id": "s8-fetch-sitemap",
+      "name": "Fetch Sitemap XML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 760]
+    },
+    {
+      "parameters": {
+        "jsCode": "const xml = $input.item.json.data || $input.item.json.body || '';\nconst matches = [...xml.matchAll(/<loc>(.*?)<\\/loc>/g)].map(m => m[1]);\nconst limited = matches.slice(0, 100);\nreturn limited.map(url => ({ json: { url } }));"
+      },
+      "id": "s9-extract-urls",
+      "name": "Extract URLs from Sitemap",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 760]
+    },
+    {
+      "parameters": { "batchSize": 10, "options": {} },
+      "id": "s10-split-batches",
+      "name": "Loop URLs (batch 10)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [840, 760]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$json.url}}",
+        "options": { "response": { "response": { "neverError": true } }, "timeout": 8000 }
+      },
+      "id": "s11-check-status",
+      "name": "Check URL Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 700]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "leftValue": "={{$json.statusCode}}",
+              "rightValue": 400,
+              "operator": { "type": "number", "operation": "gte" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "s12-if-broken",
+      "name": "Is Broken (>=400)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1280, 700]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { broken_url: $json.url, status_code: $json.statusCode } }];"
+      },
+      "id": "s13-collect-broken",
+      "name": "Collect Broken Link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 640]
+    },
+    {
+      "parameters": {
+        "jsCode": "const clusters = $('Parse Keyword Clusters').item.json;\nconst metaUpdatedCount = $('Get Pages Missing Meta Description').all().length;\nconst brokenLinks = $('Collect Broken Link').all().map(i => i.json);\n\nconst html = `\n  <h2>Weekly SEO Report</h2>\n  <h3>Top Keyword Opportunities</h3>\n  <ul>${(clusters.top_opportunity_keywords || []).map(k => `<li><b>${k.keyword}</b> - position ${k.current_position} - ${k.suggested_action}</li>`).join('')}</ul>\n  <h3>Content Gap Topics</h3>\n  <ul>${(clusters.content_gap_topics || []).map(t => `<li>${t}</li>`).join('')}</ul>\n  <h3>Meta Descriptions Auto-Generated</h3>\n  <p>${metaUpdatedCount} pages updated this week</p>\n  <h3>Broken Links Found</h3>\n  <ul>${brokenLinks.length ? brokenLinks.map(b => `<li>${b.broken_url} (status ${b.status_code})</li>`).join('') : '<li>None found 🎉</li>'}</ul>\n`;\n\nreturn [{ json: { reportHtml: html } }];"
+      },
+      "id": "s14-build-report",
+      "name": "Build Weekly SEO Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1060, 880]
+    },
+    {
+      "parameters": {
+        "fromEmail": "reports@REPLACE-WITH-YOUR-DOMAIN.com",
+        "toEmail": "REPLACE-WITH-YOUR-EMAIL@example.com",
+        "subject": "Weekly SEO Report - {{$now.toFormat('dd MMM yyyy')}}",
+        "html": "={{$json.reportHtml}}",
+        "options": {}
+      },
+      "id": "s15-send-report",
+      "name": "Send Weekly SEO Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1280, 880],
+      "credentials": {
+        "smtp": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Postal SMTP" }
+      }
+    }
+  ],
+  "connections": {
+    "Weekly - Monday 6AM": {
+      "main": [
+        [
+          { "node": "GSC - Get Search Analytics", "type": "main", "index": 0 },
+          { "node": "Get Pages Missing Meta Description", "type": "main", "index": 0 },
+          { "node": "Fetch Sitemap XML", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "GSC - Get Search Analytics": {
+      "main": [[{ "node": "Ollama - Cluster Keywords", "type": "main", "index": 0 }]]
+    },
+    "Ollama - Cluster Keywords": {
+      "main": [[{ "node": "Parse Keyword Clusters", "type": "main", "index": 0 }]]
+    },
+    "Get Pages Missing Meta Description": {
+      "main": [[{ "node": "Ollama - Generate Meta Description", "type": "main", "index": 0 }]]
+    },
+    "Ollama - Generate Meta Description": {
+      "main": [[{ "node": "Update Page Meta Description", "type": "main", "index": 0 }]]
+    },
+    "Fetch Sitemap XML": {
+      "main": [[{ "node": "Extract URLs from Sitemap", "type": "main", "index": 0 }]]
+    },
+    "Extract URLs from Sitemap": {
+      "main": [[{ "node": "Loop URLs (batch 10)", "type": "main", "index": 0 }]]
+    },
+    "Loop URLs (batch 10)": {
+      "main": [
+        [{ "node": "Build Weekly SEO Report", "type": "main", "index": 0 }],
+        [{ "node": "Check URL Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check URL Status": {
+      "main": [[{ "node": "Is Broken (>=400)", "type": "main", "index": 0 }]]
+    },
+    "Is Broken (>=400)": {
+      "main": [
+        [{ "node": "Collect Broken Link", "type": "main", "index": 0 }],
+        [{ "node": "Loop URLs (batch 10)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Collect Broken Link": {
+      "main": [[{ "node": "Loop URLs (batch 10)", "type": "main", "index": 0 }]]
+    },
+    "Build Weekly SEO Report": {
+      "main": [[{ "node": "Send Weekly SEO Report", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

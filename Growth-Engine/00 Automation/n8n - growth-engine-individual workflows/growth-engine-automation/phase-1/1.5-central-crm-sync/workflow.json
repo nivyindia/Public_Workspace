@@ -1,0 +1,447 @@
+{
+  "name": "1.5 - Central CRM Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "n1-schedule",
+      "name": "Every 5 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Odoo CRM stage change detect: compare crm.lead.stage_id (Odoo) against last-known stage in clients_master\nSELECT\n  cl.id AS odoo_lead_id,\n  cl.name,\n  cl.email_from AS email,\n  cl.phone,\n  cl.partner_name AS company,\n  st.name AS current_stage,\n  cm.status AS last_known_status\nFROM crm_lead cl\nJOIN crm_stage st ON st.id = cl.stage_id\nLEFT JOIN clients_master cm ON cm.odoo_lead_id = cl.id\nWHERE cm.odoo_lead_id IS NULL\n   OR st.name != cm.status\nORDER BY cl.write_date DESC\nLIMIT 25;",
+        "options": {}
+      },
+      "id": "n2-detect-changes",
+      "name": "Detect CRM Stage Changes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "crm_lead aur crm_stage Odoo ke actual Postgres tables hain (same DB). st.name Odoo me aapke pipeline stages ke exact naam se match hone chahiye: New, Qualified, Contacted, Nurtured, Booked, Proposal Sent, Won, Onboarded, Delivered, Renewal - Section 1 wale funnel status ke mutabiq CRM pipeline stages rename kar lena."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO clients_master (odoo_lead_id, name, email, phone, company, status, created_at, updated_at)\nVALUES ({{$json.odoo_lead_id}}, {{JSON.stringify($json.name)}}, {{JSON.stringify($json.email)}}, {{JSON.stringify($json.phone)}}, {{JSON.stringify($json.company)}}, {{JSON.stringify($json.current_stage)}}, now(), now())\nON CONFLICT (odoo_lead_id) DO UPDATE\nSET status = EXCLUDED.status, updated_at = now();",
+        "options": {}
+      },
+      "id": "n3-upsert-master",
+      "name": "Upsert clients_master",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        620,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Ye woh 'single source of truth sync' hai jiska zikr Master Plan ke Section 5.1 me hai - har module isi table ko read/write karta hai."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.current_stage}}",
+              "rightValue": "Qualified",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n4-if-qualified",
+      "name": "IF Stage = Qualified",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.current_stage}}",
+              "rightValue": "Won",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n5-if-won",
+      "name": "IF Stage = Won",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.current_stage}}",
+              "rightValue": "Proposal Sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n6-if-proposal",
+      "name": "IF Stage = Proposal Sent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.current_stage}}",
+              "rightValue": "Booked",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n6b-if-booked",
+      "name": "IF Stage = Booked",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        580
+      ],
+      "notes": "Module 2.3 (Booking Sync) status ko 'Booked' set karta hai jab Cal.com booking confirm hoti hai. Ye branch tabhi 2.4 (Proposal Generation) trigger karta hai."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_WITH_2.4_PROPOSAL_GENERATION_WORKFLOW_ID"
+        },
+        "options": {}
+      },
+      "id": "n9b-execute-2-4",
+      "name": "Execute Workflow - 2.4 Proposal Generation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_WITH_2.1_OUTREACH_WORKFLOW_ID"
+        },
+        "options": {}
+      },
+      "id": "n7-execute-2-1",
+      "name": "Execute Workflow - 2.1 Outreach",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        180
+      ],
+      "notes": "Phase 2 module 2.1 (Multi-channel Outreach) ka workflow ID daalna - n8n me open karke URL se ID copy kar lena. Ye connection Master Plan Section 5.2 wale 'Execute Workflow node' ko implement karta hai."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_WITH_2.7_ONBOARDING_WORKFLOW_ID"
+        },
+        "options": {}
+      },
+      "id": "n8-execute-2-7",
+      "name": "Execute Workflow - 2.7 Onboarding",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_WITH_2.5_CONTRACT_ESIGN_WORKFLOW_ID"
+        },
+        "options": {}
+      },
+      "id": "n9-execute-2-5",
+      "name": "Execute Workflow - 2.5 Contract E-sign",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Stage change: ' + $json.name + ' -> ' + $json.current_stage)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n10-discuss-notify",
+      "name": "Odoo Discuss - Notify Stage Change",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        320
+      ],
+      "notes": "Har major stage change par team ko Discuss me alert - Master Plan Section 5.4 (human checkpoint / QA reminder)."
+    }
+  ],
+  "connections": {
+    "Every 5 Min": {
+      "main": [
+        [
+          {
+            "node": "Detect CRM Stage Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect CRM Stage Changes": {
+      "main": [
+        [
+          {
+            "node": "Upsert clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert clients_master": {
+      "main": [
+        [
+          {
+            "node": "IF Stage = Qualified",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF Stage = Won",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF Stage = Proposal Sent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF Stage = Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Stage = Booked": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - 2.4 Proposal Generation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Execute Workflow - 2.4 Proposal Generation": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Notify Stage Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Stage = Qualified": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - 2.1 Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "IF Stage = Won": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - 2.7 Onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "IF Stage = Proposal Sent": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - 2.5 Contract E-sign",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Execute Workflow - 2.1 Outreach": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Notify Stage Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - 2.7 Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Notify Stage Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - 2.5 Contract E-sign": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Notify Stage Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

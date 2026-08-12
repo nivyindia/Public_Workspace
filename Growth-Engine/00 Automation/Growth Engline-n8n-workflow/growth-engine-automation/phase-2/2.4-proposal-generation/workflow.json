@@ -1,0 +1,511 @@
+{
+  "name": "2.4 - Proposal Generation",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "n1-execute-trigger",
+      "name": "From Module 1.5 (status = Booked)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        380
+      ],
+      "notes": "Module 1.5 (Central CRM Sync) ka naya 'IF Booked' branch is workflow ko Execute Workflow node se call karta hai, input me { odoo_lead_id } bhejta hai."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "n2-fetch-lead",
+      "name": "Fetch Lead Detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        380
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a proposal writer for a digital agency (Nivy International). Draft a service proposal for this lead.\\n\\nLead name: {{$json.name}}\\nCompany: {{$json.company}}\\nService interest: {{$json.service_type}}\\nIntent summary: {{$json.intent_summary}}\\n\\nReturn ONLY a valid JSON object with exactly these keys: proposal_title (short), scope_summary (2-3 sentences), deliverables (array of 4-6 short strings), timeline_weeks (integer estimate), pricing_tiers (array of exactly 3 objects each with keys: tier_name, price_inr (integer, realistic for an Indian digital agency), includes (short string)), recommended_tier (one of the 3 tier_name values), email_intro (80-120 words, warm, professional, inviting them to review the attached proposal and book a follow-up call if needed).\"\n}"
+      },
+      "id": "n3-ollama-proposal",
+      "name": "Ollama - Draft Proposal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : {};\n}\nconst lead = $('Fetch Lead Detail').item.json;\nconst tiers = Array.isArray(parsed.pricing_tiers) ? parsed.pricing_tiers : [];\nconst recommended = tiers.find(t => t.tier_name === parsed.recommended_tier) || tiers[0] || { price_inr: 0, tier_name: 'Standard' };\nconst customThreshold = parseInt($env.PROPOSAL_CUSTOM_THRESHOLD_INR || '150000', 10);\n\nreturn [{\n  json: {\n    odoo_lead_id: lead.odoo_lead_id,\n    name: lead.name,\n    email: lead.email,\n    company: lead.company,\n    proposal_title: parsed.proposal_title || 'Proposal for ' + lead.company,\n    scope_summary: parsed.scope_summary || '',\n    deliverables: parsed.deliverables || [],\n    timeline_weeks: parsed.timeline_weeks || 4,\n    pricing_tiers: tiers,\n    recommended_tier: recommended.tier_name,\n    recommended_price: recommended.price_inr,\n    email_intro: parsed.email_intro || 'Please find our proposal attached.',\n    use_custom_pdf: recommended.price_inr >= customThreshold\n  }\n}];"
+      },
+      "id": "n4-parse-decide",
+      "name": "Parse + Decide Simple vs Custom",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        380
+      ],
+      "notes": "PROPOSAL_CUSTOM_THRESHOLD_INR se zyada value wale deals ke liye custom-branded PDF (Gotenberg), chhote deals ke liye seedha Odoo Sales Quotation (simple, fast)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.use_custom_pdf}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n5-if-custom",
+      "name": "IF Custom Branded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1060,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"sale.order\",\n      \"create\",\n      [ {\n        \"partner_id\": {{$json.odoo_partner_id || $env.ODOO_FALLBACK_PARTNER_ID}},\n        \"opportunity_id\": {{$json.odoo_lead_id}},\n        \"order_line\": [ [0, 0, {\n          \"name\": {{JSON.stringify($json.proposal_title + ' - ' + $json.recommended_tier)}},\n          \"product_uom_qty\": 1,\n          \"price_unit\": {{$json.recommended_price}}\n        }] ]\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n6-odoo-quotation",
+      "name": "Odoo - Create Sales Quotation (Simple)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        260
+      ],
+      "notes": "partner_id zaroori hai -- clients_master me abhi odoo_partner_id column nahi hai (Setup section 1 me ALTER TABLE diya hai), tab tak ODOO_FALLBACK_PARTNER_ID env var use hoti hai."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Odoo simple quotation ka portal link banao\nconst quoteId = $input.item.json.result;\nreturn [{\n  json: {\n    ...$('Parse + Decide Simple vs Custom').item.json,\n    proposal_url: `${$env.ODOO_URL}/my/orders/${quoteId}`\n  }\n}];"
+      },
+      "id": "n7-build-simple-link",
+      "name": "Build Portal Link (Simple)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        260
+      ],
+      "notes": "Portal link direct access ke liye Odoo customer portal par lead ka contact already invited/valid hona chahiye, ya login-less access_token read karke URL me add karna hoga (v2)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gotenberg ke liye simple HTML proposal document banao\nconst d = $('Parse + Decide Simple vs Custom').item.json;\nconst rows = (d.pricing_tiers || []).map(t => `<tr><td>${t.tier_name}</td><td>Rs. ${t.price_inr}</td><td>${t.includes}</td></tr>`).join('');\nconst deliverables = (d.deliverables || []).map(x => `<li>${x}</li>`).join('');\nconst html = `<html><body style=\"font-family:Arial;padding:40px;\">\n<h1>${d.proposal_title}</h1>\n<p><b>Prepared for:</b> ${d.name} - ${d.company}</p>\n<h2>Scope</h2><p>${d.scope_summary}</p>\n<h2>Deliverables</h2><ul>${deliverables}</ul>\n<h2>Timeline</h2><p>${d.timeline_weeks} weeks (estimated)</p>\n<h2>Pricing</h2><table border=\"1\" cellpadding=\"8\" style=\"border-collapse:collapse;width:100%\"><tr><th>Tier</th><th>Price (INR)</th><th>Includes</th></tr>${rows}</table>\n<p><i>Recommended: ${d.recommended_tier}</i></p>\n</body></html>`;\nreturn [{ json: { ...d, proposal_html: html } }];"
+      },
+      "id": "n8-build-html",
+      "name": "Build Proposal HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.GOTENBERG_URL}}/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "index_html"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n9-gotenberg",
+      "name": "Gotenberg - HTML to PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1500,
+        500
+      ],
+      "notes": "Gotenberg ko file field 'index.html' chahiye -- is node se pehle ek Code/Set node se binary 'index_html' bana lena hoga jiska filename index.html ho (n8n binary conversion step, standard Gotenberg pattern)."
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{$env.NEXTCLOUD_URL}}/remote.php/dav/files/{{$env.NEXTCLOUD_USER}}/Proposals/{{$('Parse + Decide Simple vs Custom').item.json.odoo_lead_id}}-proposal.pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "n10-nextcloud-upload",
+      "name": "Nextcloud - Upload PDF (WebDAV)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1720,
+        500
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Nextcloud WebDAV"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEXTCLOUD_URL}}/ocs/v2.php/apps/files_sharing/api/v1/shares",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "OCS-APIRequest",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"/Proposals/{{$('Parse + Decide Simple vs Custom').item.json.odoo_lead_id}}-proposal.pdf\",\n  \"shareType\": 3,\n  \"format\": \"json\"\n}",
+        "options": {}
+      },
+      "id": "n11-nextcloud-share",
+      "name": "Nextcloud - Create Public Share Link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        500
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Nextcloud WebDAV"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const shareUrl = $input.item.json.ocs?.data?.url || '';\nreturn [{\n  json: {\n    ...$('Parse + Decide Simple vs Custom').item.json,\n    proposal_url: shareUrl\n  }\n}];"
+      },
+      "id": "n12-build-custom-link",
+      "name": "Build Share Link (Custom)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.proposal_title}}",
+        "emailFormat": "text",
+        "text": "={{$json.email_intro}}\n\nView your proposal here: {{$json.proposal_url}}\n\nReady to move ahead? Accept it here: {{$env.PROPOSAL_ACCEPT_BASE_URL}}/webhook/proposal-accept?lead_id={{$json.odoo_lead_id}}",
+        "options": {}
+      },
+      "id": "n13-send-proposal-email",
+      "name": "Send Proposal Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2160,
+        380
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      },
+      "notes": "Accept link Module 2.5 ke 'Proposal Accept Webhook' ko point karta hai -- yahi se Contract + E-sign flow shuru hota hai."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Proposal Sent',\n    proposal_url = '{{$json.proposal_url}}',\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n14-update-proposal-sent",
+      "name": "Postgres - Mark Proposal Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2380,
+        380
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Proposal sent to ' + $json.name + ' (' + $json.company + ') - Rs. ' + $json.recommended_price)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n15-discuss-proposal",
+      "name": "Odoo Discuss - Proposal Sent Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2600,
+        380
+      ]
+    }
+  ],
+  "connections": {
+    "From Module 1.5 (status = Booked)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Lead Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Lead Detail": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Draft Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Draft Proposal": {
+      "main": [
+        [
+          {
+            "node": "Parse + Decide Simple vs Custom",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse + Decide Simple vs Custom": {
+      "main": [
+        [
+          {
+            "node": "IF Custom Branded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Custom Branded": {
+      "main": [
+        [
+          {
+            "node": "Build Proposal HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Odoo - Create Sales Quotation (Simple)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Create Sales Quotation (Simple)": {
+      "main": [
+        [
+          {
+            "node": "Build Portal Link (Simple)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Portal Link (Simple)": {
+      "main": [
+        [
+          {
+            "node": "Send Proposal Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Proposal HTML": {
+      "main": [
+        [
+          {
+            "node": "Gotenberg - HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gotenberg - HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Nextcloud - Upload PDF (WebDAV)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nextcloud - Upload PDF (WebDAV)": {
+      "main": [
+        [
+          {
+            "node": "Nextcloud - Create Public Share Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nextcloud - Create Public Share Link": {
+      "main": [
+        [
+          {
+            "node": "Build Share Link (Custom)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Share Link (Custom)": {
+      "main": [
+        [
+          {
+            "node": "Send Proposal Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Proposal Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Proposal Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Proposal Sent": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Proposal Sent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "45a99eb7028f822f"
+}
