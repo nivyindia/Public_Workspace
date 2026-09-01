@@ -1,0 +1,191 @@
+{
+  "plan_id": "3.1.4.1",
+  "parent_workflow": "3.1.4",
+  "module": "Lead Generation Agent wiring",
+  "type": "n8n-node-patch",
+  "name": "Wrap Lead Generation Agent as Callable Subworkflow",
+  "purpose": "Make the existing Lead Generation Agent callable as a reusable n8n sub-workflow.",
+
+  "required_node": {
+    "name": "3.1.4.1 - Execute Workflow Trigger",
+    "type": "n8n-nodes-base.executeWorkflowTrigger",
+    "purpose": "Receive execution requests from the Master Orchestrator."
+  },
+
+  "target_flow": [
+    "Execute Workflow Trigger",
+    "Existing Lead Generation Agent",
+    "Output"
+  ],
+
+  "rules": [
+    "Reuse the existing Lead Generation Agent.",
+    "Do not rebuild its internal logic.",
+    "Do not hard-code caller-specific inputs.",
+    "Keep it callable by the Master Orchestrator.",
+    "Do not normalize output in this step."
+  ],
+
+  "integration": {
+    "next_step": "3.1.4.2",
+    "next_purpose": "Add Lead Generation Agent input-parameter node."
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_LEAD_GENERATION_AGENT_WORKFLOW_REQUIRED",
+    "reason": "The source specifies only the sub-workflow wrap.",
+    "action": "Apply Execute Workflow Trigger to the actual existing Lead Generation Agent workflow."
+  }
+}
+
+{
+  "plan_id": "3.1.4.2",
+  "parent_workflow": "3.1.4",
+  "module": "Lead Generation Agent wiring",
+  "type": "n8n-node-patch",
+  "name": "Lead Generation Agent Input Parameters",
+  "purpose": "Validate and pass the inputs required by the existing Lead Generation Agent.",
+
+  "node": {
+    "name": "3.1.4.2 - Lead Generation Agent Input",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "const input = { ...$json };\n\nconst query = String(input.query || input.search_query || input.keyword || '').trim();\nconst location = String(input.location || '').trim();\n\nif (!query) {\n  throw new Error('LEAD_GEN_QUERY_MISSING');\n}\n\nif (!location) {\n  throw new Error('LEAD_GEN_LOCATION_MISSING');\n}\n\nreturn [{\n  json: {\n    ...input,\n    query,\n    location\n  }\n}];"
+    }
+  },
+
+  "input_contract": {
+    "required": [
+      "query",
+      "location"
+    ]
+  },
+
+  "rules": [
+    "Do not hard-code query.",
+    "Do not hard-code location.",
+    "Preserve additional input fields.",
+    "Do not modify the Agent's internal generation logic."
+  ],
+
+  "validation": [
+    "Query must be present.",
+    "Location must be present.",
+    "Whitespace must be trimmed."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.4.1",
+    "next_step": "3.1.4.3"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_AGENT_INPUT_SCHEMA_REQUIRED",
+    "reason": "The source does not specify the exact input fields expected by the existing Lead Generation Agent.",
+    "action": "Map these fields to the actual Agent workflow before production integration."
+  }
+} {
+  "plan_id": "3.1.4.3",
+  "parent_workflow": "3.1.4",
+  "module": "Lead Generation Agent wiring",
+  "type": "n8n-node-patch",
+  "name": "Normalize Lead Generation Agent Output",
+  "purpose": "Convert Lead Generation Agent results into the common outbound lead schema.",
+
+  "node": {
+    "name": "3.1.4.3 - Normalize Lead Generation Output",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "return items.map(item => {\n  const data = item.json;\n\n  return {\n    json: {\n      name: data.name ?? data.business_name ?? data.company_name ?? null,\n      phone: data.phone ?? data.phone_number ?? null,\n      email: data.email ?? null,\n      website: data.website ?? data.domain ?? data.url ?? null,\n      source: data.source ?? 'lead_generation_agent'\n    }\n  };\n});"
+    }
+  },
+
+  "common_schema": {
+    "fields": [
+      "name",
+      "phone",
+      "email",
+      "website",
+      "source"
+    ]
+  },
+
+  "rules": [
+    "Every output item follows the common lead schema.",
+    "Missing values remain null.",
+    "Do not fabricate contact information.",
+    "Do not deduplicate here.",
+    "Do not enrich here."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.4.2",
+    "next_step": "3.1.4.4"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_AGENT_OUTPUT_SCHEMA_REQUIRED",
+    "reason": "The source defines normalization but not the exact output fields of the existing Agent.",
+    "action": "Map the real Agent output fields to name/phone/email/website/source."
+  }
+}
+
+{
+  "plan_id": "3.1.4.4",
+  "parent_workflow": "3.1.4",
+  "module": "Lead Generation Agent wiring",
+  "type": "n8n-node-patch",
+  "name": "Lead Generation Agent Error Handling",
+  "purpose": "Create a controlled error branch for Lead Generation Agent failures and zero-result output.",
+
+  "node": {
+    "name": "3.1.4.4 - Lead Generation Error Handler",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "const data = $json;\nconst results = Array.isArray(data.results) ? data.results : null;\n\nif (results && results.length === 0) {\n  return [{\n    json: {\n      ...data,\n      success: false,\n      error_type: 'NO_RESULTS',\n      source: 'lead_generation_agent',\n      results_count: 0\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...data,\n    success: true,\n    error_type: null,\n    source: data.source ?? 'lead_generation_agent'\n  }\n}];"
+    }
+  },
+
+  "handling": {
+    "zero_results": "NO_RESULTS",
+    "execution_failure": "LEAD_GENERATION_AGENT_FAILURE"
+  },
+
+  "rules": [
+    "Never fabricate leads.",
+    "Do not silently mark an Agent failure as successful.",
+    "Preserve source information.",
+    "Do not introduce unlimited retries.",
+    "Keep failures structured for the Master Orchestrator."
+  ],
+
+  "validation": [
+    {
+      "case": "Valid results",
+      "expected": "success=true."
+    },
+    {
+      "case": "Zero results",
+      "expected": "success=false, error_type=NO_RESULTS."
+    },
+    {
+      "case": "Agent execution failure",
+      "expected": "Controlled failure branch."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.1.4.3",
+    "status": "FINAL_STEP_OF_3.1.4",
+    "next_step": "3.1.5.1"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_AGENT_ERROR_SCHEMA_REQUIRED",
+    "reason": "The source specifies an error-handling branch but does not define the Agent's exact error payload.",
+    "action": "Connect this to the actual Agent error structure during integration."
+  }
+}

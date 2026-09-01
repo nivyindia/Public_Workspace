@@ -1,0 +1,31 @@
+{
+  "step_id": "3.0.1.3",
+  "target_module": "2.5 - Contract + E-sign",
+  "purpose": "Parse the signed proposal accept_token from the incoming acceptance request and expose its components for verification.",
+  "node": {
+    "parameters": {
+      "jsCode": "const token = String(\n  $json.accept_token ??\n  $json.query?.accept_token ??\n  ''\n);\n\nif (!token) {\n  return [{\n    json: {\n      ...$json,\n      token_valid_structure: false,\n      token_error: 'MISSING_ACCEPT_TOKEN'\n    }\n  }];\n}\n\nconst parts = token.split('.');\n\nif (parts.length !== 3) {\n  return [{\n    json: {\n      ...$json,\n      token_valid_structure: false,\n      token_error: 'INVALID_ACCEPT_TOKEN_FORMAT'\n    }\n  }];\n}\n\nconst [leadId, expiryRaw, signature] = parts;\nconst expiry = Number(expiryRaw);\n\nif (!leadId || !Number.isInteger(expiry) || !signature) {\n  return [{\n    json: {\n      ...$json,\n      token_valid_structure: false,\n      token_error: 'INVALID_ACCEPT_TOKEN_COMPONENTS'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...$json,\n    token_valid_structure: true,\n    accept_token_lead_id: leadId,\n    accept_token_expires_at: expiry,\n    accept_token_signature: signature\n  }\n}];"
+    },
+    "id": "ge-3-0-1-3-token-parse",
+    "name": "Security - Parse HMAC Accept Token",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "position": [
+      0,
+      0
+    ],
+    "notes": "Phase 3.0.1.3. Accepts the token from either $json.accept_token or $json.query.accept_token. This node only parses structure; it does not trust the token until 3.0.1.4 verifies signature and expiry."
+  },
+  "implementation_notes": [
+    "Do not treat token_valid_structure=true as authorization.",
+    "The parsed lead ID must not be used to fetch/accept the proposal until signature and expiry verification succeeds.",
+    "Keep the original request fields intact for downstream audit logging."
+  ],
+  "test_cases": [
+    "Valid token with lead_id.expiry.signature parses into three fields.",
+    "Missing token returns MISSING_ACCEPT_TOKEN.",
+    "Token with wrong number of segments returns INVALID_ACCEPT_TOKEN_FORMAT.",
+    "Non-numeric expiry returns INVALID_ACCEPT_TOKEN_COMPONENTS.",
+    "A structurally valid but forged signature remains untrusted until 3.0.1.4."
+  ]
+}

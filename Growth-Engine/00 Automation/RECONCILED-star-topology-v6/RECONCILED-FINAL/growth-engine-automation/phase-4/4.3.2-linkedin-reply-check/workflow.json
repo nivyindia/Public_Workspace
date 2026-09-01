@@ -1,0 +1,709 @@
+{
+  "name": "4.3.2 - LinkedIn Reply-Check Polling",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 4.3.2 \u2014 LinkedIn Reply-Check Polling\n\n**Plan ID:** 4.3.2 (Phase 4 \u2014 Missing Channels + Reply Tracking)\n**Sub-steps covered:** 4.3.2.1 (cron), 4.3.2.2 (LinkedIn inbox-check workaround), 4.3.2.3 (parse), 4.3.2.4 (Postgres update)\n\n**\u26a0\ufe0f Tool decision not yet confirmed.** The master tracker labels 4.3.2.2 explicitly as a \"(workaround)\" and does not name a canonical LinkedIn-inbox-reading tool anywhere in \u00a70.3's tool-stack table. This build uses **PhantomBuster** as a placeholder \u2014 it's the one LinkedIn-scraping tool the tracker's own reinstated tool list (\u00a719.2) names \u2014 but this is a flagged assumption, not a confirmed decision. Swap the HTTP Request node's URL/auth if Nivy picks a different provider (or GrowChief, mentioned once at line 1802 as an alternative).\n\n**\u26a0\ufe0f Built against the newer \u00a716.4/\u00a716.5 canonical event architecture** (communication_events, active_sequence_suppressed) rather than the simpler last_reply_channel-only pattern 4.3.1 used \u2014 see README \"Note on 4.3.1\" for why, and what to patch there.\n\n**ToS note:** this is read-only inbox polling (not sending), lower risk than Module 2.1's outreach leg, but still in-scope for the Phase 7.3.1 LinkedIn automation safety review.",
+        "height": 480,
+        "width": 480
+      },
+      "id": "sticky-overview",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## \u26a0\ufe0f ONE-TIME SETUP \u2014 run manually before activating\n\nCreates the canonical \u00a716.5 `communication_events` table (first module to actually instantiate it), the \u00a716.4 `active_sequence_suppressed` column, the `linkedin_profile_url` column on clients_master, and this module's own dedup control table (same pattern as Module 1.1's `n8n_processed_posts`). All idempotent \u2014 safe to re-run.",
+        "height": 240,
+        "width": 400
+      },
+      "id": "sticky-migration",
+      "name": "Migration Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS communication_events (\n  id SERIAL PRIMARY KEY,\n  client_id INTEGER REFERENCES clients_master(id),\n  channel TEXT,\n  direction TEXT,\n  content TEXT,\n  occurred_at TIMESTAMP DEFAULT now(),\n  workflow_source TEXT\n);\n\nALTER TABLE clients_master ADD COLUMN IF NOT EXISTS active_sequence_suppressed BOOLEAN DEFAULT false;\nALTER TABLE clients_master ADD COLUMN IF NOT EXISTS linkedin_profile_url TEXT;\n\nCREATE TABLE IF NOT EXISTS linkedin_processed_messages (\n  message_id TEXT PRIMARY KEY,\n  processed_at TIMESTAMP DEFAULT now()\n);",
+        "options": {}
+      },
+      "id": "pg-migration",
+      "name": "ONE-TIME SETUP - Create Tables/Columns",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -200,
+        240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Disconnected on purpose \u2014 run manually once. See Migration Note sticky."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "trigger-cron",
+      "name": "4.3.2.1 - Poll LinkedIn Inbox (every 30min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -560
+      ],
+      "notes": "30-minute interval is an assumption, not specified in the source plan \u2014 adjust freely, no business rule attached to this cadence."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Guard: don't call an unconfigured provider. Matches \u00a776 Mocking rule \u2014\n// never present a mock as production integration, and don't fail loudly\n// on a decision that's explicitly still open (tool choice unconfirmed).\nconst apiKey = $env.PHANTOMBUSTER_API_KEY || '';\nconst agentId = $env.PHANTOMBUSTER_LINKEDIN_INBOX_AGENT_ID || '';\nreturn [{\n  json: {\n    providerConfigured: Boolean(apiKey && agentId)\n  }\n}];"
+      },
+      "id": "code-check-configured",
+      "name": "Check Provider Configured",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.providerConfigured}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-provider-configured",
+      "name": "Provider Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Not configured yet \u2014 set PHANTOMBUSTER_API_KEY and PHANTOMBUSTER_LINKEDIN_INBOX_AGENT_ID (or swap this whole branch for whichever provider Nivy actually picks) before this module does anything."
+      },
+      "id": "noop-not-configured",
+      "name": "Exit - Provider Not Configured",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        -700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.phantombuster.com/api/v2/agents/fetch-output",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{$env.PHANTOMBUSTER_LINKEDIN_INBOX_AGENT_ID}}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Phantombuster-Key",
+              "value": "={{$env.PHANTOMBUSTER_API_KEY}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-linkedin-inbox",
+      "name": "4.3.2.2 - LinkedIn Inbox Check (PhantomBuster, workaround)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput",
+      "position": [
+        900,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch failed (network/auth/rate-limit). No retry queue yet for this\n// module \u2014 same known-gap pattern flagged in 4.3.1's README. Left visible\n// in the execution log rather than silently swallowed.\nconst j = $input.item.json;\nreturn [{ json: { ...j, fetchFailed: true } }];"
+      },
+      "id": "code-log-fetch-failure",
+      "name": "Log Fetch Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 4.3.2.3 - New-replies parse Code node\n// Normalizes whatever the configured provider returned into one item per\n// inbound LinkedIn message. PhantomBuster's LinkedIn-inbox agents typically\n// return an array of message objects in a 'resultObject' or top-level array \u2014\n// exact shape depends on which agent Nivy ends up using, so this reads a few\n// common field-name variants defensively rather than assuming one exact schema.\n\nconst raw = $input.item.json;\nlet messages = [];\n\nif (Array.isArray(raw)) {\n  messages = raw;\n} else if (Array.isArray(raw.resultObject)) {\n  messages = raw.resultObject;\n} else if (typeof raw.resultObject === 'string') {\n  try { messages = JSON.parse(raw.resultObject); } catch (e) { messages = []; }\n} else if (Array.isArray(raw.data)) {\n  messages = raw.data;\n}\n\nif (!Array.isArray(messages)) messages = [];\n\nreturn messages.map(m => {\n  const profileUrl = m.profileUrl || m.linkedinProfileUrl || m.senderProfileUrl || null;\n  const senderName = m.senderName || m.name || m.fromName || '';\n  const messageText = (m.message || m.text || m.body || '').toString().slice(0, 4000);\n  const messageId = m.messageId || m.id || (profileUrl && m.timestamp ? `${profileUrl}:${m.timestamp}` : null);\n  const messageTimestamp = m.timestamp\n    ? new Date(m.timestamp).toISOString()\n    : new Date().toISOString();\n\n  return {\n    json: {\n      messageId,\n      profileUrl,\n      senderName,\n      messageText,\n      messageTimestamp\n    }\n  };\n}).filter(item => item.json.messageId); // skip anything we can't dedupe on"
+      },
+      "id": "code-parse-replies",
+      "name": "4.3.2.3 - Parse New Replies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT message_id FROM linkedin_processed_messages WHERE message_id = $1;",
+        "options": {
+          "queryReplacement": "={{$json.messageId}}"
+        }
+      },
+      "id": "pg-check-processed",
+      "name": "Check Already Processed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "alwaysOutputData": true,
+      "position": [
+        1340,
+        -480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.item.json;\nreturn [{ json: { ...j, alreadyProcessed: Boolean(j.message_id) } }];"
+      },
+      "id": "code-processed-flag",
+      "name": "Compute Already Processed Flag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.alreadyProcessed}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-already-processed",
+      "name": "Already Processed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        -480
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "noop-skip-processed",
+      "name": "Skip - Already Processed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, linkedin_profile_url,\n  CASE WHEN linkedin_profile_url = $1 THEN 'profile_url' ELSE 'name' END AS match_type\nFROM clients_master\nWHERE linkedin_profile_url = $1\n   OR lower(trim(name)) = lower(trim($2))\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [$json.profileUrl, $json.senderName] }}"
+        }
+      },
+      "id": "pg-match-lead",
+      "name": "Match Lead (profile_url strong, name weak)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "alwaysOutputData": true,
+      "position": [
+        2000,
+        -400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Two-tier match per master tracker \u00a716.5 dedup-priority spirit: exact linkedin_profile_url is strong, name-only is weak. match_type is carried through to communication_events for audit/review \u2014 see README known limitation on name-only matches."
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.item.json;\nreturn [{ json: { ...j, clientFound: Boolean(j.id), clientId: j.id || null } }];"
+      },
+      "id": "code-client-found-flag",
+      "name": "Compute Client Found Flag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.clientFound}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-client-found",
+      "name": "Client Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET last_reply_channel = 'linkedin',\n    last_reply_at = $1,\n    active_sequence_suppressed = true,\n    linkedin_profile_url = COALESCE(linkedin_profile_url, $2),\n    updated_at = now()\nWHERE id = $3;",
+        "options": {
+          "queryReplacement": "={{ [$json.messageTimestamp, $json.profileUrl, $json.clientId] }}"
+        },
+        "onError": "continueErrorOutput"
+      },
+      "id": "pg-update-reply",
+      "name": "4.3.2.4 - Update Reply Tracking + Suppress",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2660,
+        -480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Sets active_sequence_suppressed=true per \u00a716.4 so Module 2.2 Nurture (once patched) stops the drip on real reply, not just on hardcoded status string."
+    },
+    {
+      "parameters": {
+        "jsCode": "// DB update failed \u2014 deliberately NOT marking this message as processed,\n// so the next poll cycle retries it (matches \u00a716.3's 'leave unmarked-complete\n// on failure so a legitimate retry can still succeed' standard).\nconst j = $input.item.json;\nreturn [{ json: { ...j, updateFailed: true } }];"
+      },
+      "id": "code-log-update-failure",
+      "name": "Log Update Failure (will retry next poll)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2660,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO communication_events (client_id, channel, direction, content, workflow_source)\nVALUES ($1, 'linkedin', 'inbound', $2, '4.3.2');",
+        "options": {
+          "queryReplacement": "={{ [$json.clientId, ($json.match_type === 'name' ? '[weak match - name only] ' : '') + $json.messageText] }}"
+        }
+      },
+      "id": "pg-insert-comm-event-matched",
+      "name": "Insert communication_events (matched)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2880,
+        -480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO linkedin_processed_messages (message_id) VALUES ($1) ON CONFLICT (message_id) DO NOTHING;",
+        "options": {
+          "queryReplacement": "={{$json.messageId}}"
+        }
+      },
+      "id": "pg-mark-processed-matched",
+      "name": "Mark Processed (matched)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        3100,
+        -480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "noop-done-updated",
+      "name": "Done - Updated",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3320,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO communication_events (client_id, channel, direction, content, workflow_source)\nVALUES (NULL, 'linkedin', 'inbound', $1, '4.3.2');",
+        "options": {
+          "queryReplacement": "={{ '[unmatched sender: ' + ($json.senderName || $json.profileUrl || 'unknown') + '] ' + $json.messageText }}"
+        }
+      },
+      "id": "pg-insert-comm-event-unmatched",
+      "name": "Insert communication_events (unmatched)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2660,
+        -220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO linkedin_processed_messages (message_id) VALUES ($1) ON CONFLICT (message_id) DO NOTHING;",
+        "options": {
+          "queryReplacement": "={{$json.messageId}}"
+        }
+      },
+      "id": "pg-mark-processed-unmatched",
+      "name": "Mark Processed (unmatched)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2880,
+        -220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "noop-done-unmatched",
+      "name": "Done - Unmatched, Logged",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3100,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "reply.received",
+            "client_id": "={{$json.clientId}}",
+            "odoo_lead_id": "={{$json.odoo_lead_id}}",
+            "source_module": "4.3.2",
+            "payload": "={{ { channel: 'linkedin', message_text: $json.messageText, linkedin_message_id: $json.messageId, reply_at: $json.messageTimestamp, profile_url: $json.profileUrl, match_type: $json.match_type } }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-4-3-2",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2880,
+        -600
+      ],
+      "notes": "S5.2 \u2014 fires in parallel off '4.3.2.4 - Update Reply Tracking + Suppress' success output, same branch as 'Insert communication_events (matched)', so the Hub round trip doesn't delay the comms-log write or the poll cycle finishing. client_id is $json.clientId (set by 'Compute Client Found Flag'; this branch only runs after 'Client Found?' is true, so never null here). odoo_lead_id resolves to null/undefined \u2014 'Match Lead' only selects id, name, linkedin_profile_url, match_type, same not-invented pattern as 4.3.1's and 2.5's Report to Hub nodes. payload carries match_type through so a weak (name-only) match is still visible downstream in funnel_events, same audit trail Insert communication_events already keeps. NOTE: same as 4.3.1 \u2014 Hub-Dispatcher's reply.received Switch branch isn't wired yet (that's S5.4); until then this lands in funnel_events and falls through to flagged_events, same safety net as any other not-yet-consumed event type. Fires once per matched reply per poll cycle, same cardinality as the existing DB writes on this branch \u2014 no extra dedup needed beyond what 'Already Processed?' already guarantees upstream."
+    }
+  ],
+  "connections": {
+    "4.3.2.1 - Poll LinkedIn Inbox (every 30min)": {
+      "main": [
+        [
+          {
+            "node": "Check Provider Configured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Provider Configured": {
+      "main": [
+        [
+          {
+            "node": "Provider Configured?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Provider Configured?": {
+      "main": [
+        [
+          {
+            "node": "4.3.2.2 - LinkedIn Inbox Check (PhantomBuster, workaround)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exit - Provider Not Configured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4.3.2.2 - LinkedIn Inbox Check (PhantomBuster, workaround)": {
+      "main": [
+        [
+          {
+            "node": "4.3.2.3 - Parse New Replies",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Fetch Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4.3.2.3 - Parse New Replies": {
+      "main": [
+        [
+          {
+            "node": "Check Already Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Already Processed": {
+      "main": [
+        [
+          {
+            "node": "Compute Already Processed Flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Already Processed Flag": {
+      "main": [
+        [
+          {
+            "node": "Already Processed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Processed?": {
+      "main": [
+        [
+          {
+            "node": "Skip - Already Processed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Match Lead (profile_url strong, name weak)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Lead (profile_url strong, name weak)": {
+      "main": [
+        [
+          {
+            "node": "Compute Client Found Flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Client Found Flag": {
+      "main": [
+        [
+          {
+            "node": "Client Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client Found?": {
+      "main": [
+        [
+          {
+            "node": "4.3.2.4 - Update Reply Tracking + Suppress",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert communication_events (unmatched)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4.3.2.4 - Update Reply Tracking + Suppress": {
+      "main": [
+        [
+          {
+            "node": "Insert communication_events (matched)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Update Failure (will retry next poll)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert communication_events (matched)": {
+      "main": [
+        [
+          {
+            "node": "Mark Processed (matched)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Processed (matched)": {
+      "main": [
+        [
+          {
+            "node": "Done - Updated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert communication_events (unmatched)": {
+      "main": [
+        [
+          {
+            "node": "Mark Processed (unmatched)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Processed (unmatched)": {
+      "main": [
+        [
+          {
+            "node": "Done - Unmatched, Logged",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

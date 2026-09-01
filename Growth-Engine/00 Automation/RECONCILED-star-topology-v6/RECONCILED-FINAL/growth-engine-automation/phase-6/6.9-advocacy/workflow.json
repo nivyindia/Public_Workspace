@@ -1,0 +1,167 @@
+{
+  "name": "6.9 - Advocacy Candidate Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "n1-monthly-trigger",
+      "name": "Monthly 1st, 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT cm.*,\n  (SELECT COUNT(*) FROM nps_responses nr WHERE nr.client_id = cm.id AND nr.score >= 9 AND nr.submitted_at > now() - interval '6 months') AS promoter_survey_count,\n  (SELECT COUNT(*) FROM referrals r WHERE r.referrer_client_id = cm.id AND r.status = 'reward_pending') AS successful_referral_count\nFROM clients_master cm\nWHERE cm.advocate_flag IS NOT TRUE\n  AND (\n    (SELECT COUNT(*) FROM nps_responses nr WHERE nr.client_id = cm.id AND nr.score >= 9 AND nr.submitted_at > now() - interval '6 months') >= 2\n    OR (SELECT COUNT(*) FROM referrals r WHERE r.referrer_client_id = cm.id AND r.status = 'reward_pending') >= 2\n  );",
+        "options": {}
+      },
+      "id": "n2-fetch-candidates",
+      "name": "Fetch Advocate Candidates",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        420,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "\u26a0\ufe0f ASSUMED threshold (not in KB, needs Nivy sign-off): sustained = 2+ NPS scores of 9-10 within the last 6 months, OR 2+ successfully converted referrals. Adjust the HAVING-equivalent WHERE clause here once confirmed."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_HUB_INTAKE_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "value": {
+            "event_type": "advocate.flagged",
+            "source_module": "6.9",
+            "client_id": "={{$json.id}}",
+            "payload": "={{ { name: $json.name, company: $json.company, promoter_survey_count: $json.promoter_survey_count, successful_referral_count: $json.successful_referral_count, flagged_at: $now.toISO() } }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "n5-report-to-hub-advocate",
+      "name": "Report to Hub - Advocate Flagged",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        420
+      ],
+      "notes": "S6.10: fires once per candidate row (mode: each), reporting event_type = 'advocate.flagged' to Hub-Intake. Ties into audit F6.1 -- lets the human-review step become a Hub-routed task later instead of only a Discuss message. Runs in parallel with the existing 'Build Candidate List Summary' branch below; this does NOT replace the monthly Odoo Discuss report, which stays as the human-facing curated list (KB: relationship cultivation stays human-led -- this is additive visibility for the Hub, not an auto-outreach trigger)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\nconst lines = items.map(i => `- ${i.json.name} (${i.json.company || 'n/a'}) -- NPS promoters: ${i.json.promoter_survey_count}, referrals: ${i.json.successful_referral_count}`).join('\\n');\nreturn [{ json: { summary: lines, count: items.length } }];"
+      },
+      "id": "n3-build-summary",
+      "name": "Build Candidate List Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\", \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\", \"method\": \"execute_kw\",\n    \"args\": [\"{{$env.ODOO_DB}}\", {{$env.ODOO_UID}}, \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\", \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Monthly advocate-candidate report (' + $json.count + ' candidates):\\n\\n' + $json.summary + '\\n\\nReview and curate -- this list is a suggestion, not an auto-outreach. No message goes out without human review.')}}\n      } ]\n  }, \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n4-discuss-report",
+      "name": "Odoo Discuss - Advocate Candidate Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        260
+      ],
+      "notes": "Intentionally report-only. Per KB: 'the relationship cultivation itself and any specific ask -- always human-led.' No auto-outreach node exists here by design."
+    }
+  ],
+  "connections": {
+    "Monthly 1st, 9AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Advocate Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Advocate Candidates": {
+      "main": [
+        [
+          {
+            "node": "Build Candidate List Summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report to Hub - Advocate Flagged",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Candidate List Summary": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Advocate Candidate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

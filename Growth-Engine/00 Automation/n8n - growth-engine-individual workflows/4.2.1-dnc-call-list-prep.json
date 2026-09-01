@@ -1,0 +1,285 @@
+{
+  "name": "4.2.1 - DNC Filter + Call-List Prep",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "n1-daily-9am-weekday",
+      "name": "Daily 9AM (Weekdays)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        300
+      ],
+      "notes": "Weekday-only trigger — cold-calling compliance ke liye weekend exclude by default. Calling-hours window ⚠️ INPUT NEEDED confirm karo (Supprting_files.txt §23: 'Calling hours' production-config item)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master\nWHERE COALESCE(call_dnc, false) = false\n  AND phone IS NOT NULL AND phone <> ''\n  AND score IN ('Hot', 'Warm')\n  AND status IN ('Qualified', 'Contacted', 'Replied', 'Nurtured')\n  AND (last_call_at IS NULL OR last_call_at < now() - interval '3 days')\n  AND COALESCE(call_attempts, 0) < 5\nORDER BY score, updated_at ASC\nLIMIT 100;",
+        "options": {}
+      },
+      "id": "n2-fetch-callable-leads",
+      "name": "Postgres - Fetch Callable Leads",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "4.2.1.1: clients_master.call_dnc = internal DNC flag (opt-outs, past 'do not call' requests logged by 4.2.2). '5 attempts' / '3 days' cadence ⚠️ INPUT NEEDED confirm — reasonable default rakha hai."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.NDNC_REGISTRY_API_URL}}/check",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{$json.phone}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n3-external-dnc-lookup",
+      "name": "External DNC Registry Lookup (optional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        220
+      ],
+      "notes": "⚠️ INPUT NEEDED — NDNC_REGISTRY_API_URL: India's National DNC (TRAI/NDNC) registry check needs a subscribed API (e.g. via a telecom/SMS-gateway provider that offers NDNC lookup). Isko abhi DISABLED/bypass rakha hai (node ke aage IF me skip ho jata hai agar env var empty hai) — sirf internal clients_master.call_dnc column hi enforce ho raha hai jab tak ye external check wire na ho. Is node ko delete mat karo, sirf env var set karne se activate ho jayega."
+    },
+    {
+      "parameters": {
+        "jsCode": "const hasExternalCheck = !!$env.NDNC_REGISTRY_API_URL;\nconst externalHit = hasExternalCheck && $input.item.json.on_dnc_registry === true;\nreturn [{ json: { ...$('Postgres - Fetch Callable Leads').item.json, external_dnc_hit: externalHit } }];"
+      },
+      "id": "n3b-merge-dnc-result",
+      "name": "Merge DNC Check Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        300
+      ],
+      "notes": "External lookup response-field name 'on_dnc_registry' ⚠️ PLACEHOLDER — actual provider ka response-schema aane par adjust karo."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-dnc-excluded",
+              "leftValue": "={{$json.external_dnc_hit}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n4-if-dnc-excluded",
+      "name": "IF DNC Match (exclude)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ],
+      "notes": "4.2.1.3: True branch (DNC match) = exclude + mark call_dnc=true in Postgres. False branch = continue to call-list export."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master SET call_dnc = true, updated_at = now() WHERE odoo_lead_id = {{$json.odoo_lead_id}};"
+      },
+      "id": "n4b-mark-dnc",
+      "name": "Postgres - Mark call_dnc = true",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1200,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 4.2.1.4: call-list format/export — VICIdial non_agent_api ke liye ready payload banao\nconst items = $input.all().map(i => i.json);\nconst callList = items.map(lead => ({\n  phone_number: lead.phone,\n  lead_id: lead.odoo_lead_id,\n  first_name: (lead.name || '').split(' ')[0] || '',\n  last_name: (lead.name || '').split(' ').slice(1).join(' ') || '',\n  company: lead.company,\n  score: lead.score\n}));\nreturn [{ json: { call_list: callList, count: callList.length, generated_at: new Date().toISOString() } }];"
+      },
+      "id": "n5-build-call-list",
+      "name": "Build Call-List (VICIdial format)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "value": "REPLACE_WITH_4.2.2_WORKFLOW_ID"
+        },
+        "options": {}
+      },
+      "id": "n6-execute-422",
+      "name": "Execute Workflow - 4.2.2 Dialer Trigger",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1420,
+        380
+      ],
+      "notes": "4.2.1 ka output seedha 4.2.2 (Dialer Trigger + Outcome Webhook) ko call-list array ke roop mein pass karta hai — jaisa 2.5→2.6 chaining pattern already established hai. Import ke baad workflowId field ko 4.2.2 ke actual n8n workflow ID se replace karo. S5.8: ye direct data-passing link star topology mein bhi rehta hai (Hub events ke through poora call_list array route karna latency/design ke hisab se sahi nahi — rollout notes ke 'time-sensitive/synchronous data hand-off' exception ke andar aata hai); Report to Hub sirf tracking/observability ke liye parallel add hua hai, ye link replace nahi karta."
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "call.outcome",
+            "client_id": null,
+            "odoo_lead_id": null,
+            "source_module": "4.2.1",
+            "payload": "={{ { count: $json.count, generated_at: $json.generated_at } }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-4-2-1",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1420,
+        480
+      ],
+      "notes": "S5.8 \u2014 batch-level report, one per run (call list is built as a single aggregated item, not per-lead), so client_id/odoo_lead_id are null here \u2014 payload carries the batch count instead. Runs in parallel with the existing Execute Workflow hand-off to 4.2.2, off the same Build Call-List output. Not yet wired into Hub-Dispatcher (no consumer subscribes to call.outcome yet per S0-EVENT-TYPE-TAXONOMY.md \u2014 falls through to flagged_events by design until S5.9's 4.2.2 outcome events give it a real consumer)."
+    }
+  ],
+  "connections": {
+    "Daily 9AM (Weekdays)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Fetch Callable Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Fetch Callable Leads": {
+      "main": [
+        [
+          {
+            "node": "External DNC Registry Lookup (optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "External DNC Registry Lookup (optional)": {
+      "main": [
+        [
+          {
+            "node": "Merge DNC Check Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge DNC Check Result": {
+      "main": [
+        [
+          {
+            "node": "IF DNC Match (exclude)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF DNC Match (exclude)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark call_dnc = true",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Call-List (VICIdial format)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Call-List (VICIdial format)": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - 4.2.2 Dialer Trigger",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

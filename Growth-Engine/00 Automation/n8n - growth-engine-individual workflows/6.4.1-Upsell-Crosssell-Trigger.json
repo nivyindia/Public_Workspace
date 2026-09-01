@@ -1,0 +1,175 @@
+{
+  "name": "6.4.1 - Upsell/Cross-sell Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 * * 1" }]
+        }
+      },
+      "id": "c6411001-0000-4000-8000-000000000001",
+      "name": "Weekly Mon 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-1420, 300],
+      "notes": "Placeholder cadence, matches the pattern used elsewhere (2.8/2.9/6.1.1) - not sourced."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- pull candidate accounts with everything the rule engine needs: health_score (6.1.1), tenure, adoption status (6.2.1)\nSELECT\n  id AS client_id, odoo_lead_id, name, email, service_type, status,\n  health_score, health_score_snapshot_at,\n  created_at, adoption_checklist_created_at,\n  EXTRACT(DAY FROM (now() - created_at)) AS tenure_days\nFROM clients_master\nWHERE status IN ('Onboarded', 'Active/Onboarded (recurring)')\n  AND health_score IS NOT NULL\nLIMIT 100;",
+        "options": {}
+      },
+      "id": "c6411002-0000-4000-8000-000000000002",
+      "name": "Get Candidate Accounts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-1200, 300],
+      "credentials": { "postgres": { "name": "Odoo Postgres" } },
+      "notes": "Restricted to accounts that already have a health_score (i.e. 6.1.1 has run at least once) - upsell logic depends on that data existing."
+    },
+    {
+      "parameters": {
+        "jsCode": "// 6.4.1.1 - Rule-engine node (usage/tenure/adoption thresholds)\n// FLAG: no upsell/cross-sell threshold rubric exists anywhere in the uploads (Stage 47 -\n// Upsell Identification - is marked pilot-depth 'built' at the business-doc level per §10B row 47,\n// but that automation.md content wasn't included in this upload, so the exact numbers below are\n// NOT sourced from it - they are transparent placeholders modeled on the shape of a healthy-account\n// rule (good health score + meaningful tenure + adoption checklist completed). Review against the\n// real Stage 47 automation.md before treating this as final.\nconst a = $input.item.json;\n\nconst HEALTH_THRESHOLD = 70;      // placeholder\nconst TENURE_MIN_DAYS = 90;       // placeholder\nconst REQUIRE_ADOPTION_DONE = true;\n\nconst passes = {\n  health: a.health_score !== null && a.health_score >= HEALTH_THRESHOLD,\n  tenure: a.tenure_days !== null && a.tenure_days >= TENURE_MIN_DAYS,\n  adoption: REQUIRE_ADOPTION_DONE ? !!a.adoption_checklist_created_at : true\n};\n\nconst isCandidate = passes.health && passes.tenure && passes.adoption;\n\nreturn [{\n  json: {\n    ...a,\n    rule_engine_passes: passes,\n    rule_engine_thresholds_status: 'PLACEHOLDER - not sourced from Stage 47 automation.md, needs confirmation',\n    is_upsell_candidate: isCandidate\n  }\n}];"
+      },
+      "id": "c6411003-0000-4000-8000-000000000003",
+      "name": "Rule Engine - Thresholds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-980, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "c1", "leftValue": "={{ $json.is_upsell_candidate }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true" } }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "c6411004-0000-4000-8000-000000000004",
+      "name": "Candidate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-760, 300]
+    },
+    {
+      "parameters": {},
+      "id": "c6411005-0000-4000-8000-000000000005",
+      "name": "Not a Candidate - Skip",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [-540, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.OLLAMA_URL || 'http://ollama:11434' }}/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: $vars.OLLAMA_MODEL || 'qwen2.5:14b',\n  format: 'json',\n  stream: false,\n  prompt: `A client has passed internal health/tenure/adoption thresholds and is a candidate for an upsell or cross-sell conversation. Given only the service line they are currently on, suggest ONE plausible next-step service or expansion area a sales rep could raise with them, and a one-sentence rationale. Return ONLY valid JSON: {\"suggestion\": string, \"rationale\": string}. Do not invent specific pricing or make promises - this is a conversation-starter for a human rep, not a quote.\\n\\nCurrent service_type: ${$json.service_type || 'unknown'}\\nTenure (days): ${$json.tenure_days}\\nHealth score: ${$json.health_score}`\n}) }}",
+        "options": {}
+      },
+      "id": "c6411006-0000-4000-8000-000000000006",
+      "name": "Ollama Suggestion Generation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-540, 220],
+      "notes": "6.4.1.2. Explicitly instructed not to generate pricing (this plan's top blocker, §10A.5/§16.1, is Ollama-hallucinated pricing already live in Module 2.4 - do not repeat that pattern here). Output is a conversation starter for a human rep, not a quote or commitment."
+    },
+    {
+      "parameters": {
+        "jsCode": "let suggestion = {};\ntry { suggestion = JSON.parse($json.response); }\ncatch (e) { suggestion = { suggestion: 'Ollama output could not be parsed - manual review needed', rationale: '', parse_error: true }; }\n\nreturn [{\n  json: {\n    ...$('Rule Engine - Thresholds').item.json,\n    upsell_suggestion: suggestion.suggestion,\n    upsell_rationale: suggestion.rationale,\n    suggestion_parse_error: !!suggestion.parse_error\n  }\n}];"
+      },
+      "id": "c6411007-0000-4000-8000-000000000007",
+      "name": "Parse Suggestion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-320, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.ODOO_URL }}/jsonrpc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  jsonrpc: '2.0',\n  method: 'call',\n  params: {\n    service: 'object',\n    method: 'execute_kw',\n    args: [\n      $vars.ODOO_DB,\n      $vars.ODOO_UID,\n      $vars.ODOO_API_KEY,\n      'mail.activity',\n      'create',\n      [{\n        res_model: 'crm.lead',\n        res_id: $json.odoo_lead_id,\n        activity_type_id: $vars.ODOO_UPSELL_ACTIVITY_TYPE_ID,\n        summary: 'Upsell/cross-sell opportunity flagged',\n        note: 'Suggested: ' + $json.upsell_suggestion + ' -- Rationale: ' + $json.upsell_rationale + ' (auto-generated, human review required before client contact)',\n        user_id: $vars.ODOO_SALES_USER_ID\n      }]\n    ]\n  },\n  id: Math.floor(Math.random() * 100000)\n}) }}",
+        "options": {}
+      },
+      "id": "c6411008-0000-4000-8000-000000000008",
+      "name": "Odoo Activity-Create",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-100, 220],
+      "notes": "6.4.1.3. Uses mail.activity.create on the existing crm.lead record (Odoo's standard 'to-do' pattern), reusing ODOO_SALES_USER_ID which is already in §10A.2's env var list. ODOO_UPSELL_ACTIVITY_TYPE_ID is a NEW env var (parallel to the existing ODOO_LINKEDIN_ACTIVITY_TYPE_ID / ODOO_RENEWAL_ACTIVITY_TYPE_ID pattern) - needs to be created in Odoo and added to the variable list."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "c2", "leftValue": "={{ $json.error }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty" } }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "c6411009-0000-4000-8000-000000000009",
+      "name": "Activity Create Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [120, 220]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_errors (workflow_name, execution_id, node_name, error_message, input_payload)\nVALUES ('6.4.1 - Upsell/Cross-sell Trigger', '{{ $execution.id }}', 'Odoo Activity-Create', {{ JSON.stringify($json.error) }}, {{ JSON.stringify($json) }}::jsonb);",
+        "options": {}
+      },
+      "id": "c641100a-0000-4000-8000-00000000000a",
+      "name": "Log Activity-Create Failure",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [340, 320],
+      "credentials": { "postgres": { "name": "Odoo Postgres" } }
+    },
+    {
+      "parameters": {},
+      "id": "c641100b-0000-4000-8000-00000000000b",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [340, 140]
+    }
+  ],
+  "connections": {
+    "Weekly Mon 9AM": { "main": [[{ "node": "Get Candidate Accounts", "type": "main", "index": 0 }]] },
+    "Get Candidate Accounts": { "main": [[{ "node": "Rule Engine - Thresholds", "type": "main", "index": 0 }]] },
+    "Rule Engine - Thresholds": { "main": [[{ "node": "Candidate?", "type": "main", "index": 0 }]] },
+    "Candidate?": {
+      "main": [
+        [{ "node": "Ollama Suggestion Generation", "type": "main", "index": 0 }],
+        [{ "node": "Not a Candidate - Skip", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ollama Suggestion Generation": { "main": [[{ "node": "Parse Suggestion", "type": "main", "index": 0 }]] },
+    "Parse Suggestion": { "main": [[{ "node": "Odoo Activity-Create", "type": "main", "index": 0 }]] },
+    "Odoo Activity-Create": { "main": [[{ "node": "Activity Create Failed?", "type": "main", "index": 0 }]] },
+    "Activity Create Failed?": {
+      "main": [
+        [{ "node": "Log Activity-Create Failure", "type": "main", "index": 0 }],
+        [{ "node": "Done", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "errorWorkflow": "" },
+  "meta": {
+    "planId": "6.4.1",
+    "planLabel": "Upsell/cross-sell trigger",
+    "subSteps": {
+      "6.4.1.1": "Rule-engine node (usage/tenure/adoption thresholds) -> Get Candidate Accounts + Rule Engine - Thresholds (placeholder cutoffs) + Candidate?",
+      "6.4.1.2": "Ollama suggestion-generation node -> Ollama Suggestion Generation + Parse Suggestion (no pricing generated, conversation-starter only)",
+      "6.4.1.3": "Odoo activity-create node -> Odoo Activity-Create (mail.activity.create) + failure handling"
+    }
+  }
+}

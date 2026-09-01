@@ -1,0 +1,32 @@
+{
+  "step_id": "3.0.1.2",
+  "target_module": "2.4 / 2.5 - Proposal acceptance flow",
+  "purpose": "Append the generated HMAC accept_token to the proposal acceptance URL without replacing the existing proposal URL construction logic.",
+  "node": {
+    "parameters": {
+      "jsCode": "const baseUrl = String(\n  $json.accept_url_base ??\n  $json.proposal_accept_url ??\n  $json.accept_url ??\n  ''\n);\n\nconst token = String($json.accept_token ?? '');\n\nif (!baseUrl) {\n  throw new Error('3.0.1.2: proposal accept URL is missing');\n}\n\nif (!token) {\n  throw new Error('3.0.1.2: accept_token is missing');\n}\n\n// Preserve existing query parameters and append the signed token.\nconst separator = baseUrl.includes('?') ? '&' : '?';\nconst acceptUrl = `${baseUrl}${separator}accept_token=${encodeURIComponent(token)}`;\n\nreturn [{\n  json: {\n    ...$json,\n    proposal_accept_url: acceptUrl\n  }\n}];"
+    },
+    "id": "ge-3-0-1-2-append-token",
+    "name": "Security - Append HMAC Token to Accept URL",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "position": [
+      240,
+      0
+    ],
+    "notes": "Phase 3.0.1.2. Place after 3.0.1.1 and before email/template rendering. If the existing field has a different name, map it into accept_url_base before this node."
+  },
+  "implementation_notes": [
+    "This is a node-level patch, not a replacement of Module 2.4 or 2.5.",
+    "The existing proposal acceptance URL should remain the base URL.",
+    "The signed token is URL-encoded before being appended as accept_token.",
+    "Do not expose PROPOSAL_ACCEPT_HMAC_SECRET in the URL or email payload."
+  ],
+  "test_cases": [
+    "Base URL without query string produces ?accept_token=...",
+    "Base URL with existing query string produces &accept_token=...",
+    "Missing base URL fails.",
+    "Missing token fails.",
+    "Token is URL encoded."
+  ]
+}

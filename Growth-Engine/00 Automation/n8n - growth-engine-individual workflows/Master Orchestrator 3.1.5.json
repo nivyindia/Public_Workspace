@@ -1,0 +1,253 @@
+{
+  "plan_id": "3.1.5.1",
+  "parent_workflow": "3.1.5",
+  "name": "Master Orchestrator - Cron Manual Trigger",
+  "type": "n8n-node-patch",
+  "purpose": "Start the Master Orchestrator either manually or through a scheduled execution.",
+
+  "nodes": [
+    {
+      "name": "3.1.5.1 - Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger"
+    },
+    {
+      "name": "3.1.5.1 - Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger"
+    }
+  ],
+
+  "output_contract": {
+    "execution_id": "{{$execution.id}}",
+    "started_at": "{{$now}}"
+  },
+
+  "rules": [
+    "Both manual and scheduled execution must enter the same orchestrator path.",
+    "Do not hard-code scraper-specific inputs here.",
+    "Preserve execution metadata."
+  ],
+
+  "integration": {
+    "next_step": "3.1.5.2"
+  },
+
+  "source_gap": {
+    "status": "SCHEDULE_NOT_DEFINED",
+    "missing": "Exact cron frequency/time is not specified by the source.",
+    "action": "Configure the approved schedule separately."
+  }
+}
+
+{
+  "plan_id": "3.1.5.2",
+  "parent_workflow": "3.1.5",
+  "name": "Execute Google Maps Lead Scraper",
+  "type": "n8n-node-patch",
+  "purpose": "Call the callable Google Maps scraper sub-workflow.",
+
+  "node": {
+    "name": "3.1.5.2 - Execute Google Maps",
+    "type": "n8n-nodes-base.executeWorkflow"
+  },
+
+  "target_workflow": "3.1.1",
+
+  "input_mapping": {
+    "search_query": "={{$json.search_query}}",
+    "location": "={{$json.location}}"
+  },
+
+  "rules": [
+    "Call the existing 3.1.1 sub-workflow.",
+    "Do not duplicate Google Maps scraping logic inside the orchestrator.",
+    "Pass required input parameters.",
+    "Preserve normalized output."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.5.1",
+    "next_step": "3.1.5.3"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_WORKFLOW_ID_REQUIRED",
+    "missing": "Production n8n workflow ID for 3.1.1.",
+    "action": "Select the actual imported 3.1.1 workflow in n8n."
+  }
+}
+
+{
+  "plan_id": "3.1.5.3",
+  "parent_workflow": "3.1.5",
+  "name": "Execute LinkedIn Hiring Posts Scraper",
+  "type": "n8n-node-patch",
+  "purpose": "Call the callable LinkedIn hiring-posts scraper sub-workflow.",
+
+  "node": {
+    "name": "3.1.5.3 - Execute LinkedIn",
+    "type": "n8n-nodes-base.executeWorkflow"
+  },
+
+  "target_workflow": "3.1.2",
+
+  "input_mapping": {
+    "keyword": "={{$json.keyword || $json.search_query}}",
+    "location": "={{$json.location}}"
+  },
+
+  "rules": [
+    "Call the existing 3.1.2 sub-workflow.",
+    "Do not duplicate LinkedIn scraping logic.",
+    "Pass required inputs.",
+    "Preserve normalized output."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.5.2",
+    "next_step": "3.1.5.4"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_WORKFLOW_ID_REQUIRED",
+    "missing": "Production n8n workflow ID for 3.1.2.",
+    "action": "Select the actual imported 3.1.2 workflow."
+  }
+}
+
+{
+  "plan_id": "3.1.5.4",
+  "parent_workflow": "3.1.5",
+  "name": "Execute Digital Footprints Scraper",
+  "type": "n8n-node-patch",
+  "purpose": "Call the callable Digital Footprints scraper sub-workflow.",
+
+  "node": {
+    "name": "3.1.5.4 - Execute Digital Footprints",
+    "type": "n8n-nodes-base.executeWorkflow"
+  },
+
+  "target_workflow": "3.1.3",
+
+  "input_mapping": {
+    "query": "={{$json.query || $json.search_query || $json.keyword}}",
+    "location": "={{$json.location}}"
+  },
+
+  "rules": [
+    "Call the existing 3.1.3 sub-workflow.",
+    "Do not duplicate scraper logic.",
+    "Pass required parameters.",
+    "Preserve normalized output."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.5.3",
+    "next_step": "3.1.5.5"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_WORKFLOW_ID_REQUIRED",
+    "missing": "Production n8n workflow ID for 3.1.3.",
+    "action": "Select the actual imported 3.1.3 workflow."
+  }
+}
+
+{
+  "plan_id": "3.1.5.5",
+  "parent_workflow": "3.1.5",
+  "name": "Execute Lead Generation Agent",
+  "type": "n8n-node-patch",
+  "purpose": "Call the callable Lead Generation Agent sub-workflow.",
+
+  "node": {
+    "name": "3.1.5.5 - Execute Lead Generation Agent",
+    "type": "n8n-nodes-base.executeWorkflow"
+  },
+
+  "target_workflow": "3.1.4",
+
+  "input_mapping": {
+    "query": "={{$json.query || $json.search_query || $json.keyword}}",
+    "location": "={{$json.location}}"
+  },
+
+  "rules": [
+    "Call the existing 3.1.4 sub-workflow.",
+    "Do not duplicate Agent logic.",
+    "Pass required parameters.",
+    "Preserve normalized output."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.5.4",
+    "next_step": "3.1.5.6"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_WORKFLOW_ID_REQUIRED",
+    "missing": "Production n8n workflow ID for 3.1.4.",
+    "action": "Select the actual imported 3.1.4 workflow."
+  }
+}
+
+{
+  "plan_id": "3.1.5.6",
+  "parent_workflow": "3.1.5",
+  "name": "Merge All Four Lead Source Outputs",
+  "type": "n8n-node-patch",
+  "purpose": "Combine the normalized outputs from Google Maps, LinkedIn, Digital Footprints and Lead Generation Agent into one outbound lead stream.",
+
+  "node": {
+    "name": "3.1.5.6 - Merge Four Lead Sources",
+    "type": "n8n-nodes-base.merge"
+  },
+
+  "inputs": [
+    {
+      "source": "3.1.1",
+      "label": "google_maps"
+    },
+    {
+      "source": "3.1.2",
+      "label": "linkedin_hiring_post"
+    },
+    {
+      "source": "3.1.3",
+      "label": "digital_footprints"
+    },
+    {
+      "source": "3.1.4",
+      "label": "lead_generation_agent"
+    }
+  ],
+
+  "output_schema": {
+    "fields": [
+      "name",
+      "phone",
+      "email",
+      "website",
+      "source"
+    ]
+  },
+
+  "rules": [
+    "Merge normalized outputs only.",
+    "Do not deduplicate here.",
+    "Do not enrich here.",
+    "Do not modify source attribution.",
+    "Every lead retains its originating source."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.5.5",
+    "next_parent": "3.2.1",
+    "next_purpose": "Enrichment port from Airtable pattern to Postgres clients_master."
+  },
+
+  "source_gap": {
+    "status": "N8N_MERGE_TOPOLOGY_REQUIRED",
+    "missing": "Exact Merge node mode/topology depends on how the four execution branches are connected.",
+    "action": "Configure the final n8n Merge topology after the four actual Execute Workflow nodes are imported."
+  }
+}

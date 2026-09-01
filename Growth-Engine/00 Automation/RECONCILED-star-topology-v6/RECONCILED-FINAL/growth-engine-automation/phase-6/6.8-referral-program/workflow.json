@@ -1,0 +1,351 @@
+{
+  "name": "6.8 - Referral Link Generation + Reward Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "event_type"
+            },
+            {
+              "name": "client_id"
+            },
+            {
+              "name": "payload"
+            }
+          ]
+        }
+      },
+      "id": "n1-hub-trigger",
+      "name": "Triggered by Hub (nps.promoter_flagged)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        260
+      ],
+      "notes": "Star topology S6.9: replaces 'Daily 11AM' independent poll. Hub-Dispatcher calls this once per client on event_type = 'nps.promoter_flagged' (same event Module 6.7 subscribes to -- both spokes react to it independently). This ONLY covers the link-generation half of this workflow; the Daily 12PM reward-check flow below is untouched, since the plan's S6.9 doesn't cover it (it's a conversion-poll, not a promoter hand-off -- see README)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE id = {{$json.client_id}} AND id NOT IN (SELECT referrer_client_id FROM referrals);",
+        "options": {}
+      },
+      "id": "n2-fetch-promoter-no-link",
+      "name": "Fetch Flagged Promoter Without Referral Link",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        420,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "S6.9: was a bulk 'promoter_flag = true AND NOT IN referrals' poll; now a single-row lookup by the client_id in the Hub event payload. The NOT IN referrals guard stays as an idempotency check (don't re-generate a code if this client already has one)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const code = `NIVY-${$json.id}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;\nreturn [{ json: { ...$json, referral_code: code, referral_link: `${$env.NIVY_SITE_URL}/?ref=${code}` } }];"
+      },
+      "id": "n3-generate-code",
+      "name": "Generate Referral Code + Link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO referrals (referrer_client_id, referral_code, status, created_at)\nVALUES ({{$json.id}}, '{{$json.referral_code}}', 'link_generated', now());",
+        "options": {}
+      },
+      "id": "n4-insert-referral",
+      "name": "Postgres - Insert Referral Record",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        860,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"Draft a short, warm referral-ask email for a happy Nivy client. Mention their unique link naturally, don't be salesy. Client: {{$json.name}}. Link: {{$json.referral_link}}. Return ONLY JSON with keys: subject, body.\"\n}"
+      },
+      "id": "n5-ollama-draft-ask",
+      "name": "Ollama - Draft Referral Ask",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.response; let p; try { p = JSON.parse(raw); } catch(e) { p = { subject: 'Know someone who could use our help?', body: raw }; }\nreturn [{ json: { ...$('Generate Referral Code + Link').item.json, email_subject: p.subject, email_body: p.body } }];"
+      },
+      "id": "n6-parse-ask-draft",
+      "name": "Parse Referral Ask Draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "emailFormat": "text",
+        "text": "={{$json.email_body}}",
+        "options": {}
+      },
+      "id": "n7-send-referral-ask",
+      "name": "Send Referral Ask Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1520,
+        260
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 12 * * *"
+            }
+          ]
+        }
+      },
+      "id": "n8-daily-reward-check",
+      "name": "Daily 12PM - Reward Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.*, cm.name AS referred_name, cm.status AS referred_status\nFROM referrals r\nJOIN clients_master cm ON cm.referral_code_used = r.referral_code\nWHERE cm.status IN ('Won', 'Paid') AND r.status != 'reward_pending';",
+        "options": {}
+      },
+      "id": "n9-fetch-converted-referrals",
+      "name": "Fetch Referrals with Closed-Won Conversion",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        420,
+        460
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Assumes clients_master gets a new referral_code_used column, populated when a lead lands via ?ref= (integration point in Module 1.3/1.4 -- not modified here, needs a small patch there to capture the query param)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE referrals SET status = 'reward_pending', converted_at = now() WHERE id = {{$json.id}};",
+        "options": {}
+      },
+      "id": "n10-mark-reward-pending",
+      "name": "Postgres - Mark Reward Pending",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        640,
+        460
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\", \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\", \"method\": \"execute_kw\",\n    \"args\": [\"{{$env.ODOO_DB}}\", {{$env.ODOO_UID}}, \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\", \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('REFERRAL PAYOUT DUE: referral code ' + $json.referral_code + ' converted (referred: ' + $json.referred_name + '). Amount NOT auto-calculated -- commission % is not yet defined in the KB. Process manually per your commission policy once set.')}}\n      } ]\n  }, \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n11-discuss-payout-alert",
+      "name": "Odoo Discuss - Payout Due Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        460
+      ],
+      "notes": "\u26a0\ufe0f Deliberately does NOT auto-calculate or auto-trigger a payment -- KB explicitly leaves commission %/structure undefined (Stage 53: 'must be a deliberate business decision, documented'). This node only alerts that a payout is owed; amount + actual transfer stays human until the number is set."
+    }
+  ],
+  "connections": {
+    "Triggered by Hub (nps.promoter_flagged)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Flagged Promoter Without Referral Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Flagged Promoter Without Referral Link": {
+      "main": [
+        [
+          {
+            "node": "Generate Referral Code + Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Referral Code + Link": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Insert Referral Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Insert Referral Record": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Draft Referral Ask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Draft Referral Ask": {
+      "main": [
+        [
+          {
+            "node": "Parse Referral Ask Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Referral Ask Draft": {
+      "main": [
+        [
+          {
+            "node": "Send Referral Ask Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 12PM - Reward Check": {
+      "main": [
+        [
+          {
+            "node": "Fetch Referrals with Closed-Won Conversion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Referrals with Closed-Won Conversion": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Reward Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Reward Pending": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Payout Due Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

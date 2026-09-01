@@ -1,0 +1,269 @@
+{
+  "plan_id": "3.2.1.1",
+  "parent_workflow": "3.2.1",
+  "name": "Map Existing Airtable Enrichment Fields to Postgres",
+  "type": "n8n-node-patch",
+  "purpose": "Map the existing Airtable enrichment fields to the Postgres clients_master schema without changing the enrichment logic.",
+  "node": {
+    "name": "3.2.1.1 - Enrichment Field Mapper",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2
+  },
+  "mapping": {
+    "source": "existing Airtable enrichment fields",
+    "destination": "Postgres clients_master",
+    "rule": "Preserve semantic meaning and existing enrichment values."
+  },
+  "rules": [
+    "Do not redesign the enrichment logic.",
+    "Do not silently drop existing enrichment fields.",
+    "Do not invent destination fields.",
+    "Document fields that have no direct Postgres equivalent."
+  ],
+  "validation": [
+    "Every existing enrichment field is mapped or explicitly marked unresolved.",
+    "Data types are compatible.",
+    "Existing enrichment values remain semantically equivalent."
+  ],
+  "integration": {
+    "next_step": "3.2.1.2"
+  },
+  "source_gap": {
+    "status": "ACTUAL_AIRTABLE_AND_POSTGRES_SCHEMAS_REQUIRED",
+    "action": "Create the real field-by-field mapping from the existing workflow and clients_master schema."
+  }
+}
+
+{
+  "plan_id": "3.2.1.2",
+  "parent_workflow": "3.2.1",
+  "name": "Replace Airtable Node With Postgres",
+  "type": "n8n-node-patch",
+  "purpose": "Replace the Airtable enrichment persistence operation with the equivalent Postgres operation.",
+  "node": {
+    "name": "3.2.1.2 - Postgres Enrichment Operation",
+    "type": "n8n-nodes-base.postgres"
+  },
+  "replacement_rule": {
+    "old": "Airtable enrichment node",
+    "new": "Postgres clients_master operation",
+    "principle": "Same operation, new persistence layer."
+  },
+  "rules": [
+    "Preserve the existing enrichment operation.",
+    "Use the field mapping from 3.2.1.1.",
+    "Do not change unrelated workflow logic.",
+    "Do not delete the Airtable node until parity is verified."
+  ],
+  "validation": [
+    "Postgres receives the same logical enrichment data.",
+    "Insert/update behavior matches the previous operation.",
+    "No required field is lost."
+  ],
+  "integration": {
+    "previous_step": "3.2.1.1",
+    "next_step": "3.2.1.3"
+  }
+}
+
+{
+  "plan_id": "3.2.1.3",
+  "parent_workflow": "3.2.1",
+  "name": "Field-by-Field Enrichment Parity Test",
+  "type": "n8n-test-spec",
+  "purpose": "Verify that the Postgres enrichment implementation preserves the behavior and data of the existing Airtable implementation.",
+  "test_strategy": {
+    "method": "field-by-field comparison",
+    "compare": [
+      "field existence",
+      "field name mapping",
+      "field value",
+      "data type",
+      "null handling",
+      "insert/update behavior"
+    ]
+  },
+  "pass_conditions": [
+    "All required fields have equivalent destination mapping.",
+    "Values are preserved.",
+    "No enrichment field is unintentionally lost.",
+    "Postgres operation behaves as intended."
+  ],
+  "fail_conditions": [
+    "Missing field",
+    "Incorrect mapping",
+    "Incorrect type",
+    "Unexpected null",
+    "Data loss"
+  ],
+  "integration": {
+    "previous_step": "3.2.1.2",
+    "status": "FINAL_STEP_OF_3.2.1",
+    "next_step": "3.2.2.1"
+  }
+}
+{
+  "plan_id": "3.2.2.1",
+  "parent_workflow": "3.2.2",
+  "name": "Postgres Lead Dedup Lookup",
+  "type": "n8n-node-patch",
+  "purpose": "Look up existing leads in Postgres using email, phone, and domain identifiers.",
+  "node": {
+    "name": "3.2.2.1 - Existing Lead Lookup",
+    "type": "n8n-nodes-base.postgres"
+  },
+  "match_fields": [
+    "email",
+    "phone",
+    "domain"
+  ],
+  "match_rule": "Check available identifiers against clients_master.",
+  "rules": [
+    "Normalize identifiers before comparison where existing schema requires it.",
+    "Do not treat missing identifiers as matches.",
+    "Return existing lead information for downstream dedup logic."
+  ],
+  "output": [
+    "lookup_match",
+    "matched_lead",
+    "match_fields"
+  ],
+  "integration": {
+    "next_step": "3.2.2.2"
+  },
+  "source_gap": {
+    "status": "POSTGRES_SCHEMA_AND_INDEXES_REQUIRED",
+    "action": "Use the actual clients_master identifier columns and indexes."
+  }
+}
+
+{
+  "plan_id": "3.2.2.2",
+  "parent_workflow": "3.2.2",
+  "name": "Fuzzy Match Lead by Name and Domain",
+  "type": "n8n-node-patch",
+  "purpose": "Identify probable duplicates using name and domain similarity when exact identifiers are insufficient.",
+  "node": {
+    "name": "3.2.2.2 - Fuzzy Match",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2
+  },
+  "match_dimensions": [
+    "name similarity",
+    "domain similarity"
+  ],
+  "output": {
+    "fuzzy_match": "boolean",
+    "similarity": "number",
+    "matched_lead": "object|null"
+  },
+  "rules": [
+    "Do not automatically merge solely on weak similarity.",
+    "Keep similarity score available for the decision node.",
+    "Do not fabricate missing values.",
+    "Use the approved similarity threshold."
+  ],
+  "source_gap": {
+    "status": "THRESHOLD_NOT_DEFINED",
+    "missing": "Exact fuzzy-match threshold/algorithm.",
+    "action": "Configure the approved threshold before production."
+  },
+  "integration": {
+    "previous_step": "3.2.2.1",
+    "next_step": "3.2.2.3"
+  }
+}
+
+{
+  "plan_id": "3.2.2.3",
+  "parent_workflow": "3.2.2",
+  "name": "Duplicate Decision and Merge or Insert",
+  "type": "n8n-node-patch",
+  "purpose": "Route a lead to the duplicate merge/update path or the new-lead insert path.",
+  "node": {
+    "name": "3.2.2.3 - Duplicate Decision",
+    "type": "n8n-nodes-base.if"
+  },
+  "decision": {
+    "duplicate_true": "merge/update existing lead",
+    "duplicate_false": "insert new lead"
+  },
+  "rules": [
+    "Exact identifier matches take precedence over fuzzy matching.",
+    "Do not create a second record when a confirmed duplicate exists.",
+    "Do not overwrite valid existing information unnecessarily.",
+    "Preserve the originating source channel."
+  ],
+  "outputs": [
+    "merge_update",
+    "new_insert"
+  ],
+  "integration": {
+    "previous_step": "3.2.2.2",
+    "next_step": "3.2.2.4"
+  }
+}
+
+{
+  "plan_id": "3.2.2.4",
+  "parent_workflow": "3.2.2",
+  "name": "Add lead_source_channel Column",
+  "type": "postgres-migration",
+  "purpose": "Add the lead_source_channel field to the Postgres lead schema.",
+  "migration": {
+    "table": "clients_master",
+    "column": "lead_source_channel",
+    "operation": "ADD COLUMN"
+  },
+  "rules": [
+    "Use the project's approved database migration process.",
+    "Do not drop or rename existing fields.",
+    "Choose the final database type based on the actual schema conventions.",
+    "Backwards compatibility must be preserved."
+  ],
+  "validation": [
+    "Column exists.",
+    "Existing records remain intact.",
+    "New records can receive a source-channel value."
+  ],
+  "source_gap": {
+    "status": "COLUMN_TYPE_NOT_DEFINED",
+    "action": "Select the actual approved Postgres type before migration."
+  },
+  "integration": {
+    "previous_step": "3.2.2.3",
+    "next_step": "3.2.2.5"
+  }
+}
+
+{
+  "plan_id": "3.2.2.5",
+  "parent_workflow": "3.2.2",
+  "name": "Set Lead Source Channel",
+  "type": "n8n-node-patch",
+  "purpose": "Populate lead_source_channel using the originating lead source.",
+  "node": {
+    "name": "3.2.2.5 - Set Lead Source Channel",
+    "type": "n8n-nodes-base.set"
+  },
+  "source_mapping": {
+    "source_field": "source",
+    "destination_field": "lead_source_channel"
+  },
+  "examples": [
+    "google_maps",
+    "linkedin_hiring_post",
+    "digital_footprints",
+    "lead_generation_agent"
+  ],
+  "rules": [
+    "Use the actual originating scraper value.",
+    "Do not overwrite the source with a generic value.",
+    "Preserve source through merge/dedup operations."
+  ],
+  "integration": {
+    "previous_step": "3.2.2.4",
+    "status": "FINAL_STEP_OF_3.2.2",
+    "next_step": "3.3.1.1"
+  }
+}

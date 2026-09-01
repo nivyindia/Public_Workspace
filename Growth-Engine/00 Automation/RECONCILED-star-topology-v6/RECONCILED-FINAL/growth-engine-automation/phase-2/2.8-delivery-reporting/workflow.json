@@ -1,0 +1,266 @@
+{
+  "name": "2.8 - Delivery + Reporting",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "n1-weekly-trigger",
+      "name": "Weekly - Monday 8AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        260
+      ],
+      "notes": "Monthly clients ke liye alag ek Schedule Trigger (monthly interval) add kar sakte ho, same downstream chain reuse karke -- v1 me sirf weekly rakha hai."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE status IN ('Onboarded', 'Active');",
+        "options": {}
+      },
+      "id": "n2-fetch-active-clients",
+      "name": "Fetch Active Clients",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Har row ek alag item banta hai -- n8n is item ko baaki poori chain se independently pass karega (per-client execution), koi explicit loop node nahi chahiye."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.METABASE_URL}}/api/card/{{$env.METABASE_CLIENT_CARD_ID}}/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-API-KEY",
+              "value": "={{$env.METABASE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"parameters\": [\n    { \"type\": \"category\", \"target\": [\"variable\", [\"template-tag\", \"client_id\"]], \"value\": \"{{$json.odoo_lead_id}}\" }\n  ]\n}",
+        "options": {}
+      },
+      "id": "n3-metabase-query-metrics",
+      "name": "Metabase - Query Client Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        260
+      ],
+      "notes": "METABASE_CLIENT_CARD_ID = ek saved Metabase question jisme 'client_id' naam ka SQL template-tag filter hai (leads/traffic/rankings ya jo bhi metrics client ko dikhani hain). Metabase >=0.49 me X-API-KEY header se auth hoti hai (Settings -> Admin -> API Keys)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const client = $('Fetch Active Clients').item.json;\nconst raw = $input.item.json;\nconst cols = (raw.data?.cols || []).map(c => c.name);\nconst rows = raw.data?.rows || [];\nconst metrics = rows.map(r => Object.fromEntries(cols.map((c, i) => [c, r[i]])));\n\n// Locked/filtered public dashboard link the client can click to view live data\nconst dashboardUrl = `${$env.METABASE_URL}/public/dashboard/${$env.METABASE_CLIENT_DASHBOARD_PUBLIC_UUID}?client_id=${client.odoo_lead_id}`;\n\nreturn [{\n  json: {\n    ...client,\n    metrics_json: JSON.stringify(metrics).slice(0, 4000),\n    dashboard_url: dashboardUrl\n  }\n}];"
+      },
+      "id": "n4-build-dashboard-link",
+      "name": "Parse Metrics + Build Dashboard Link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        260
+      ],
+      "notes": "Metabase Community edition me first-class 'export as PDF via API' nahi hai (wo Enterprise Dashboard Subscriptions feature hai). v1 me isliye ek locked/filtered PUBLIC dashboard link bhej rahe hain instead of PDF attachment -- Known Limitations me detail hai."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You write short, friendly weekly client update emails for a digital marketing/AI agency. Client: {{$json.company}}. Raw weekly metrics data (JSON): {{$json.metrics_json}}.\\n\\nReturn ONLY a valid JSON object with keys: headline (one sentence, the single best result this week), bullet_points (array of up to 4 short strings, plain language, no jargon), next_week_focus (one sentence). No text outside the JSON.\"\n}"
+      },
+      "id": "n5-ollama-summarize",
+      "name": "Ollama - Summarize Weekly Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let parsed;\ntry {\n  const raw = $input.item.json.response || '{}';\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  parsed = JSON.parse(match ? match[0] : raw);\n} catch (e) {\n  parsed = { headline: 'Here is your weekly update.', bullet_points: [], next_week_focus: '' };\n}\n\nreturn [{\n  json: {\n    ...$('Parse Metrics + Build Dashboard Link').item.json,\n    headline: parsed.headline || '',\n    bullet_points: parsed.bullet_points || [],\n    next_week_focus: parsed.next_week_focus || ''\n  }\n}];"
+      },
+      "id": "n6-parse-summary",
+      "name": "Parse Ollama Summary JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Your weekly update from Nivy - {{$json.company}}",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\n{{$json.headline}}\n\nThis week:\n{{$json.bullet_points.map(b => '- ' + b).join('\\n')}}\n\nNext week we're focused on: {{$json.next_week_focus}}\n\nFull live dashboard: {{$json.dashboard_url}}\n\nQuestions? Just reply.\nTeam Nivy",
+        "options": {}
+      },
+      "id": "n7-send-report-email",
+      "name": "Send Weekly Report Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1500,
+        260
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET last_report_sent_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n8-log-report-sent",
+      "name": "Postgres - Log Report Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1720,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Weekly - Monday 8AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Clients": {
+      "main": [
+        [
+          {
+            "node": "Metabase - Query Client Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Metabase - Query Client Metrics": {
+      "main": [
+        [
+          {
+            "node": "Parse Metrics + Build Dashboard Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Metrics + Build Dashboard Link": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Summarize Weekly Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Summarize Weekly Report": {
+      "main": [
+        [
+          {
+            "node": "Parse Ollama Summary JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Ollama Summary JSON": {
+      "main": [
+        [
+          {
+            "node": "Send Weekly Report Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Weekly Report Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Log Report Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "3859662fe0ebebb1"
+}

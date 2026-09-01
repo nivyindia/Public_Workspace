@@ -1,0 +1,36 @@
+{
+  "step_id": "3.0.1.1",
+  "target_module": "2.5 - Contract + E-sign",
+  "target_node_context": "Proposal accept-link generation path in Module 2.4 / Contract acceptance entry into Module 2.5",
+  "purpose": "Generate a signed, expiring HMAC accept_token for proposal acceptance.",
+  "environment_variables_required": [
+    "PROPOSAL_ACCEPT_HMAC_SECRET"
+  ],
+  "node": {
+    "parameters": {
+      "jsCode": "const crypto = require('crypto');\n\nconst leadId = String(\n  $json.odoo_lead_id ??\n  $json.lead_id ??\n  $('Fetch Lead Detail').item.json.odoo_lead_id\n);\n\nif (!leadId) {\n  throw new Error('3.0.1.1: odoo_lead_id/lead_id is required');\n}\n\nconst secret = $env.PROPOSAL_ACCEPT_HMAC_SECRET;\nif (!secret) {\n  throw new Error('3.0.1.1: PROPOSAL_ACCEPT_HMAC_SECRET is not configured');\n}\n\n// Token lifetime is intentionally short; change only if the master plan/business policy specifies another value.\nconst expiresAt = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);\nconst payload = `${leadId}.${expiresAt}`;\n\nconst signature = crypto\n  .createHmac('sha256', secret)\n  .update(payload, 'utf8')\n  .digest('hex');\n\nconst acceptToken = `${payload}.${signature}`;\n\nreturn [{\n  json: {\n    ...$json,\n    accept_token: acceptToken,\n    accept_token_lead_id: leadId,\n    accept_token_expires_at: expiresAt\n  }\n}];"
+    },
+    "id": "ge-3-0-1-1-hmac-generate",
+    "name": "Security - Generate HMAC Accept Token",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "position": [
+      0,
+      0
+    ],
+    "notes": "Phase 3.0.1.1. Add this immediately before the proposal accept-link is assembled. Uses PROPOSAL_ACCEPT_HMAC_SECRET. The token format is lead_id.expiry_unix.signature."
+  },
+  "implementation_notes": [
+    "Do not replace the existing Module 2.5 workflow wholesale with this file; this is the smallest MAXSPLIT node patch.",
+    "3.0.1.2 will append accept_token to the proposal accept URL.",
+    "3.0.1.3–3.0.1.5 will parse, verify, check expiry, and branch invalid requests.",
+    "The current Module 2.5 accept endpoint is GET /webhook/proposal-accept and currently accepts a guessable lead_id; the master plan explicitly identifies this as a launch blocker."
+  ],
+  "test_cases": [
+    "Valid lead ID + configured secret => token generated.",
+    "Missing lead ID => node fails.",
+    "Missing PROPOSAL_ACCEPT_HMAC_SECRET => node fails.",
+    "Generated token has three dot-separated parts: lead_id, expiry, signature.",
+    "Signature recomputed with the same secret matches the generated signature."
+  ]
+}

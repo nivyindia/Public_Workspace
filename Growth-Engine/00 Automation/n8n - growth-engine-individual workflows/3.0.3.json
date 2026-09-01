@@ -1,0 +1,430 @@
+{
+  "plan_id": "3.0.3.1",
+  "parent_workflow": "3.0.3",
+  "module": "2.9 Renewal/Dunning",
+  "type": "n8n-node-patch",
+  "name": "Failed Payment Webhook - Raw Payload + Signature Extract",
+  "purpose": "Extract the incoming failed-payment webhook raw payload and signature header so the subsequent HMAC verification steps can validate the webhook before dunning logic executes.",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const input = $json;\n\nconst headers = input.headers || input.header || {};\nconst body = input.body ?? null;\n\nconst signatureHeaderName = String(\n  $env.FAILED_PAYMENT_SIGNATURE_HEADER_NAME || 'x-signature'\n).toLowerCase();\n\nlet receivedSignature = null;\n\nfor (const [key, value] of Object.entries(headers)) {\n  if (String(key).toLowerCase() === signatureHeaderName) {\n    receivedSignature = Array.isArray(value) ? value[0] : value;\n    break;\n  }\n}\n\nconst rawPayload =\n  input.rawBody ??\n  input.raw_body ??\n  (typeof body === 'string' ? body : null);\n\nreturn [\n  {\n    json: {\n      ...input,\n      failed_payment_webhook: {\n        raw_payload: rawPayload,\n        received_signature: receivedSignature,\n        signature_header_name: signatureHeaderName,\n        signature_present: Boolean(receivedSignature),\n        raw_payload_present: rawPayload !== null && rawPayload !== undefined,\n        extracted_at: new Date().toISOString()\n      }\n    }\n  }\n];"
+      },
+      "id": "3-0-3-1-failed-payment-signature-extract",
+      "name": "3.0.3.1 - Extract Failed-Payment Payload + Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        0
+      ],
+      "notes": "Extraction only. Signature verification and dunning authorization occur in subsequent steps."
+    }
+  ],
+  "integration": {
+    "insert_after": "Existing 2.9 Renewal/Dunning failed-payment webhook trigger",
+    "next_step": "3.0.3.2",
+    "next_step_purpose": "Compute expected HMAC signature",
+    "required_input": [
+      "Incoming failed-payment webhook",
+      "Raw request payload",
+      "Failed-payment gateway signature header"
+    ]
+  },
+  "environment_variables": {
+    "FAILED_PAYMENT_SIGNATURE_HEADER_NAME": {
+      "required": true,
+      "description": "Exact signature header name used by the failed-payment webhook provider.",
+      "example": "x-signature",
+      "note": "Placeholder only. Replace with the actual provider-defined header."
+    }
+  },
+  "security_rules": [
+    "Do not trust the received signature.",
+    "Do not calculate or compare the signature in this step.",
+    "Do not enter dunning logic in this step.",
+    "Do not expose secrets.",
+    "Preserve the exact raw payload where required by the provider's HMAC specification."
+  ],
+  "validation": [
+    {
+      "case": "Valid webhook with payload and signature",
+      "expected": "Both raw_payload and received_signature are extracted."
+    },
+    {
+      "case": "Missing signature",
+      "expected": "signature_present=false; downstream verification must reject."
+    },
+    {
+      "case": "Missing raw payload",
+      "expected": "raw_payload_present=false; downstream verification must not accept."
+    },
+    {
+      "case": "Different header capitalization",
+      "expected": "Signature header lookup remains case-insensitive."
+    }
+  ],
+  "source_gap": {
+    "item": "Exact failed-payment provider and signature-header name",
+    "status": "NOT_SPECIFIED_IN_MASTER_PLAN",
+    "action": "Use the actual provider configuration/documentation before production deployment."
+  }
+}
+
+
+
+{
+  "plan_id": "3.0.3.2",
+  "parent_workflow": "3.0.3",
+  "module": "2.9 Renewal/Dunning",
+  "type": "n8n-node-patch",
+  "name": "Failed Payment Webhook - Compute Expected HMAC Signature",
+  "purpose": "Compute the expected HMAC signature from the failed-payment webhook raw payload using the configured gateway secret.",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst webhook = $json.failed_payment_webhook || {};\nconst rawPayload = webhook.raw_payload;\n\nif (rawPayload === null || rawPayload === undefined) {\n  return [{\n    json: {\n      ...$json,\n      failed_payment_webhook: {\n        ...webhook,\n        expected_signature: null,\n        signature_computation_valid: false,\n        signature_error: 'RAW_FAILED_PAYMENT_PAYLOAD_MISSING'\n      }\n    }\n  }];\n}\n\nconst secret = $env.FAILED_PAYMENT_WEBHOOK_HMAC_SECRET;\n\nif (!secret) {\n  throw new Error('FAILED_PAYMENT_WEBHOOK_HMAC_SECRET is not configured');\n}\n\nconst payloadString = typeof rawPayload === 'string'\n  ? rawPayload\n  : JSON.stringify(rawPayload);\n\nconst expectedSignature = crypto\n  .createHmac('sha256', secret)\n  .update(payloadString, 'utf8')\n  .digest('hex');\n\nreturn [{\n  json: {\n    ...$json,\n    failed_payment_webhook: {\n      ...webhook,\n      expected_signature: expectedSignature,\n      signature_computation_valid: true,\n      signature_computed_at: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "3-0-3-2-failed-payment-hmac-compute",
+      "name": "3.0.3.2 - Compute Expected Failed-Payment HMAC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "notes": "Computes the expected signature only. Signature comparison is handled by 3.0.3.3."
+    }
+  ],
+  "integration": {
+    "previous_step": "3.0.3.1 - Extract Failed-Payment Payload + Signature",
+    "next_step": "3.0.3.3 - Compare computed vs received signature",
+    "environment_variable": "FAILED_PAYMENT_WEBHOOK_HMAC_SECRET"
+  },
+  "security_rules": [
+    "Never expose the HMAC secret.",
+    "Never log the HMAC secret.",
+    "Do not decide whether the received signature is valid in this step.",
+    "Do not enter dunning logic in this step.",
+    "Do not modify payment or renewal status in this step."
+  ],
+  "validation": [
+    {
+      "case": "Raw payload + configured secret",
+      "expected": "expected_signature is generated."
+    },
+    {
+      "case": "Missing raw payload",
+      "expected": "signature_computation_valid=false."
+    },
+    {
+      "case": "Missing secret",
+      "expected": "Workflow stops with configuration error."
+    },
+    {
+      "case": "Same payload + same secret",
+      "expected": "Same deterministic HMAC signature."
+    }
+  ],
+  "source_gap": {
+    "item": "Exact failed-payment provider signing specification",
+    "status": "NOT_SPECIFIED_IN_SOURCE",
+    "action": "Confirm the provider's exact HMAC algorithm, encoding and signature format before production use."
+  }
+}
+
+
+
+{
+  "plan_id": "3.0.3.3",
+  "parent_workflow": "3.0.3",
+  "module": "2.9 Renewal/Dunning",
+  "type": "n8n-node-patch",
+  "name": "Failed Payment Webhook - Compare HMAC Signatures",
+  "purpose": "Compare the received failed-payment webhook signature against the locally computed expected signature and route the webhook into the fail or pass branch.",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst webhook = $json.failed_payment_webhook || {};\nconst received = String(webhook.received_signature || '').trim();\nconst expected = String(webhook.expected_signature || '').trim();\n\nlet signatureValid = false;\nlet comparisonPerformed = false;\n\nif (received && expected && received.length === expected.length) {\n  comparisonPerformed = true;\n  signatureValid = crypto.timingSafeEqual(\n    Buffer.from(received, 'utf8'),\n    Buffer.from(expected, 'utf8')\n  );\n}\n\nreturn [{\n  json: {\n    ...$json,\n    failed_payment_webhook: {\n      ...webhook,\n      signature_comparison_performed: comparisonPerformed,\n      signature_valid: signatureValid,\n      signature_verification_status: signatureValid ? 'VALID' : 'INVALID',\n      signature_verified_at: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "3-0-3-3-failed-payment-hmac-compare",
+      "name": "3.0.3.3 - Compare Received vs Expected HMAC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        820,
+        0
+      ],
+      "notes": "Performs the signature comparison only. It does not execute dunning logic."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.failed_payment_webhook.signature_valid }}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "3-0-3-3-signature-valid-if",
+      "name": "3.0.3.3 - Failed Payment Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "3.0.3.3 - Compare Received vs Expected HMAC": {
+      "main": [
+        [
+          {
+            "node": "3.0.3.3 - Failed Payment Signature Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "integration": {
+    "previous_step": "3.0.3.2 - Compute Expected Failed-Payment HMAC",
+    "true_branch": "Connect to 3.0.3.5 - Pass branch → dunning flow continue.",
+    "false_branch": "Connect to 3.0.3.4 - Fail branch → reject + alert."
+  },
+  "security_rules": [
+    "Use timing-safe comparison.",
+    "Missing signature must result in invalid.",
+    "Missing expected signature must result in invalid.",
+    "Invalid signatures must never enter dunning processing.",
+    "Do not expose the HMAC secret.",
+    "Do not expose signatures in user-facing responses.",
+    "Do not change payment or renewal status in this step."
+  ],
+  "validation": [
+    {
+      "case": "Received signature matches expected signature",
+      "expected": "signature_valid=true and TRUE branch executes."
+    },
+    {
+      "case": "Received signature differs",
+      "expected": "signature_valid=false and FALSE branch executes."
+    },
+    {
+      "case": "Missing received signature",
+      "expected": "signature_valid=false."
+    },
+    {
+      "case": "Different signature lengths",
+      "expected": "signature_valid=false without timingSafeEqual."
+    },
+    {
+      "case": "Tampered failed-payment payload",
+      "expected": "Computed signature changes and verification fails."
+    }
+  ],
+  "source_gap": {
+    "item": "Provider-specific signature encoding/format",
+    "status": "NOT_SPECIFIED_IN_SOURCE",
+    "action": "Confirm provider specification before production deployment."
+  }
+}
+
+
+
+{
+  "plan_id": "3.0.3.4",
+  "parent_workflow": "3.0.3",
+  "module": "2.9 Renewal/Dunning",
+  "type": "n8n-node-patch",
+  "name": "Failed Payment Webhook - Invalid Signature Reject + Alert",
+  "purpose": "Reject an unverified failed-payment webhook and create a security alert without allowing it to enter dunning processing.",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const webhook = $json.failed_payment_webhook || {};\n\nreturn [{\n  json: {\n    ...$json,\n    security_alert: {\n      event_type: 'FAILED_PAYMENT_WEBHOOK_SIGNATURE_INVALID',\n      severity: 'HIGH',\n      module: '2.9 Renewal/Dunning',\n      plan_id: '3.0.3.4',\n      message: 'Failed-payment webhook rejected because signature verification failed.',\n      signature_present: Boolean(webhook.received_signature),\n      comparison_performed: Boolean(webhook.signature_comparison_performed),\n      verification_status: webhook.signature_verification_status || 'INVALID',\n      occurred_at: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "3-0-3-4-build-security-alert",
+      "name": "3.0.3.4 - Build Failed-Payment Security Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        180
+      ],
+      "notes": "Creates the alert payload. Connect to the existing alert/notification mechanism."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, accepted: false, error_code: 'INVALID_FAILED_PAYMENT_WEBHOOK_SIGNATURE', message: 'Webhook signature verification failed.' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "3-0-3-4-reject-webhook",
+      "name": "3.0.3.4 - Reject Failed-Payment Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        180
+      ],
+      "notes": "Terminates the invalid-signature branch. Never connect this branch to dunning processing."
+    }
+  ],
+  "connections": {
+    "3.0.3.4 - Build Failed-Payment Security Alert": {
+      "main": [
+        [
+          {
+            "node": "3.0.3.4 - Reject Failed-Payment Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "integration": {
+    "previous_step": "3.0.3.3 - Compare Received vs Expected HMAC",
+    "input": "FALSE/invalid branch from 3.0.3.3",
+    "next_step": "3.0.3.5",
+    "invalid_branch": "Reject and alert",
+    "pass_branch": "Must bypass this patch and continue to 3.0.3.5."
+  },
+  "security_rules": [
+    "Invalid signature must never reach dunning logic.",
+    "Missing signature must be treated as invalid.",
+    "Do not expose received or expected signatures in the HTTP response.",
+    "Do not expose the HMAC secret.",
+    "Create an audit/security alert.",
+    "Do not modify dunning state in this rejection step."
+  ],
+  "validation": [
+    {
+      "case": "Invalid signature",
+      "expected": "Security alert generated and webhook rejected."
+    },
+    {
+      "case": "Missing signature",
+      "expected": "Security alert generated and webhook rejected."
+    },
+    {
+      "case": "Tampered payload",
+      "expected": "Verification fails and webhook is rejected."
+    },
+    {
+      "case": "Valid signature",
+      "expected": "This fail branch is not executed."
+    }
+  ],
+  "source_gap": {
+    "item": "Exact alert destination/integration is not specified in the source.",
+    "status": "INPUT_REQUIRED_FOR_FINAL_INTEGRATION",
+    "action": "Connect the alert payload to the project's existing alert/notification mechanism."
+  }
+}
+
+
+
+{
+  "plan_id": "3.0.3.5",
+  "parent_workflow": "3.0.3",
+  "module": "2.9 Renewal/Dunning",
+  "type": "n8n-node-patch",
+  "name": "Failed Payment Webhook - Valid Signature Continue to Dunning",
+  "purpose": "Allow only a successfully verified failed-payment webhook to continue into the existing dunning flow.",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.failed_payment_webhook.signature_valid }}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "3-0-3-5-signature-valid",
+      "name": "3.0.3.5 - Failed Payment Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        0
+      ],
+      "notes": "Only TRUE is allowed to continue into dunning."
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhook = $json.failed_payment_webhook || {};\n\nif (webhook.signature_valid !== true) {\n  throw new Error('SECURITY_GUARD_FAILED: Unverified failed-payment webhook attempted to enter dunning flow.');\n}\n\nreturn [{\n  json: {\n    ...$json,\n    failed_payment_webhook: {\n      ...webhook,\n      security_status: 'VERIFIED',\n      verified_for_dunning_processing: true,\n      verified_for_dunning_processing_at: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "3-0-3-5-verified-dunning",
+      "name": "3.0.3.5 - Verified Failed-Payment Webhook",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2100,
+        -80
+      ],
+      "notes": "Connect this node to the EXISTING 2.9 Renewal/Dunning flow."
+    }
+  ],
+  "connections": {
+    "3.0.3.5 - Failed Payment Signature Valid?": {
+      "main": [
+        [
+          {
+            "node": "3.0.3.5 - Verified Failed-Payment Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "integration": {
+    "previous_step": "3.0.3.4 - Invalid signature rejection branch",
+    "true_branch": "Connect to the existing 2.9 Renewal/Dunning processing flow.",
+    "false_branch": "Must remain rejected and must not enter dunning.",
+    "next_parent_session": "3.0.4"
+  },
+  "security_rules": [
+    "Only signature_valid=true may enter dunning.",
+    "Never bypass the HMAC verification chain.",
+    "Do not create a duplicate dunning workflow.",
+    "Do not change payment status in this security patch.",
+    "Preserve the verified webhook data for downstream dunning processing.",
+    "Business-level failed-payment validation remains the responsibility of the existing dunning flow."
+  ],
+  "validation": [
+    {
+      "case": "Valid signature",
+      "expected": "Verified webhook reaches the existing dunning flow."
+    },
+    {
+      "case": "Invalid signature",
+      "expected": "Dunning flow is not executed."
+    },
+    {
+      "case": "Missing signature",
+      "expected": "Dunning flow is not executed."
+    },
+    {
+      "case": "Tampered payload",
+      "expected": "Dunning flow is not executed."
+    }
+  ],
+  "source_gap": {
+    "item": "Exact existing 2.9 dunning node/branch is not identified in the tracker.",
+    "status": "REQUIRES_EXISTING_WORKFLOW_MAPPING",
+    "action": "Connect the TRUE branch to the actual existing 2.9 Renewal/Dunning entry node rather than inventing a node ID."
+  }
+}

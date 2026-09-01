@@ -1,0 +1,293 @@
+{
+  "name": "6.7 - Case Study / Testimonial Auto-Request",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "event_type"
+            },
+            {
+              "name": "client_id"
+            },
+            {
+              "name": "payload"
+            }
+          ]
+        }
+      },
+      "id": "n1-hub-trigger",
+      "name": "Triggered by Hub (nps.promoter_flagged)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        260
+      ],
+      "notes": "Star topology S6.8: replaces the old 'Daily 10AM' independent poll. Hub-Dispatcher calls this workflow once per client on event_type = 'nps.promoter_flagged' (reported by Module 6.6). Unlike 6.5's multi-day cadence, this is a single-shot ask -- no safety-net poll needed, since Hub-Dispatcher/Hub-Intake own retry + error handling for the whole routing layer (see plan \u00a70.3)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE id = {{$json.client_id}} AND testimonial_ask_sent_at IS NULL;",
+        "options": {}
+      },
+      "id": "n2-fetch-promoter",
+      "name": "Fetch Flagged Promoter by ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        420,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "S6.8: was a bulk 'WHERE promoter_flag = true AND testimonial_ask_sent_at IS NULL' poll; now a single-row lookup by the client_id carried in the Hub event payload. The testimonial_ask_sent_at IS NULL guard is kept as an idempotency check in case the Hub-Dispatcher ever redelivers the same event. Milestone-completion trigger (KB Stage 52's second path) still not wired -- see README."
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "Would you share a quick word about working with us?",
+        "emailFormat": "text",
+        "text": "={{`Hi ${$json.name}, glad things are going well! Would you be open to a short testimonial we could feature? Just reply with a few lines -- no pressure at all.`}}",
+        "options": {}
+      },
+      "id": "n3-send-ask-email",
+      "name": "Send Testimonial-Ask Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        640,
+        260
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master SET testimonial_ask_sent_at = now() WHERE id = {{$json.id}};",
+        "options": {}
+      },
+      "id": "n4-mark-asked",
+      "name": "Postgres - Mark Ask Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        860,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "testimonial-reply",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n5-reply-webhook",
+      "name": "Testimonial Reply Webhook (Postal Inbound)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        460
+      ],
+      "notes": "Reuses the same Postal inbound-reply pattern as Module 2.1's reply-tracking webhook -- filter subject/thread to this ask."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"Format this raw client reply into a polished 2-3 sentence testimonial quote. Keep their actual words/meaning, just tighten grammar and flow. Raw reply: {{$json.body.text}}\\n\\nReturn ONLY JSON with key: polished_quote.\"\n}"
+      },
+      "id": "n6-ollama-format-quote",
+      "name": "Ollama - Format Testimonial Quote",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO case_studies (client_id, raw_reply, polished_quote, status, created_at)\nVALUES ({{$json.client_id}}, {{JSON.stringify($json.body.text)}}, {{JSON.stringify($json.polished_quote)}}, 'pending_client_approval', now());",
+        "options": {}
+      },
+      "id": "n7-insert-case-study",
+      "name": "Postgres - Insert Draft Case Study",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        640,
+        460
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\", \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\", \"method\": \"execute_kw\",\n    \"args\": [\"{{$env.ODOO_DB}}\", {{$env.ODOO_UID}}, \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\", \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('New draft testimonial ready for client sign-off before publishing: ' + $json.polished_quote)}}\n      } ]\n  }, \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n8-discuss-review-alert",
+      "name": "Odoo Discuss - Review Draft Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        460
+      ],
+      "notes": "Human approval gate -- per KB, client sign-off on final wording is always required before publishing. No auto-publish node exists in this workflow by design."
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Thank you!",
+        "options": {}
+      },
+      "id": "n9-respond-ok",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        460
+      ]
+    }
+  ],
+  "connections": {
+    "Triggered by Hub (nps.promoter_flagged)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Flagged Promoter by ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Flagged Promoter by ID": {
+      "main": [
+        [
+          {
+            "node": "Send Testimonial-Ask Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Testimonial-Ask Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Ask Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Testimonial Reply Webhook (Postal Inbound)": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Format Testimonial Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Format Testimonial Quote": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Insert Draft Case Study",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Insert Draft Case Study": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Review Draft Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo Discuss - Review Draft Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

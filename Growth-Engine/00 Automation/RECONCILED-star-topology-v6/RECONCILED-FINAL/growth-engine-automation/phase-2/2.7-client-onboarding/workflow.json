@@ -1,0 +1,547 @@
+{
+    "name": "2.7 - Client Onboarding",
+    "nodes": [
+        {
+            "parameters": {},
+            "id": "n1-execute-trigger",
+            "name": "Dispatcher Trigger (client.won OR payment.received)",
+            "type": "n8n-nodes-base.executeWorkflowTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                180,
+                260
+            ],
+            "notes": "S4.6, updated S4b-revert \u2014 pehle 2.6 seedha isse Execute Workflow se call karta tha. Ab Hub-Dispatcher is workflow ko DO events par call kar sakta hai: 'payment.received' (2.6 se, normal flow) YA 'client.won' (1.5 se, NET-30/unpaid-onboarding business case ke liye jaan-boojh kar wapas enable kiya gaya, S4b-DISPATCHER-UPDATE.md ki Option B). Dono se ek hi shape ka input aata hai ({ odoo_lead_id, ... }), spoke ke andar koi input-mapping change nahi hui. Duplicate-onboarding se bachne ke liye 'IF Not Yet Onboarded (duplicate guard)' node fetch ke turant baad add kiya gaya hai -- agar dono events same client ke liye fire ho jaayein, doosra silently skip ho jaata hai."
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose"
+                    },
+                    "conditions": [
+                        {
+                            "leftValue": "={{$json.odoo_project_id}}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "empty",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "guard-not-yet-onboarded",
+            "name": "IF Not Yet Onboarded (duplicate guard)",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                400,
+                260
+            ],
+            "notes": "S4b-revert \u2014 Option B chuna gaya hai (client.won aur payment.received dono 2.7 ko trigger kar sakte hain, jaan-boojh kar, NET-30/unpaid-onboarding business case ke liye). Isliye ab yahan guard chahiye: agar 'clients_master.odoo_project_id' already set hai (matlab is client ka onboarding pehle ho chuka), to poora chain (Nextcloud folder, Odoo project, tasks, Discuss channel, welcome email) skip karo -- warna client.won + payment.received dono aa gaye to duplicate project/folder/channel/email ban jaayenge. Ye README ke apne known-limitation ('Duplicate trigger safety nahi hai') ko fix karta hai."
+        },
+        {
+            "parameters": {},
+            "id": "noop-already-onboarded",
+            "name": "Already Onboarded - Skip (Duplicate Guard)",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                620,
+                420
+            ],
+            "notes": "client.won aur payment.received dono is client ke liye fire ho gaye -- jo bhi doosra aaya, usne yahan no-op kiya. Koi duplicate Nextcloud/Odoo/email side-effect nahi hua. Agar isse zyada visibility chahiye (jaise Discuss alert), yahan add kar sakte ho."
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.odoo_lead_id}} LIMIT 1;",
+                "options": {}
+            },
+            "id": "n2-fetch-lead",
+            "name": "Fetch Lead + Deal Detail",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2.5,
+            "position": [
+                400,
+                260
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Odoo Postgres"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "method": "MKCOL",
+                "url": "={{$env.NEXTCLOUD_URL}}/remote.php/dav/files/{{$env.NEXTCLOUD_USER}}/Clients/{{$json.company}}-{{$json.odoo_lead_id}}/",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpBasicAuth",
+                "options": {
+                    "response": {
+                        "response": {
+                            "neverError": true
+                        }
+                    }
+                }
+            },
+            "id": "n3-nextcloud-mkcol",
+            "name": "Nextcloud - Create Client Folder",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                840,
+                260
+            ],
+            "credentials": {
+                "httpBasicAuth": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Nextcloud WebDAV"
+                }
+            },
+            "notes": "neverError=true kyunki agar folder pehle se exist karta hai to Nextcloud 405 dega -- wo ignore karna hai, blocker nahi hai."
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.NEXTCLOUD_URL}}/ocs/v2.php/apps/files_sharing/api/v1/shares",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpBasicAuth",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "OCS-APIRequest",
+                            "value": "true"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"path\": \"/Clients/{{$('Fetch Lead + Deal Detail').item.json.company}}-{{$('Fetch Lead + Deal Detail').item.json.odoo_lead_id}}\",\n  \"shareType\": 3,\n  \"format\": \"json\"\n}",
+                "options": {}
+            },
+            "id": "n4-nextcloud-share",
+            "name": "Nextcloud - Create Client Share Link",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1060,
+                260
+            ],
+            "credentials": {
+                "httpBasicAuth": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Nextcloud WebDAV"
+                }
+            },
+            "notes": "Ye link client ko welcome email me diya jaayega, aur delivery team bhi isi folder me deliverables daalegi."
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.ODOO_URL}}/jsonrpc",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"project.project\",\n      \"create\",\n      [ {\n        \"name\": {{JSON.stringify($('Fetch Lead + Deal Detail').item.json.company + ' - Delivery')}},\n        \"partner_id\": {{$('Fetch Lead + Deal Detail').item.json.odoo_partner_id || $env.ODOO_FALLBACK_PARTNER_ID}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+            },
+            "id": "n5-odoo-create-project",
+            "name": "Odoo - Create Project",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1280,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const projectId = $input.item.json.result;\nconst lead = $('Fetch Lead + Deal Detail').item.json;\nconst today = new Date();\nfunction plusDays(n) {\n  const d = new Date(today);\n  d.setDate(d.getDate() + n);\n  return d.toISOString().slice(0, 10);\n}\n\n// Standard onboarding task template -- v1 fixed list, v2: pull from a per-service_type template table\nconst tasks = [\n  { name: 'Kickoff call scheduled', days: 2 },\n  { name: 'Collect access & credentials (website, ad accounts, socials)', days: 3 },\n  { name: 'Collect brand assets (logo, guidelines, past creatives)', days: 3 },\n  { name: 'Assign delivery team + internal handoff note', days: 1 },\n  { name: 'Draft 30-day strategy doc', days: 7 },\n  { name: 'First deliverable due', days: 14 }\n];\n\nreturn [{\n  json: {\n    ...lead,\n    odoo_project_id: projectId,\n    task_create_args: tasks.map(t => ({\n      name: t.name,\n      project_id: projectId,\n      date_deadline: plusDays(t.days)\n    }))\n  }\n}];"
+            },
+            "id": "n6-build-tasks",
+            "name": "Build Onboarding Task List",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1500,
+                260
+            ],
+            "notes": "v1 fixed 6-task template hai. v2: service_type ke hisaab se alag templates (SEO vs Design vs VA) Postgres table se pull karo."
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.ODOO_URL}}/jsonrpc",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"project.task\",\n      \"create\",\n      [ {{JSON.stringify($json.task_create_args)}} ]\n    ]\n  },\n  \"id\": 1\n}"
+            },
+            "id": "n7-odoo-create-tasks",
+            "name": "Odoo - Create Onboarding Tasks (batch)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1720,
+                260
+            ],
+            "notes": "Odoo 17+ ka create() method dicts ki list accept karke ids ki list return karta hai. Agar aapka Odoo version isse support na kare, to har task ke liye alag create call (loop) karna hoga -- Known Limitations dekho."
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.ODOO_URL}}/jsonrpc",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"create\",\n      [ {\n        \"name\": {{JSON.stringify('Client - ' + $('Fetch Lead + Deal Detail').item.json.company)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+            },
+            "id": "n8-odoo-create-channel",
+            "name": "Odoo - Create Client Discuss Channel",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1940,
+                260
+            ],
+            "notes": "Kuch Odoo versions me model 'discuss.channel' hai (mail.channel purane versions me). Apne Odoo version ke hisaab se model name confirm/adjust karo."
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.ODOO_URL}}/jsonrpc",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"add_members\",\n      [ [{{$json.result}}], {{$env.ODOO_DELIVERY_TEAM_PARTNER_IDS}} ]\n    ]\n  },\n  \"id\": 1\n}"
+            },
+            "id": "n9-odoo-invite-team",
+            "name": "Odoo - Add Delivery Team to Channel",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2160,
+                260
+            ],
+            "notes": "ODOO_DELIVERY_TEAM_PARTNER_IDS = comma-separated Odoo partner IDs array string e.g. [12,15,18] -- delivery/account-management team jo har client channel me by-default honi chahiye."
+        },
+        {
+            "parameters": {
+                "jsCode": "const lead = $('Fetch Lead + Deal Detail').item.json;\nlet shareUrl = '';\ntry {\n  shareUrl = JSON.parse($('Nextcloud - Create Client Share Link').item.json.data || '{}').ocs?.data?.url || '';\n} catch (e) {\n  shareUrl = $('Nextcloud - Create Client Share Link').item.json.url || '';\n}\n\nreturn [{\n  json: {\n    ...lead,\n    client_folder_url: shareUrl,\n    odoo_project_id: $('Build Onboarding Task List').item.json.odoo_project_id,\n    odoo_discuss_channel_id: $('Odoo - Create Client Discuss Channel').item.json.result\n  }\n}];"
+            },
+            "id": "n10-build-welcome-info",
+            "name": "Build Welcome Email Info",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2380,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+                "toEmail": "={{$json.email}}",
+                "subject": "=Welcome to Nivy, {{$json.name}}! Here's what happens next",
+                "emailFormat": "text",
+                "text": "=Hi {{$json.name}},\n\nWelcome aboard! Your project is now set up and our delivery team has been notified.\n\nYour shared folder (assets, deliverables, reports will live here): {{$json.client_folder_url}}\n\nOver the next few days we'll reach out to schedule a kickoff call and collect access/brand assets. If anything's urgent, just reply to this email.\n\nExcited to get started!\nTeam Nivy",
+                "options": {}
+            },
+            "id": "n11-send-welcome-email",
+            "name": "Send Welcome Email (Postal SMTP)",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 2.1,
+            "position": [
+                2600,
+                260
+            ],
+            "credentials": {
+                "smtp": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Postal SMTP"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "UPDATE clients_master\nSET status = 'Onboarded',\n    nextcloud_folder_url = {{JSON.stringify($json.client_folder_url)}},\n    odoo_project_id = {{$json.odoo_project_id}},\n    odoo_discuss_channel_id = {{$json.odoo_discuss_channel_id}},\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}}\nRETURNING *;",
+                "options": {}
+            },
+            "id": "n12-mark-onboarded",
+            "name": "Postgres - Mark Onboarded",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2.5,
+            "position": [
+                2820,
+                260
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Odoo Postgres"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.ODOO_URL}}/jsonrpc",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Client onboarded: ' + $json.company + ' -- Project #' + $json.odoo_project_id + ' created, folder + Discuss channel ready.')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+                "options": {
+                    "response": {
+                        "response": {
+                            "neverError": true
+                        }
+                    }
+                }
+            },
+            "id": "n13-discuss-onboarded-alert",
+            "name": "Odoo Discuss - Onboarding Complete Alert",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                3040,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+                "workflowInputs": {
+                    "value": {
+                        "event_type": "client.onboarded",
+                        "client_id": "={{$json.id}}",
+                        "odoo_lead_id": "={{$json.odoo_lead_id}}",
+                        "source_module": "2.7",
+                        "payload": "={{ { odoo_project_id: $json.odoo_project_id, nextcloud_folder_url: $json.nextcloud_folder_url } }}"
+                    }
+                },
+                "options": {}
+            },
+            "id": "report-to-hub-2-7",
+            "name": "Report to Hub",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                2820,
+                420
+            ],
+            "notes": "S4.6 \u2014 fires in parallel off 'Postgres - Mark Onboarded' (same branch as the internal Discuss alert). 'Postgres - Mark Onboarded' now has RETURNING * added so client_id/odoo_lead_id are available here. No module currently subscribes to client.onboarded, but 2.8 (weekly reporting) picking up new 'Onboarded' clients naturally, and this is the hook Phase 6 health-scoring work would key off later."
+        }
+    ],
+    "connections": {
+        "Fetch Lead + Deal Detail": {
+            "main": [
+                [
+                    {
+                        "node": "IF Not Yet Onboarded (duplicate guard)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Nextcloud - Create Client Folder": {
+            "main": [
+                [
+                    {
+                        "node": "Nextcloud - Create Client Share Link",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Nextcloud - Create Client Share Link": {
+            "main": [
+                [
+                    {
+                        "node": "Odoo - Create Project",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Odoo - Create Project": {
+            "main": [
+                [
+                    {
+                        "node": "Build Onboarding Task List",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Build Onboarding Task List": {
+            "main": [
+                [
+                    {
+                        "node": "Odoo - Create Onboarding Tasks (batch)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Odoo - Create Onboarding Tasks (batch)": {
+            "main": [
+                [
+                    {
+                        "node": "Odoo - Create Client Discuss Channel",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Odoo - Create Client Discuss Channel": {
+            "main": [
+                [
+                    {
+                        "node": "Odoo - Add Delivery Team to Channel",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Odoo - Add Delivery Team to Channel": {
+            "main": [
+                [
+                    {
+                        "node": "Build Welcome Email Info",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Build Welcome Email Info": {
+            "main": [
+                [
+                    {
+                        "node": "Send Welcome Email (Postal SMTP)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Welcome Email (Postal SMTP)": {
+            "main": [
+                [
+                    {
+                        "node": "Postgres - Mark Onboarded",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Postgres - Mark Onboarded": {
+            "main": [
+                [
+                    {
+                        "node": "Odoo Discuss - Onboarding Complete Alert",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Report to Hub",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Dispatcher Trigger (client.won OR payment.received)": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Lead + Deal Detail",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "IF Not Yet Onboarded (duplicate guard)": {
+            "main": [
+                [
+                    {
+                        "node": "Nextcloud - Create Client Folder",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Already Onboarded - Skip (Duplicate Guard)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "id": "54d839bd859bb42c"
+}

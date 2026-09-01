@@ -1,0 +1,141 @@
+{
+  "name": "6.2.2 - Milestone-Missed Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 8 * * *" }]
+        }
+      },
+      "id": "c6221001-0000-4000-8000-000000000001",
+      "name": "Daily 8AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-1380, 300],
+      "notes": "6.2.2.1 (part 1). Daily check matches the cadence pattern already used by Module 2.9 (daily 7AM renewal check) - not a sourced business rule, flagged as a reasonable default."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- projects belonging to active/onboarded clients only\nSELECT id AS client_id, odoo_project_id, odoo_discuss_channel_id, name, email, odoo_lead_id\nFROM clients_master\nWHERE odoo_project_id IS NOT NULL\n  AND status IN ('Onboarded', 'Active/Onboarded (recurring)', 'Churn Risk')\nLIMIT 100;",
+        "options": {}
+      },
+      "id": "c6221002-0000-4000-8000-000000000002",
+      "name": "Get Clients With Active Projects",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-1160, 300],
+      "credentials": { "postgres": { "name": "Odoo Postgres" } }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.ODOO_URL }}/jsonrpc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  jsonrpc: '2.0',\n  method: 'call',\n  params: {\n    service: 'object',\n    method: 'execute_kw',\n    args: [\n      $vars.ODOO_DB,\n      $vars.ODOO_UID,\n      $vars.ODOO_API_KEY,\n      'project.task',\n      'search_read',\n      [[\n        ['project_id', '=', $json.odoo_project_id],\n        ['date_deadline', '!=', false],\n        ['date_deadline', '<', new Date().toISOString().slice(0,10)],\n        ['stage_id.is_closed', '=', false]\n      ]],\n      { fields: ['id', 'name', 'date_deadline', 'stage_id'] }\n    ]\n  },\n  id: Math.floor(Math.random() * 100000)\n}) }}",
+        "options": {}
+      },
+      "id": "c6221003-0000-4000-8000-000000000003",
+      "name": "Scheduled Check - Overdue Tasks (Odoo)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-940, 300],
+      "notes": "6.2.2.1 (part 2). Uses project.task.date_deadline vs stage_id.is_closed via execute_kw, same JSON-RPC pattern as every other Odoo call in this stack. FLAG: 6.2.1's checklist tasks are created WITHOUT a date_deadline today, so this node will only catch tasks that had a deadline set some other way (manually by the delivery team, or a future patch to 6.2.1). Also flags the same Odoo-version ambiguity already on record elsewhere in this plan (stage_id.is_closed availability / project.milestone vs project.task) - confirm against the live Odoo version before relying on this field name."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "c1", "leftValue": "={{ $json.length }}", "rightValue": 0, "operator": { "type": "number", "operation": "gt" } }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "c6221004-0000-4000-8000-000000000004",
+      "name": "Missed? (has overdue tasks)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-720, 300],
+      "notes": "6.2.2.2. Alert branch fires only when the search returned at least one overdue, non-closed task for this client's project."
+    },
+    {
+      "parameters": {},
+      "id": "c6221005-0000-4000-8000-000000000005",
+      "name": "No Missed Milestones - Skip",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [-500, 420]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format the overdue task list for the alert message\nconst client = $('Get Clients With Active Projects').item.json;\nconst tasks = $json;\n\nconst today = new Date();\nconst lines = tasks.map(t => {\n  const dueDate = new Date(t.date_deadline);\n  const daysOverdue = Math.floor((today - dueDate) / 86400000);\n  return `- ${t.name} (due ${t.date_deadline}, ${daysOverdue}d overdue)`;\n}).join('\\n');\n\nreturn [{\n  json: {\n    client_id: client.client_id,\n    odoo_discuss_channel_id: client.odoo_discuss_channel_id,\n    client_email: client.email,\n    client_name: client.name,\n    overdue_count: tasks.length,\n    alert_body: `Milestone check for ${client.name}: ${tasks.length} task(s) overdue.\\n\\n${lines}`\n  }\n}];"
+      },
+      "id": "c6221006-0000-4000-8000-000000000006",
+      "name": "Format Alert Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-500, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.ODOO_URL }}/jsonrpc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  jsonrpc: '2.0',\n  method: 'call',\n  params: {\n    service: 'object',\n    method: 'execute_kw',\n    args: [\n      $vars.ODOO_DB,\n      $vars.ODOO_UID,\n      $vars.ODOO_API_KEY,\n      'discuss.channel',\n      'message_post',\n      [[$json.odoo_discuss_channel_id], { body: $json.alert_body }]\n    ]\n  },\n  id: Math.floor(Math.random() * 100000)\n}) }}",
+        "options": {}
+      },
+      "id": "c6221007-0000-4000-8000-000000000007",
+      "name": "Odoo Discuss Alert (internal team)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-280, 160],
+      "notes": "6.2.2.3 (part 1). Posts to the same per-client Discuss channel Module 2.7 already creates (odoo_discuss_channel_id). Uses 'discuss.channel' model - same version caveat already flagged repeatedly in this plan (mail.channel on Odoo <17, discuss.channel on 17+) - confirm against the live instance."
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $vars.OUTREACH_FROM_EMAIL }}",
+        "toEmail": "delivery-team@nivynext.internal",
+        "subject": "=Milestone alert: {{ $json.client_name }} - {{ $json.overdue_count }} overdue task(s)",
+        "text": "={{ $json.alert_body }}",
+        "options": {}
+      },
+      "id": "c6221008-0000-4000-8000-000000000008",
+      "name": "Email Alert (Postal, internal fallback)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [-280, 280],
+      "credentials": { "smtp": { "name": "Postal SMTP" } },
+      "notes": "6.2.2.3 (part 2). Internal delivery-team alert, NOT sent to the client - this is a missed-milestone notice for Nivy's own team to act on. 'delivery-team@nivynext.internal' is a placeholder recipient address - confirm the real distribution list before production."
+    }
+  ],
+  "connections": {
+    "Daily 8AM": { "main": [[{ "node": "Get Clients With Active Projects", "type": "main", "index": 0 }]] },
+    "Get Clients With Active Projects": { "main": [[{ "node": "Scheduled Check - Overdue Tasks (Odoo)", "type": "main", "index": 0 }]] },
+    "Scheduled Check - Overdue Tasks (Odoo)": { "main": [[{ "node": "Missed? (has overdue tasks)", "type": "main", "index": 0 }]] },
+    "Missed? (has overdue tasks)": {
+      "main": [
+        [{ "node": "Format Alert Message", "type": "main", "index": 0 }],
+        [{ "node": "No Missed Milestones - Skip", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Alert Message": {
+      "main": [[
+        { "node": "Odoo Discuss Alert (internal team)", "type": "main", "index": 0 },
+        { "node": "Email Alert (Postal, internal fallback)", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "errorWorkflow": "" },
+  "meta": {
+    "planId": "6.2.2",
+    "planLabel": "Milestone-missed alert",
+    "subSteps": {
+      "6.2.2.1": "Scheduled check node (milestone due-date vs status) -> Daily 8AM + Get Clients With Active Projects + Scheduled Check - Overdue Tasks (Odoo)",
+      "6.2.2.2": "IF node - missed -> alert branch -> Missed? (has overdue tasks)",
+      "6.2.2.3": "Odoo Discuss/email alert node -> Format Alert Message + Odoo Discuss Alert + Email Alert (Postal fallback)"
+    }
+  }
+}

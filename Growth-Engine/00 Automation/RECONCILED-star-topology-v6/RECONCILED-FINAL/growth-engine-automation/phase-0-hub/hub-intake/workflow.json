@@ -1,0 +1,73 @@
+{
+  "name": "0.0 Hub-Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "event_type",
+              "type": "string"
+            },
+            {
+              "name": "client_id",
+              "type": "number"
+            },
+            {
+              "name": "odoo_lead_id",
+              "type": "number"
+            },
+            {
+              "name": "source_module",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "id": "hub-intake-trigger",
+      "name": "Hub Intake Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [180, 300],
+      "notes": "S1.1 — called by any spoke's 'Report to Hub' node with {event_type, client_id, odoo_lead_id, source_module, payload}. source_module added beyond the plan's minimum 3 fields because funnel_events.source_module is NOT NULL — falls back to 'unknown' if omitted."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO funnel_events (event_type, source_module, client_id, odoo_lead_id, payload, status)\nVALUES (\n  {{JSON.stringify($json.event_type || 'unknown')}},\n  {{JSON.stringify($json.source_module || 'unknown')}},\n  {{$json.client_id ?? null}},\n  {{$json.odoo_lead_id ?? null}},\n  {{JSON.stringify($json.payload || {})}}::jsonb,\n  'pending'\n)\nRETURNING id, event_type, status, created_at;",
+        "options": {}
+      },
+      "id": "hub-intake-insert",
+      "name": "Insert into funnel_events",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [420, 300],
+      "notes": "S1.2 + S1.3 — RETURNING id is the last node's output, so it's automatically what goes back to the calling spoke (lets the spoke log its own event ID for traceability)."
+    }
+  ],
+  "connections": {
+    "Hub Intake Trigger": {
+      "main": [
+        [
+          {
+            "node": "Insert into funnel_events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_0.0_ERROR_HANDLER_WORKFLOW_ID"
+  },
+  "staticData": null,
+  "meta": {
+    "notes": "S1 build. Test per S1.4: call manually with a dummy {event_type: 'lead.qualified', client_id: 1, source_module: 'test', payload: {}} and confirm a row lands in funnel_events."
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "name": "6.2.1 - Adoption Checklist Auto-Create",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            { "name": "client_id" },
+            { "name": "odoo_project_id" },
+            { "name": "odoo_lead_id" },
+            { "name": "service_type" }
+          ]
+        }
+      },
+      "id": "c6211001-0000-4000-8000-000000000001",
+      "name": "6.2.1 Trigger - Onboarding Complete",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-1300, 300],
+      "notes": "6.2.1.1 (part 1). Meant to be called from Module 2.7 (Client Onboarding) at the point it finishes creating the Nextcloud folder / Odoo Project / Discuss channel. Per the precedent already flagged in this file's own §10A.3 for 2.6->2.7 ('the Execute Workflow node from 2.6 into 2.7 must be added manually - it does not exist by default'), the same applies here: add an Execute Workflow node at the end of 2.7 pointing at this workflow. Not done silently since 2.7 is an already-built Phase 2 module."
+    },
+    {
+      "parameters": {
+        "amount": 7,
+        "unit": "days"
+      },
+      "id": "c6211002-0000-4000-8000-000000000002",
+      "name": "Wait X Days (placeholder = 7)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [-1080, 300],
+      "notes": "6.2.1.1 (part 2). 'X-din Wait node' - the exact number of days isn't specified anywhere in the uploads (Stage 44 / Customer Success Planning has no automation.md yet, per §16.0). 7 days is a placeholder giving the client a short settling-in period before the checklist lands; flag for Nivy confirmation, not a sourced business rule."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- guard against duplicate checklist creation if this workflow is ever re-triggered for the same client\nSELECT adoption_checklist_created_at FROM clients_master WHERE id = {{ $json.client_id }};",
+        "options": {}
+      },
+      "id": "c6211003-0000-4000-8000-000000000003",
+      "name": "Check Not Already Created",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-860, 300],
+      "credentials": { "postgres": { "name": "Odoo Postgres" } }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "c1", "leftValue": "={{ $json.adoption_checklist_created_at }}", "rightValue": "", "operator": { "type": "string", "operation": "isEmpty" } }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "c6211004-0000-4000-8000-000000000004",
+      "name": "Already Created?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-640, 300]
+    },
+    {
+      "parameters": {},
+      "id": "c6211005-0000-4000-8000-000000000005",
+      "name": "Skip - Already Exists",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [-420, 420]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 6.2.1.2 (part 1) - checklist item set\n// FLAG: this generic list is a PLACEHOLDER, same caveat already on record for Module 2.7's\n// task template ('fixed regardless of service_type' - §10A.3 known limitation). No\n// service-line-specific adoption checklist content exists in the uploads. Do not treat this\n// as final client-facing copy without Nivy review.\nconst input = $('6.2.1 Trigger - Onboarding Complete').item.json;\n\nconst checklist = [\n  'Kickoff call scheduled and completed',\n  'Access/credentials handed over and confirmed working',\n  'Primary point of contact identified on client side',\n  'First deliverable/milestone reviewed with client',\n  'Client has used/reviewed the Nextcloud shared folder at least once',\n  'Reporting cadence and channel confirmed with client (per Module 2.8)'\n];\n\nreturn checklist.map(item_name => ({\n  json: {\n    client_id: input.client_id,\n    odoo_project_id: input.odoo_project_id,\n    odoo_lead_id: input.odoo_lead_id,\n    service_type: input.service_type || null,\n    task_name: item_name\n  }\n}));"
+      },
+      "id": "c6211006-0000-4000-8000-000000000006",
+      "name": "Build Checklist Items (placeholder list)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-420, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.ODOO_URL }}/jsonrpc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  jsonrpc: '2.0',\n  method: 'call',\n  params: {\n    service: 'object',\n    method: 'execute_kw',\n    args: [\n      $vars.ODOO_DB,\n      $vars.ODOO_UID,\n      $vars.ODOO_API_KEY,\n      'project.task',\n      'create',\n      [{\n        name: 'Adoption checklist: ' + $json.task_name,\n        project_id: $json.odoo_project_id,\n        description: 'Auto-created by 6.2.1 Adoption Checklist workflow. Placeholder checklist item - review against real Customer Success Planning content once Stage 44 is documented.'\n      }]\n    ]\n  },\n  id: Math.floor(Math.random() * 100000)\n}) }}",
+        "options": {}
+      },
+      "id": "c6211007-0000-4000-8000-000000000007",
+      "name": "Odoo Project task-create",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-200, 220],
+      "notes": "6.2.1.2 (part 2). Same execute_kw / project.task create pattern already used by Module 2.7 for its 6 starter tasks (§10A.3) - reused, not reinvented. One call per checklist item (n8n loops over the items from the previous node automatically)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "c2", "leftValue": "={{ $json.error }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty" } }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "c6211008-0000-4000-8000-000000000008",
+      "name": "Any Create Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [20, 220]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_errors (workflow_name, execution_id, node_name, error_message, input_payload)\nVALUES ('6.2.1 - Adoption Checklist Auto-Create', '{{ $execution.id }}', 'Odoo Project task-create', {{ JSON.stringify($json.error) }}, {{ JSON.stringify($json) }}::jsonb);",
+        "options": {}
+      },
+      "id": "c6211009-0000-4000-8000-000000000009",
+      "name": "Log Task-Create Failure",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [240, 320],
+      "credentials": { "postgres": { "name": "Odoo Postgres" } }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "ALTER TABLE clients_master ADD COLUMN IF NOT EXISTS adoption_checklist_created_at TIMESTAMP;\n\nUPDATE clients_master\nSET adoption_checklist_created_at = now(), updated_at = now()\nWHERE id = {{ $('6.2.1 Trigger - Onboarding Complete').item.json.client_id }};",
+        "options": {}
+      },
+      "id": "c621100a-0000-4000-8000-00000000000a",
+      "name": "Mark Checklist Created",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [240, 140],
+      "credentials": { "postgres": { "name": "Odoo Postgres" } }
+    }
+  ],
+  "connections": {
+    "6.2.1 Trigger - Onboarding Complete": { "main": [[{ "node": "Wait X Days (placeholder = 7)", "type": "main", "index": 0 }]] },
+    "Wait X Days (placeholder = 7)": { "main": [[{ "node": "Check Not Already Created", "type": "main", "index": 0 }]] },
+    "Check Not Already Created": { "main": [[{ "node": "Already Created?", "type": "main", "index": 0 }]] },
+    "Already Created?": {
+      "main": [
+        [{ "node": "Build Checklist Items (placeholder list)", "type": "main", "index": 0 }],
+        [{ "node": "Skip - Already Exists", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Checklist Items (placeholder list)": { "main": [[{ "node": "Odoo Project task-create", "type": "main", "index": 0 }]] },
+    "Odoo Project task-create": { "main": [[{ "node": "Any Create Failed?", "type": "main", "index": 0 }]] },
+    "Any Create Failed?": {
+      "main": [
+        [{ "node": "Log Task-Create Failure", "type": "main", "index": 0 }],
+        [{ "node": "Mark Checklist Created", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "errorWorkflow": "" },
+  "meta": {
+    "planId": "6.2.1",
+    "planLabel": "Adoption checklist auto-create",
+    "subSteps": {
+      "6.2.1.1": "Trigger: onboarding-complete + X-din Wait node -> 6.2.1 Trigger + Wait X Days (7-day cadence is placeholder) + idempotency guard (Check Not Already Created / Already Created?)",
+      "6.2.1.2": "Odoo Project task-create node (checklist items) -> Build Checklist Items + Odoo Project task-create + failure handling + Mark Checklist Created"
+    }
+  }
+}

@@ -1,0 +1,393 @@
+{
+  "name": "4.3.3 - Unified Reply Merge + Nurture Suppression",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "client_id"
+            },
+            {
+              "name": "email"
+            },
+            {
+              "name": "channel"
+            },
+            {
+              "name": "reply_content"
+            },
+            {
+              "name": "occurred_at"
+            },
+            {
+              "name": "workflow_source"
+            }
+          ]
+        }
+      },
+      "id": "e1a1f001-0000-4000-8000-000000000001",
+      "name": "4.3.3 Trigger - Reply Event In",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        300
+      ],
+      "notes": "Called via Execute Workflow from 4.3.1 (Waha inbound webhook, after its Postgres update) and 4.3.2 (LinkedIn poll, after its Postgres update). Also intended for 2.1's existing email-reply webhook to be re-pointed here (see integration note in README) so all three channels funnel through one suppression path instead of each module patching clients_master separately."
+    },
+    {
+      "parameters": {
+        "jsCode": "// 4.3.3.1 (part 1) - Validate + normalize the merged reply signal\nconst item = $input.item.json;\n\nconst errors = [];\nif (!item.client_id && !item.email) errors.push('client_id or email required');\nif (!item.channel) errors.push('channel required');\nif (!['email','whatsapp','linkedin'].includes((item.channel||'').toLowerCase())) errors.push('channel must be email|whatsapp|linkedin');\nif (!item.occurred_at) errors.push('occurred_at required');\n\nconst normalized = {\n  client_id: item.client_id || null,\n  email: item.email ? String(item.email).trim().toLowerCase() : null,\n  channel: item.channel ? String(item.channel).trim().toLowerCase() : null,\n  reply_content: item.reply_content || '',\n  occurred_at: item.occurred_at || new Date().toISOString(),\n  workflow_source: item.workflow_source || 'unknown',\n  is_valid: errors.length === 0,\n  validation_errors: errors.join('; ')\n};\n\nreturn [{ json: normalized }];"
+      },
+      "id": "e1a1f002-0000-4000-8000-000000000002",
+      "name": "Validate & Normalize Reply Signal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "e1a1f003-0000-4000-8000-000000000003",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_errors (workflow_name, execution_id, node_name, error_message, input_payload)\nVALUES ('4.3.3 - Unified Reply Merge + Nurture Suppression', '{{ $execution.id }}', 'Validate & Normalize Reply Signal', {{ JSON.stringify($json.validation_errors) }}, {{ JSON.stringify($json) }}::jsonb);",
+        "options": {}
+      },
+      "id": "e1a1f004-0000-4000-8000-000000000004",
+      "name": "Log Invalid Reply Signal",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -460,
+        460
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "workflow_errors table per SKILL \u00a716.3 schema. Requires that table to already exist (Phase 3.0 error-handling work) - flag as REQUIRES SCHEMA CONFIRMATION if 3.0's workflow_errors table has not actually been created yet."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 4.3.3.1 (part 2) - resolve client_id from email when only email was supplied (LinkedIn/Waha payloads may not carry client_id)\nSELECT id AS client_id FROM clients_master\nWHERE id = {{ $json.client_id ? $json.client_id : 'NULL' }}\n   OR email = {{ $json.email ? `'${$json.email}'` : 'NULL' }}\nLIMIT 1;",
+        "options": {}
+      },
+      "id": "e1a1f005-0000-4000-8000-000000000005",
+      "name": "Resolve client_id",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -460,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.client_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "e1a1f006-0000-4000-8000-000000000006",
+      "name": "Client Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 4.3.3.1 (part 3) - write the event to history (per \u00a716.5 canonical event table)\nINSERT INTO communication_events (client_id, channel, direction, content, occurred_at, workflow_source)\nVALUES (\n  {{ $json.client_id }},\n  {{ JSON.stringify($('Validate & Normalize Reply Signal').item.json.channel) }},\n  'inbound',\n  {{ JSON.stringify($('Validate & Normalize Reply Signal').item.json.reply_content) }},\n  {{ JSON.stringify($('Validate & Normalize Reply Signal').item.json.occurred_at) }}::timestamp,\n  {{ JSON.stringify($('Validate & Normalize Reply Signal').item.json.workflow_source) }}\n);",
+        "options": {}
+      },
+      "id": "e1a1f007-0000-4000-8000-000000000007",
+      "name": "Insert communication_events",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -20,
+        140
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "REQUIRES SCHEMA CONFIRMATION if communication_events (\u00a716.5) has not been created on the live DB yet - CREATE TABLE statement is in the companion schema-setup node below, run once before this goes live."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 4.3.3.1 (part 4) + 4.3.3.2 - this IS the 'merge channels' step: whichever channel replied last wins last_reply_channel/at,\n-- and this is what makes the lead stop qualifying for 2.2 Nurture's due-lead query (see integration note in README)\nUPDATE clients_master\nSET last_reply_channel = {{ JSON.stringify($('Validate & Normalize Reply Signal').item.json.channel) }},\n    last_reply_at = {{ JSON.stringify($('Validate & Normalize Reply Signal').item.json.occurred_at) }}::timestamp,\n    active_sequence_suppressed = true,\n    status = CASE WHEN status IN ('Contacted','Nurtured') THEN 'Replied' ELSE status END,\n    updated_at = now()\nWHERE id = {{ $json.client_id }}\nRETURNING id, odoo_lead_id, status, last_reply_channel, last_reply_at, active_sequence_suppressed;",
+        "options": {}
+      },
+      "id": "e1a1f008-0000-4000-8000-000000000008",
+      "name": "Update clients_master (reply + suppress)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        200,
+        140
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "REQUIRES SCHEMA CONFIRMATION for active_sequence_suppressed column if the \u00a716.4 ALTER TABLE hasn't been run yet - see schema-setup node."
+    },
+    {
+      "parameters": {},
+      "id": "e1a1f009-0000-4000-8000-000000000009",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- No matching client_id/email in clients_master - log for manual review, do not silently drop\nINSERT INTO workflow_errors (workflow_name, execution_id, node_name, error_message, input_payload)\nVALUES ('4.3.3 - Unified Reply Merge + Nurture Suppression', '{{ $execution.id }}', 'Client Found?', 'No matching client_id/email in clients_master', {{ JSON.stringify($json) }}::jsonb);",
+        "options": {}
+      },
+      "id": "e1a1f00a-0000-4000-8000-00000000000a",
+      "name": "Log Unmatched Reply",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -20,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 4.3.3.0 - one-time schema setup, run manually before first live execution (NOT part of the per-event runtime path)\nCREATE TABLE IF NOT EXISTS communication_events (\n  id SERIAL PRIMARY KEY,\n  client_id INTEGER REFERENCES clients_master(id),\n  channel TEXT,\n  direction TEXT,\n  content TEXT,\n  occurred_at TIMESTAMP DEFAULT now(),\n  workflow_source TEXT\n);\nALTER TABLE clients_master ADD COLUMN IF NOT EXISTS active_sequence_suppressed BOOLEAN DEFAULT false;",
+        "options": {}
+      },
+      "id": "e1a1f00b-0000-4000-8000-00000000000b",
+      "name": "[Manual] Schema Setup - run once",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1120,
+        540
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      },
+      "disabled": true,
+      "notes": "Disabled by default. Enable and execute once (manual trigger / single click) before this workflow goes live, then disable again. Sourced verbatim from this master plan's \u00a716.4 and \u00a716.5 - not invented."
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "reply.received",
+            "client_id": "={{$json.id}}",
+            "odoo_lead_id": "={{$json.odoo_lead_id}}",
+            "source_module": "4.3.3",
+            "payload": "={{ { channel: $('Validate & Normalize Reply Signal').item.json.channel, reply_content: $('Validate & Normalize Reply Signal').item.json.reply_content, occurred_at: $('Validate & Normalize Reply Signal').item.json.occurred_at, workflow_source: $('Validate & Normalize Reply Signal').item.json.workflow_source, active_sequence_suppressed: $json.active_sequence_suppressed } }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-4-3-3",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        140
+      ],
+      "notes": "S5.3 \u2014 reports the merged reply (whichever channel it came from) to Hub-Intake as event_type: reply.received, right after the single clients_master update this workflow already does. Fires regardless of which channel (email/whatsapp/linkedin) sent the reply, since all 3 route through this one node once 4.3.1/4.3.2 are rewired to call this workflow (see README \u2014 rewiring itself is a separate, not-yet-done step)."
+    }
+  ],
+  "connections": {
+    "4.3.3 Trigger - Reply Event In": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize Reply Signal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize Reply Signal": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid?": {
+      "main": [
+        [
+          {
+            "node": "Resolve client_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Invalid Reply Signal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve client_id": {
+      "main": [
+        [
+          {
+            "node": "Client Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client Found?": {
+      "main": [
+        [
+          {
+            "node": "Insert communication_events",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Unmatched Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert communication_events": {
+      "main": [
+        [
+          {
+            "node": "Update clients_master (reply + suppress)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update clients_master (reply + suppress)": {
+      "main": [
+        [
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report to Hub": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "errorWorkflow": ""
+  },
+  "meta": {
+    "planId": "4.3.3",
+    "planLabel": "Merge reply channels + nurture filter patch",
+    "subSteps": {
+      "4.3.3.1": "Merge node - email/WhatsApp/LinkedIn reply signals combine -> implemented as Resolve client_id + Insert communication_events + Update clients_master nodes above (single merge point all three channels call into, rather than a literal n8n Merge node, since 4.3.1/4.3.2 each fire independently as Execute Workflow calls into this same sub-workflow)",
+      "4.3.3.2": "2.2 Nurture 'already-replied' filter condition add -> see README.md, cannot be applied here since Module 2.2's actual workflow.json is not present in this upload; exact SQL patch given in README for manual application to 2.2's due-lead query node",
+      "4.3.3.3": "Replied-lead suppression test -> see README.md Test Checklist"
+    }
+  }
+}

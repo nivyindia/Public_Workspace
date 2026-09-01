@@ -1,0 +1,32 @@
+Simple hai, step by step:
+
+**1. Workflow ID milti kahan se hai**
+
+Jab tum n8n me koi bhi workflow import karte ho, n8n usko automatically ek unique ID de deta hai. Ye ID tumhe **browser ke URL me** dikhti hai jab wo workflow khuli ho:
+
+```
+https://tumhara-n8n.com/workflow/aBcD1234EfGh5678
+                                  ^^^^^^^^^^^^^^^^
+                                  yehi workflow ID hai
+```
+
+Ya n8n ke naye versions me workflow list se bhi copy kar sakte ho — workflow open karo, URL se ID copy kar lo.
+
+**2. Kaam karne ka sahi order (important)**
+
+1. Sabse pehle **Hub-Intake** (`phase-0-hub/hub-intake/workflow.json`) import karo → uski URL se ID copy karo
+2. Ab har spoke workflow (1.3, 1.4, 2.3, 2.4, etc.) me jitne bhi **"Report to Hub"** node hain, unme ye Hub-Intake wali ID daalni hai
+3. Fir baaki saare spokes (1.1 se 7.2 tak) import karo → har ek ki apni ID note karo
+4. Sabse aakhir me **Hub-Dispatcher** (`phase-0-hub/hub-dispatcher/workflow.json`) import karo, aur uske andar jitne "Execute Workflow - X.X" node hain, unme respective spoke ki ID daalo
+
+**3. ID kahan daalni hai (n8n ke UI me)**
+
+- Jis node me placeholder hai (jaise "Report to Hub" ya "Execute Workflow - 2.1 Outreach"), us node pe **double-click** karo
+- Node khulega, usme ek field hogi **"Workflow"** ya **"Workflow ID"**
+- Wahan pehle se `REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID` jaisa text likha hoga (kabhi-kabhi n8n dropdown se bhi workflow select karne ka option deta hai — agar dropdown hai to seedha wahan se select kar sakte ho naam se, ID type karne ki zaroorat nahi)
+- Us text ko delete karke actual ID paste kar do (ya dropdown se select kar lo)
+- Save karo
+
+**Chota tip:** Agar n8n ka version dropdown-select support karta hai (list me se workflow choose karna), to wo sabse aasan hai — manually ID paste karne ki zaroorat hi nahi padegi, bas naam se dhoondh ke select kar do.
+
+Koi node me confusion ho (kaunsa placeholder kis workflow ke liye hai), to batao — main us specific file me dekh ke exact node names bata dunga.

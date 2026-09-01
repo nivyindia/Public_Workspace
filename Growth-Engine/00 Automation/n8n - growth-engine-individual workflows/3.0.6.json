@@ -1,0 +1,240 @@
+{
+  "plan_id": "3.0.6.1",
+  "parent_workflow": "3.0.6",
+  "module": "2.5 Contract e-sign",
+  "type": "n8n-node-patch",
+  "name": "Calculate renewal_date",
+  "purpose": "Calculate renewal_date from contract_start and contract_term_months after contract signing.",
+
+  "node": {
+    "name": "3.0.6.1 - Calculate renewal_date",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "const contractStartRaw = $json.contract_start;\nconst termRaw = $json.contract_term_months;\n\nif (!contractStartRaw) {\n  throw new Error('CONTRACT_START_MISSING: contract_start is required to calculate renewal_date.');\n}\n\nconst term = Number(termRaw);\n\nif (!Number.isInteger(term) || term <= 0) {\n  throw new Error('INVALID_CONTRACT_TERM: contract_term_months must be a positive integer.');\n}\n\nconst start = new Date(contractStartRaw);\n\nif (Number.isNaN(start.getTime())) {\n  throw new Error('INVALID_CONTRACT_START: contract_start is not a valid date.');\n}\n\nconst renewal = new Date(start);\nrenewal.setMonth(renewal.getMonth() + term);\n\nconst renewal_date = renewal.toISOString().slice(0, 10);\n\nreturn [\n  {\n    json: {\n      ...$json,\n      renewal_date\n    }\n  }\n];"
+    }
+  },
+
+  "input_contract": {
+    "required": [
+      "contract_start",
+      "contract_term_months"
+    ]
+  },
+
+  "output_contract": {
+    "preserved_fields": "All existing input fields",
+    "new_field": "renewal_date",
+    "format": "YYYY-MM-DD"
+  },
+
+  "calculation": {
+    "formula": "renewal_date = contract_start + contract_term_months",
+    "unit": "months"
+  },
+
+  "validation": [
+    {
+      "case": "Valid contract_start and positive integer term",
+      "expected": "renewal_date is generated in YYYY-MM-DD format."
+    },
+    {
+      "case": "Missing contract_start",
+      "expected": "Workflow stops with CONTRACT_START_MISSING."
+    },
+    {
+      "case": "Invalid contract_start",
+      "expected": "Workflow stops with INVALID_CONTRACT_START."
+    },
+    {
+      "case": "Missing contract_term_months",
+      "expected": "Workflow stops here; missing/default handling belongs to 3.0.6.3."
+    },
+    {
+      "case": "Non-positive/non-integer term",
+      "expected": "Workflow stops with INVALID_CONTRACT_TERM."
+    }
+  ],
+
+  "integration": {
+    "previous_event": "Contract e-sign / accepted contract data",
+    "next_step": "3.0.6.2",
+    "next_purpose": "Write renewal_date into clients_master using Postgres."
+  },
+
+  "important_constraint": "Do not silently default a missing contract_term_months in this node; that is explicitly handled by 3.0.6.3.",
+
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.5_WORKFLOW_SCHEMA",
+    "reason": "The plan specifies the calculation but does not identify the exact upstream node or whether contract_start is already normalized to YYYY-MM-DD.",
+    "action": "Verify the actual 2.5 Contract e-sign workflow before production import."
+  }
+}
+
+
+
+{
+  "plan_id": "3.0.6.2",
+  "parent_workflow": "3.0.6",
+  "module": "2.5 Contract e-sign",
+  "type": "n8n-node-patch",
+  "name": "Write renewal_date to clients_master",
+  "purpose": "Persist the calculated renewal_date into the existing clients_master PostgreSQL record.",
+
+  "node": {
+    "name": "3.0.6.2 - Update clients_master renewal_date",
+    "type": "n8n-nodes-base.postgres",
+    "typeVersion": 2,
+    "parameters": {
+      "operation": "update",
+      "table": "clients_master",
+      "columns": {
+        "renewal_date": "={{ $json.renewal_date }}"
+      },
+      "where": {
+        "id": "={{ $json.client_id || $json.clients_master_id }} "
+      }
+    }
+  },
+
+  "input_contract": {
+    "required": [
+      "renewal_date"
+    ],
+    "record_identifier_required": [
+      "client_id",
+      "clients_master_id"
+    ]
+  },
+
+  "write_contract": {
+    "table": "clients_master",
+    "column": "renewal_date",
+    "data_type": "DATE",
+    "value": "={{ $json.renewal_date }}"
+  },
+
+  "validation": [
+    {
+      "case": "Valid renewal_date and valid clients_master record",
+      "expected": "Existing clients_master row is updated."
+    },
+    {
+      "case": "renewal_date missing",
+      "expected": "Do not write NULL accidentally; route to error handling."
+    },
+    {
+      "case": "clients_master identifier missing",
+      "expected": "Do not update an unspecified/wrong row."
+    },
+    {
+      "case": "No matching clients_master row",
+      "expected": "Update fails safely and is logged."
+    }
+  ],
+
+  "rules": [
+    "Update an existing clients_master record; do not create a new client row.",
+    "Only renewal_date should be changed by this node.",
+    "Preserve all other clients_master fields.",
+    "Use the existing PostgreSQL credential.",
+    "Do not hard-code database credentials.",
+    "Do not calculate renewal_date again here."
+  ],
+
+  "integration": {
+    "previous_step": "3.0.6.1",
+    "next_step": "3.0.6.3",
+    "next_purpose": "Validate/default missing contract_term_months."
+  },
+
+  "schema_reference": {
+    "table": "clients_master",
+    "column": "renewal_date",
+    "type": "DATE"
+  },
+
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.5_WORKFLOW_SCHEMA",
+    "reason": "The plan specifies the Postgres write but does not define the exact existing node credential or the exact clients_master row identifier used by 2.5.",
+    "action": "Verify the real 2.5 workflow and use its actual client-row identifier before production import."
+  }
+}
+
+
+{
+  "plan_id": "3.0.6.3",
+  "parent_workflow": "3.0.6",
+  "module": "2.5 Contract e-sign",
+  "type": "n8n-node-patch",
+  "name": "Validate / Default contract_term_months",
+  "purpose": "Handle missing or invalid contract_term_months before renewal_date calculation.",
+
+  "node": {
+    "name": "3.0.6.3 - Validate contract_term_months",
+    "type": "n8n-nodes-base.if",
+    "typeVersion": 2,
+    "parameters": {
+      "conditions": {
+        "number": [
+          {
+            "value1": "={{ Number($json.contract_term_months) }}",
+            "operation": "larger",
+            "value2": 0
+          }
+        ]
+      }
+    }
+  },
+
+  "branches": {
+    "true": {
+      "meaning": "Valid contract_term_months exists",
+      "action": "Continue with renewal_date calculation."
+    },
+    "false": {
+      "meaning": "Missing or invalid contract_term_months",
+      "action": "Route to explicit default/error handling."
+    }
+  },
+
+  "default_policy": {
+    "status": "NOT_DEFINED_BY_SOURCE",
+    "value": null,
+    "rule": "Do not silently invent a default duration.",
+    "recommended_implementation": "Use an explicit configured default only after the business-approved value is supplied."
+  },
+
+  "validation_rules": [
+    "contract_term_months must be present.",
+    "Value must be numeric.",
+    "Value must be greater than zero.",
+    "Prefer an integer number of months.",
+    "Do not silently assume a contract duration."
+  ],
+
+  "error_handling": {
+    "missing_field": "CONTRACT_TERM_MONTHS_MISSING",
+    "invalid_value": "INVALID_CONTRACT_TERM_MONTHS",
+    "action": "Stop renewal_date calculation or route to controlled exception handling."
+  },
+
+  "integration": {
+    "input": [
+      "contract_start",
+      "contract_term_months"
+    ],
+    "valid_output": "Continue to renewal_date calculation.",
+    "invalid_output": "Controlled validation/default branch."
+  },
+
+  "important_note": "The source says validate/default but does not specify the actual default value. Production implementation must obtain that business rule rather than inventing one.",
+
+  "source_gap": {
+    "status": "BUSINESS_RULE_REQUIRED",
+    "missing_information": [
+      "Approved default value for contract_term_months, if any.",
+      "Whether missing value should block the workflow or use the approved default."
+    ]
+  }
+}

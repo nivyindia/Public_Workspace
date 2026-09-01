@@ -1,0 +1,388 @@
+{
+  "plan_id": "3.0.4.1",
+  "parent_workflow": "3.0.4",
+  "module": "2.6 Invoice/Payment",
+  "type": "workflow-mapping",
+  "name": "Identify Existing Payment-Success Node/Branch",
+  "purpose": "Identify the exact existing 2.6 Invoice/Payment node and branch that represents a successfully completed payment, so 3.0.4.2 can attach the Execute Workflow node without creating a duplicate payment-success path.",
+  "scope": {
+    "source_workflow": "2.6 Invoice/Payment",
+    "target_workflow": "2.7 Onboarding",
+    "current_step": "3.0.4.1",
+    "next_step": "3.0.4.2"
+  },
+  "do_not_modify": [
+    "Do not create a new payment-success node.",
+    "Do not create the Execute Workflow node yet.",
+    "Do not modify existing payment business logic.",
+    "Do not change invoice/payment status.",
+    "Do not rewire existing payment branches."
+  ],
+  "required_mapping": {
+    "payment_success_node": {
+      "node_name": null,
+      "node_id": null,
+      "node_type": null
+    },
+    "success_branch": {
+      "branch_node_name": null,
+      "branch_node_id": null,
+      "output_index": null,
+      "condition": null
+    },
+    "upstream_payment_verification": {
+      "node_name": null,
+      "node_id": null
+    },
+    "available_output_fields": [
+      "lead_id",
+      "client_id",
+      "contract_id",
+      "invoice_id",
+      "payment_id",
+      "payment_status",
+      "contract_start",
+      "contract_term_months"
+    ]
+  },
+  "identification_rules": [
+    "Find the existing node that confirms payment success.",
+    "Prefer the branch that is already the authoritative payment-success path.",
+    "Record the exact node ID and node name from workflow.json.",
+    "Record the output branch/index that represents success.",
+    "Inspect the data available immediately after the success node.",
+    "Do not assume a node name or ID if it is not present in the actual workflow.json."
+  ],
+  "output_artifact": {
+    "mapping_status": "REQUIRES_ACTUAL_2.6_WORKFLOW_JSON",
+    "required_record": {
+      "source_workflow": "2.6 Invoice/Payment",
+      "payment_success_node_id": null,
+      "payment_success_node_name": null,
+      "success_output_index": null,
+      "success_condition": null,
+      "available_fields": [],
+      "target_workflow": "2.7 Onboarding"
+    }
+  },
+  "acceptance_criteria": [
+    "Exact payment-success node identified.",
+    "Exact success branch/output identified.",
+    "Node ID recorded.",
+    "Available downstream fields recorded.",
+    "No existing payment logic modified.",
+    "Mapping is sufficient for 3.0.4.2."
+  ],
+  "blocker": {
+    "status": "INPUT_REQUIRED",
+    "required_file": "Current 2.6 Invoice/Payment workflow.json",
+    "reason": "The Master Plan defines what must be identified but does not contain the actual node IDs or current workflow structure."
+  }
+}
+
+{
+  "plan_id": "3.0.4.2",
+  "parent_workflow": "3.0.4",
+  "module": "2.6 Invoice/Payment",
+  "type": "n8n-node-patch",
+  "name": "Payment Success -> Execute 2.7 Onboarding",
+  "purpose": "Trigger the existing 2.7 Onboarding workflow after the authoritative 2.6 payment-success branch.",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_WITH_2_7_ONBOARDING_WORKFLOW_ID"
+        },
+        "options": {}
+      },
+      "id": "3-0-4-2-execute-onboarding",
+      "name": "3.0.4.2 - Execute 2.7 Onboarding",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        0
+      ],
+      "notes": "Connect after the identified existing 2.6 payment-success branch. Replace the workflow ID with the actual 2.7 Onboarding workflow ID."
+    }
+  ],
+  "integration": {
+    "source": {
+      "workflow": "2.6 Invoice/Payment",
+      "branch": "Existing payment-success branch",
+      "connection": "Payment-success node -> Execute 2.7 Onboarding"
+    },
+    "target": {
+      "workflow": "2.7 Onboarding",
+      "execution_mode": "Existing workflow",
+      "input": "Data received from verified payment-success branch"
+    },
+    "next_step": "3.0.4.3"
+  },
+  "data_handling": {
+    "pass_through": true,
+    "required_fields_to_map_next": [
+      "lead_id",
+      "client_id",
+      "contract_id",
+      "invoice_id",
+      "payment_id",
+      "payment_status",
+      "contract_start",
+      "contract_term_months"
+    ],
+    "note": "Exact field mapping is intentionally handled in 3.0.4.3."
+  },
+  "security_rules": [
+    "Connect only from the authoritative payment-success branch.",
+    "Do not trigger onboarding from failed, pending, cancelled, or unverified payment branches.",
+    "Do not create a duplicate 2.7 onboarding workflow.",
+    "Do not hard-code an unverified workflow ID.",
+    "Preserve the verified payment context for downstream mapping."
+  ],
+  "validation": [
+    {
+      "case": "Successful payment",
+      "expected": "2.7 Onboarding workflow executes once."
+    },
+    {
+      "case": "Failed payment",
+      "expected": "2.7 Onboarding is not executed."
+    },
+    {
+      "case": "Pending payment",
+      "expected": "2.7 Onboarding is not executed."
+    },
+    {
+      "case": "Invalid webhook signature",
+      "expected": "2.7 Onboarding is not executed."
+    }
+  ],
+  "source_gap": {
+    "item": "Actual 2.7 workflow ID and exact 2.6 payment-success node ID are not provided by the Master Plan.",
+    "status": "REQUIRES_ACTUAL_WORKFLOW_JSON",
+    "action": "Replace the placeholder workflow ID and connect to the exact mapped payment-success node before import."
+  }
+}
+
+{
+  "plan_id": "3.0.4.3",
+  "parent_workflow": "3.0.4",
+  "module": "2.6 Invoice/Payment",
+  "type": "n8n-node-patch",
+  "name": "Payment Success -> 2.7 Onboarding Required Fields Mapping",
+  "purpose": "Map the payment-success data required by the 2.7 Onboarding workflow.",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const input = $json;\n\nconst source = input.payment_success || input;\n\nconst onboardingInput = {\n  lead_id: source.lead_id ?? input.lead_id ?? null,\n  client_id: source.client_id ?? input.client_id ?? null,\n  contract_id: source.contract_id ?? input.contract_id ?? null,\n  invoice_id: source.invoice_id ?? input.invoice_id ?? null,\n  payment_id: source.payment_id ?? input.payment_id ?? null,\n  payment_status: source.payment_status ?? input.payment_status ?? null,\n  contract_start: source.contract_start ?? input.contract_start ?? null,\n  contract_term_months: source.contract_term_months ?? input.contract_term_months ?? null\n};\n\nconst missingRequired = [\n  'lead_id',\n  'client_id'\n].filter(key => onboardingInput[key] === null || onboardingInput[key] === undefined || onboardingInput[key] === '');\n\nreturn [{\n  json: {\n    ...input,\n    onboarding_input: onboardingInput,\n    onboarding_mapping: {\n      valid: missingRequired.length === 0,\n      missing_required_fields: missingRequired,\n      mapped_at: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "3-0-4-3-onboarding-field-map",
+      "name": "3.0.4.3 - Map Payment Success -> Onboarding Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "notes": "lead_id and client_id are treated as minimum required identifiers. Other fields are preserved when available."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.onboarding_mapping.valid }}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "3-0-4-3-mapping-valid",
+      "name": "3.0.4.3 - Required Onboarding Fields Present?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "3.0.4.3 - Map Payment Success -> Onboarding Fields": {
+      "main": [
+        [
+          {
+            "node": "3.0.4.3 - Required Onboarding Fields Present?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "field_mapping": {
+    "lead_id": "Payment-success lead_id",
+    "client_id": "Payment-success client_id",
+    "contract_id": "Payment-success contract_id",
+    "invoice_id": "Payment-success invoice_id",
+    "payment_id": "Payment-success payment_id",
+    "payment_status": "Payment-success payment_status",
+    "contract_start": "Payment-success contract_start",
+    "contract_term_months": "Payment-success contract_term_months"
+  },
+  "integration": {
+    "previous_step": "3.0.4.2 - Execute 2.7 Onboarding",
+    "true_branch": "Pass mapped onboarding_input to the 2.7 Onboarding workflow.",
+    "false_branch": "Stop onboarding trigger and route to existing error/alert handling.",
+    "next_step": "3.0.4.4"
+  },
+  "security_rules": [
+    "Do not invent missing client identifiers.",
+    "Do not trigger onboarding when required identifiers are missing.",
+    "Do not modify the original payment record in this mapping step.",
+    "Preserve source payment-success data for auditability."
+  ],
+  "validation": [
+    {
+      "case": "lead_id and client_id present",
+      "expected": "onboarding_mapping.valid=true."
+    },
+    {
+      "case": "lead_id missing",
+      "expected": "valid=false and onboarding must not be triggered."
+    },
+    {
+      "case": "client_id missing",
+      "expected": "valid=false and onboarding must not be triggered."
+    },
+    {
+      "case": "Optional contract/payment fields missing",
+      "expected": "Mapping remains valid if required identifiers exist."
+    }
+  ],
+  "source_gap": {
+    "status": "FIELD_SCHEMA_NOT_FULLY_SPECIFIED",
+    "note": "The Master Plan explicitly mentions lead_id/client_id and contract details, but does not define the exact field names/schema of the existing 2.7 workflow. Confirm against the actual 2.7 workflow before production integration."
+  }
+}
+
+{
+  "plan_id": "3.0.4.4",
+  "parent_workflow": "3.0.4",
+  "module": "2.6 Invoice/Payment",
+  "type": "test-plan",
+  "name": "Payment Success -> 2.7 Onboarding End-to-End Pinned Data Test",
+  "purpose": "Verify that a successful payment can pass through the payment-success branch, Execute Workflow node, required field mapping, and reach the 2.7 Onboarding workflow correctly.",
+  "test_mode": "Pinned data / manual n8n test",
+  "workflow_chain": [
+    "2.6 Invoice/Payment",
+    "Existing payment-success branch",
+    "3.0.4.2 Execute 2.7 Onboarding",
+    "3.0.4.3 Required field mapping",
+    "2.7 Onboarding"
+  ],
+  "test_fixture": {
+    "payment_success": {
+      "lead_id": "TEST-LEAD-001",
+      "client_id": "TEST-CLIENT-001",
+      "contract_id": "TEST-CONTRACT-001",
+      "invoice_id": "TEST-INVOICE-001",
+      "payment_id": "TEST-PAYMENT-001",
+      "payment_status": "paid",
+      "contract_start": "2026-08-12",
+      "contract_term_months": 12
+    }
+  },
+  "test_cases": [
+    {
+      "id": "E2E-001",
+      "name": "Successful payment triggers onboarding",
+      "input": "Pinned successful-payment fixture",
+      "expected": [
+        "Payment-success branch executes.",
+        "3.0.4.2 Execute Workflow node executes.",
+        "3.0.4.3 mapping produces onboarding_input.",
+        "lead_id is preserved.",
+        "client_id is preserved.",
+        "contract details are preserved.",
+        "2.7 Onboarding receives the mapped data."
+      ],
+      "result": "PASS only if every expected condition is satisfied."
+    },
+    {
+      "id": "E2E-002",
+      "name": "Required field protection",
+      "input": "Fixture with lead_id removed",
+      "expected": [
+        "3.0.4.3 marks mapping invalid.",
+        "2.7 Onboarding is not triggered."
+      ],
+      "result": "PASS if onboarding is blocked."
+    },
+    {
+      "id": "E2E-003",
+      "name": "Client identifier protection",
+      "input": "Fixture with client_id removed",
+      "expected": [
+        "3.0.4.3 marks mapping invalid.",
+        "2.7 Onboarding is not triggered."
+      ],
+      "result": "PASS if onboarding is blocked."
+    },
+    {
+      "id": "E2E-004",
+      "name": "Contract data preservation",
+      "input": "Complete successful-payment fixture",
+      "expected": [
+        "contract_id remains unchanged.",
+        "contract_start remains unchanged.",
+        "contract_term_months remains unchanged."
+      ],
+      "result": "PASS if values arrive unchanged at onboarding."
+    }
+  ],
+  "manual_execution_steps": [
+    "Open the existing 2.6 Invoice/Payment workflow in n8n.",
+    "Locate the existing payment-success branch identified in 3.0.4.1.",
+    "Pin the successful-payment fixture to the appropriate test node.",
+    "Execute the payment-success branch manually.",
+    "Verify 3.0.4.2 executes the 2.7 Onboarding workflow.",
+    "Inspect 3.0.4.3 output.",
+    "Verify all required fields.",
+    "Inspect the 2.7 Onboarding execution input.",
+    "Repeat with missing lead_id.",
+    "Repeat with missing client_id.",
+    "Record the results."
+  ],
+  "pass_criteria": [
+    "Successful payment triggers exactly one onboarding execution.",
+    "lead_id reaches onboarding unchanged.",
+    "client_id reaches onboarding unchanged.",
+    "Contract information reaches onboarding unchanged.",
+    "Missing required identifiers prevent onboarding.",
+    "No duplicate onboarding execution occurs."
+  ],
+  "failure_handling": {
+    "onboarding_not_triggered": "Inspect 3.0.4.2 connection and target workflow ID.",
+    "fields_missing": "Inspect 3.0.4.3 mapping and actual 2.7 input schema.",
+    "duplicate_execution": "Inspect payment-success branch and webhook/event retry handling.",
+    "wrong_values": "Compare source payment-success data with 3.0.4.3 output and 2.7 input."
+  },
+  "evidence_to_record": [
+    "n8n execution ID",
+    "payment-success node output",
+    "3.0.4.2 execution result",
+    "3.0.4.3 onboarding_input",
+    "2.7 Onboarding execution ID",
+    "2.7 Onboarding received input",
+    "PASS/FAIL result for each test case"
+  ],
+  "source_constraints": {
+    "master_plan_requirement": "End-to-end pinned-data test",
+    "exact_test_values": "Not specified by Master Plan; fixture values in this file are synthetic test data.",
+    "production_data": "Do not use real customer/payment data for this test."
+  }
+}

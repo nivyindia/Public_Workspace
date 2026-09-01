@@ -1,0 +1,33 @@
+{
+  "step_id": "3.0.1.4",
+  "target_module": "2.5 - Contract + E-sign",
+  "purpose": "Verify the HMAC signature and expiry of the parsed proposal acceptance token before any acceptance action is allowed.",
+  "node": {
+    "parameters": {
+      "jsCode": "const crypto = require('crypto');\n\nif (!$json.token_valid_structure) {\n  return [{\n    json: {\n      ...$json,\n      token_verified: false,\n      token_error: $json.token_error ?? 'INVALID_TOKEN_STRUCTURE'\n    }\n  }];\n}\n\nconst secret = $env.PROPOSAL_ACCEPT_HMAC_SECRET;\nif (!secret) {\n  throw new Error('3.0.1.4: PROPOSAL_ACCEPT_HMAC_SECRET is not configured');\n}\n\nconst leadId = String($json.accept_token_lead_id);\nconst expiresAt = Number($json.accept_token_expires_at);\nconst suppliedSignature = String($json.accept_token_signature);\n\nconst payload = `${leadId}.${expiresAt}`;\n\nconst expectedSignature = crypto\n  .createHmac('sha256', secret)\n  .update(payload, 'utf8')\n  .digest('hex');\n\nconst signaturesMatch =\n  suppliedSignature.length === expectedSignature.length &&\n  crypto.timingSafeEqual(\n    Buffer.from(suppliedSignature, 'utf8'),\n    Buffer.from(expectedSignature, 'utf8')\n  );\n\nconst now = Math.floor(Date.now() / 1000);\nconst notExpired = Number.isInteger(expiresAt) && expiresAt > now;\n\nreturn [{\n  json: {\n    ...$json,\n    token_signature_valid: signaturesMatch,\n    token_not_expired: notExpired,\n    token_verified: signaturesMatch && notExpired,\n    token_verified_at: new Date().toISOString(),\n    token_error: signaturesMatch\n      ? (notExpired ? null : 'ACCEPT_TOKEN_EXPIRED')\n      : 'ACCEPT_TOKEN_SIGNATURE_INVALID'\n  }\n}];"
+    },
+    "id": "ge-3-0-1-4-hmac-verify",
+    "name": "Security - Verify HMAC Signature and Expiry",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "position": [
+      240,
+      0
+    ],
+    "notes": "Phase 3.0.1.4. This node establishes trust only after signature and expiry both pass. Never accept the proposal before token_verified=true."
+  },
+  "implementation_notes": [
+    "Uses the same PROPOSAL_ACCEPT_HMAC_SECRET used by 3.0.1.1.",
+    "Uses timingSafeEqual for signature comparison.",
+    "Expiry is checked against Unix time in seconds.",
+    "A valid signature with an expired timestamp is rejected.",
+    "A forged signature is rejected even if the token structure is valid."
+  ],
+  "test_cases": [
+    "Correct secret + unexpired token => token_verified=true.",
+    "Correct secret + expired token => token_verified=false and ACCEPT_TOKEN_EXPIRED.",
+    "Incorrect signature => token_verified=false and ACCEPT_TOKEN_SIGNATURE_INVALID.",
+    "Missing secret => workflow fails closed.",
+    "Malformed token from 3.0.1.3 => remains unverified."
+  ]
+}

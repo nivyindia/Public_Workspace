@@ -1,0 +1,607 @@
+{
+  "name": "4.2.2 - Dialer Trigger + Outcome Webhook",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "n1-execute-trigger",
+      "name": "From Module 4.2.1 (Call-List)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "call_list",
+        "options": {}
+      },
+      "id": "n2-split-call-list",
+      "name": "Split Out Call List",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "n3-loop-leads",
+      "name": "Loop Over Leads",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        620,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.VICIDIAL_URL}}/vicidial/non_agent_api.php",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{$env.VICIDIAL_SOURCE}}"
+            },
+            {
+              "name": "user",
+              "value": "={{$env.VICIDIAL_USER}}"
+            },
+            {
+              "name": "pass",
+              "value": "={{$env.VICIDIAL_PASS}}"
+            },
+            {
+              "name": "function",
+              "value": "add_lead"
+            },
+            {
+              "name": "phone_number",
+              "value": "={{$json.phone_number}}"
+            },
+            {
+              "name": "first_name",
+              "value": "={{$json.first_name}}"
+            },
+            {
+              "name": "last_name",
+              "value": "={{$json.last_name}}"
+            },
+            {
+              "name": "list_id",
+              "value": "={{$env.VICIDIAL_CAMPAIGN_LIST_ID}}"
+            },
+            {
+              "name": "custom_fields",
+              "value": "=Y"
+            },
+            {
+              "name": "lead_id_field",
+              "value": "={{$json.lead_id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n4-vicidial-add-lead",
+      "name": "VICIdial - Add Lead to Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        160
+      ],
+      "notes": "4.2.2.1. ⚠️ INPUT NEEDED (per Supprting_files.txt §23): VICIDIAL_URL, VICIDIAL_SOURCE, VICIDIAL_USER, VICIDIAL_PASS, VICIDIAL_CAMPAIGN_LIST_ID, plus SIP trunk/agent/campaign config on VICIdial/Asterisk side (not n8n). non_agent_api.php's exact param names shown here match VICIdial's documented API — verify against your actual VICIdial version. The call itself STAYS HUMAN (an agent dials from the campaign) — this node only queues the lead, it does not auto-dial. Do not invent SIP/carrier settings, per Supprting_files.txt's own instruction."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master SET call_attempts = COALESCE(call_attempts,0) + 1, last_call_at = now(), updated_at = now() WHERE odoo_lead_id = {{$json.lead_id}};"
+      },
+      "id": "n5-mark-call-queued",
+      "name": "Postgres - Mark Call Queued",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1060,
+        160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "call-outcome",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n10-outcome-webhook",
+      "name": "Call Outcome Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        560
+      ],
+      "webhookId": "call-outcome",
+      "notes": "VICIdial ka post-call 'URL Load Webform' / disposition-script feature isi URL ko call-outcome data ke saath POST karega (VICIdial admin -> Campaign -> Web Form Integration mein configure karna hoga — ⚠️ INPUT NEEDED)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst body = $input.item.json.body || {};\nconst receivedSecret = $input.item.json.headers['x-webhook-secret'] || $input.item.json.query.secret || '';\nlet valid = false;\ntry { valid = crypto.timingSafeEqual(Buffer.from(receivedSecret), Buffer.from($env.CALL_OUTCOME_WEBHOOK_SECRET)); } catch (e) { valid = false; }\nreturn [{ json: { ...body, sig_valid: valid } }];"
+      },
+      "id": "n11-verify-secret",
+      "name": "Verify Shared Secret",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        560
+      ],
+      "notes": "§16.2 standard: VICIdial ka webform-post native HMAC support nahi karta, isliye shared-secret (CALL_OUTCOME_WEBHOOK_SECRET) query-param/header approach use kiya — VICIdial ke Web Form Integration URL mein ?secret=... append karo."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-secret-valid",
+              "leftValue": "={{$json.sig_valid}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n12-if-secret-valid",
+      "name": "IF Secret Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseCode": 401,
+        "responseBody": "Invalid secret",
+        "options": {}
+      },
+      "id": "n12b-respond-401",
+      "name": "Respond 401 - Invalid Secret",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT 1 FROM webhook_events WHERE event_id = {{JSON.stringify($json.uniqueid || $json.call_id)}};",
+        "options": {}
+      },
+      "id": "n13-idempotency-check",
+      "name": "Postgres - Idempotency Check",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        760,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "§16.2 idempotency step — webhook_events table Phase 3.0's shared table hai (agar 3.0.1-3.0.3 patches already applied hain to migration.sql yahi table reuse karta hai; agar nahi to iss module ki migration.sql mein CREATE TABLE IF NOT EXISTS diya hai)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-already-processed",
+              "leftValue": "={{$json.count}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n14-if-new-event",
+      "name": "IF New Event (not duplicate)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        960,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK (duplicate, already processed)",
+        "options": {}
+      },
+      "id": "n14b-respond-duplicate",
+      "name": "Respond 200 OK (duplicate)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1160,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO webhook_events (event_id, source, status, raw_payload) VALUES ({{JSON.stringify($json.uniqueid || $json.call_id)}}, 'vicidial', 'processing', {{JSON.stringify($json)}}::jsonb) ON CONFLICT (event_id) DO NOTHING;"
+      },
+      "id": "n15-write-event-id",
+      "name": "Postgres - Write event_id (before processing)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1160,
+        440
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 4.2.2.3: outcome-payload parse\nconst body = $json;\nreturn [{ json: {\n  lead_id: body.lead_id || body.vendor_lead_code,\n  outcome: body.status || body.disposition || 'unknown', // e.g. SALE, NI (not interested), DNC, CALLBK, N/A\n  call_duration_sec: body.call_length || null,\n  agent: body.user || null,\n  event_id: body.uniqueid || body.call_id\n} }];"
+      },
+      "id": "n16-parse-outcome",
+      "name": "Parse Outcome Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        440
+      ],
+      "notes": "Field names (status/disposition/vendor_lead_code/uniqueid) VICIdial ki standard disposition-webform field-names hain — apni actual VICIdial webform config se verify karo."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET last_call_outcome = {{JSON.stringify($json.outcome)}},\n    last_call_at = now(),\n    call_dnc = CASE WHEN {{JSON.stringify($json.outcome)}} = 'DNC' THEN true ELSE call_dnc END,\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.lead_id}};",
+        "options": {}
+      },
+      "id": "n17-update-clients-master",
+      "name": "Postgres - Update Call Outcome",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1600,
+        440
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "4.2.2.4. Agent ne live call par DNC request mark ki to call_dnc turant true ho jata hai — 4.2.1 ki agli run se ye lead automatically exclude."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE webhook_events SET status = 'processed', processed_at = now() WHERE event_id = {{JSON.stringify($json.event_id)}};"
+      },
+      "id": "n18-mark-event-processed",
+      "name": "Postgres - Mark Event Processed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1820,
+        440
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Call outcome: lead ' + $json.lead_id + ' -> ' + $json.outcome)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n19-odoo-alert",
+      "name": "Odoo Discuss - Call Outcome Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2040,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "n20-respond-ok",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2260,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "call.outcome",
+            "client_id": null,
+            "odoo_lead_id": "={{$json.lead_id}}",
+            "source_module": "4.2.2",
+            "payload": "={{ { outcome: $json.outcome, call_duration_sec: $json.call_duration_sec, agent: $json.agent } }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-4-2-2",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1820,
+        320
+      ],
+      "notes": "S5.9 \u2014 real per-call outcome report (SALE/NI/DNC/CALLBK/etc.), unlike 4.2.1's batch-level call.outcome from S5.8 \u2014 same event_type as the plan specifies, so this is the event Phase 6 modules actually react to. odoo_lead_id comes from the parsed VICIdial payload (vendor_lead_code); client_id isn't available at this point so left null. Runs in parallel with the existing Postgres - Mark Event Processed / Odoo Discuss chain, off Postgres - Update Call Outcome, so a Hub failure can't block the webhook's 200 OK response."
+    }
+  ],
+  "connections": {
+    "From Module 4.2.1 (Call-List)": {
+      "main": [
+        [
+          {
+            "node": "Split Out Call List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Call List": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Leads": {
+      "main": [
+        [],
+        [
+          {
+            "node": "VICIdial - Add Lead to Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VICIdial - Add Lead to Campaign": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Call Queued",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Call Queued": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Outcome Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify Shared Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Shared Secret": {
+      "main": [
+        [
+          {
+            "node": "IF Secret Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Secret Valid": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Idempotency Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401 - Invalid Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Idempotency Check": {
+      "main": [
+        [
+          {
+            "node": "IF New Event (not duplicate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF New Event (not duplicate)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Write event_id (before processing)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 200 OK (duplicate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Write event_id (before processing)": {
+      "main": [
+        [
+          {
+            "node": "Parse Outcome Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Outcome Payload": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Update Call Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Update Call Outcome": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Event Processed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Event Processed": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Call Outcome Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo Discuss - Call Outcome Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

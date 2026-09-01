@@ -1,0 +1,432 @@
+{
+  "name": "2.1 - Multi-channel Outreach",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "n1-execute-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        320
+      ],
+      "notes": "Ye workflow Module 1.5 (Central CRM Sync) ke 'Execute Workflow - 2.1 Outreach' node se call hota hai jab lead stage = Qualified ho jaata hai. Input: odoo_lead_id, name, email, phone, company, current_stage."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "n2-fetch-lead",
+      "name": "Fetch Lead Detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "service_type, intent_summary, score jaisi details yahan se milti hain taaki outreach message personalized ho (1.3/1.4 me already save ho chuki hain)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a sales development rep for a digital agency called Nivy International (services: SEO, AI Automation, VA, Design, Video). Write a personalized first-touch outreach for this lead.\\n\\nName: {{$json.name}}\\nCompany: {{$json.company}}\\nService interest: {{$json.service_type}}\\nWhat they said: {{($json.intent_summary || '').replace(/\\\"/g, '\\\\\\\"').slice(0,500)}}\\n\\nReturn ONLY a valid JSON object with exactly these keys, no other text: email_subject (under 60 chars), email_body (120-180 words, friendly, ends with a clear call to book a call, plain text no markdown), linkedin_message (under 300 chars, casual, no hard sell), whatsapp_message (under 300 chars, casual, friendly opener).\"\n}"
+      },
+      "id": "n3-ollama-generate",
+      "name": "Ollama - Generate Outreach Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { email_subject: '', email_body: '', linkedin_message: '', whatsapp_message: '' };\n}\nconst lead = $('Fetch Lead Detail').item.json;\nreturn [{\n  json: {\n    odoo_lead_id: lead.odoo_lead_id,\n    name: lead.name,\n    email: lead.email,\n    phone: lead.phone,\n    company: lead.company,\n    email_subject: parsed.email_subject || 'Following up on your enquiry',\n    email_body: parsed.email_body || '',\n    linkedin_message: parsed.linkedin_message || '',\n    whatsapp_message: parsed.whatsapp_message || ''\n  }\n}];"
+      },
+      "id": "n4-parse-outreach",
+      "name": "Parse Outreach JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "emailFormat": "text",
+        "text": "={{$json.email_body}}",
+        "options": {}
+      },
+      "id": "n5-send-email",
+      "name": "Send Outreach Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1060,
+        160
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.WAHA_URL}}/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Api-Key",
+              "value": "={{$env.WAHA_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session\": \"{{$env.WAHA_SESSION}}\",\n  \"chatId\": \"{{$json.phone.replace(/[^0-9]/g, '')}}@c.us\",\n  \"text\": {{JSON.stringify($json.whatsapp_message)}}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n6-send-whatsapp",
+      "name": "Send WhatsApp (Waha)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        320
+      ],
+      "notes": "Waha ka /api/sendText endpoint aur auth header version ke hisaab se thoda differ kar sakta hai - https://waha.devlike.pro/docs ki official API reference se confirm kar lena. Agar lead ka phone number nahi hai to ye node skip ho jaayega (empty result, error nahi)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.activity\",\n      \"create\",\n      [ {\n        \"res_model\": \"crm.lead\",\n        \"res_id\": {{$json.odoo_lead_id}},\n        \"activity_type_id\": {{$env.ODOO_LINKEDIN_ACTIVITY_TYPE_ID}},\n        \"summary\": \"Send LinkedIn outreach message (AI-drafted)\",\n        \"note\": {{JSON.stringify($json.linkedin_message)}},\n        \"user_id\": {{$env.ODOO_SALES_USER_ID}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {}
+      },
+      "id": "n7-linkedin-task",
+      "name": "Odoo - Create LinkedIn Task (Semi-Automated)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        480
+      ],
+      "notes": "LinkedIn par direct automated messaging LinkedIn ke Terms of Service ke against hai aur account ban ka risk hai. Isliye ye step LinkedIn message khud nahi bhejta - Ollama-drafted message ke saath Odoo me ek activity/task bana deta hai jise sales rep 1-click me copy-paste karke manually LinkedIn par bhej sakta hai. Agar aap apna khud ka LinkedIn automation tool (jaise Unipile/PhantomBuster - apne risk par) use karna chahte ho to yahan HTTP node replace kar sakte ho."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Contacted',\n    last_outreach_at = now(),\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n8-update-master",
+      "name": "Update clients_master (Contacted)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1280,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "postal-reply-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n9-reply-webhook",
+      "name": "Postal Inbound Reply Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        640
+      ],
+      "notes": "Postal me Settings > Webhooks me 'MessageBounced'/'MessageDeliveryFailed' ke alawa inbound route bhi configure karo taaki reply aane par ye URL call ho. Postal docs: https://docs.postalserver.io/"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Replied', updated_at = now()\nWHERE email = {{JSON.stringify($json.body.mail_from || $json.body.from)}}\nRETURNING id, odoo_lead_id, name;",
+        "options": {}
+      },
+      "id": "n10-mark-replied",
+      "name": "Mark Lead as Replied",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        640
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Postal ka inbound webhook payload field name (from/mail_from) apne Postal version ke actual payload se confirm kar lena test email bhej ke."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Lead replied: ' + ($json.name || 'unknown') + ' - check inbox and follow up!')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n11-discuss-reply-alert",
+      "name": "Odoo Discuss - Notify Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\" }",
+        "options": {}
+      },
+      "id": "n12-respond-postal",
+      "name": "Respond to Postal",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "lead.replied",
+            "client_id": "={{$json.id}}",
+            "odoo_lead_id": "={{$json.odoo_lead_id}}",
+            "source_module": "2.1",
+            "payload": "={{ { name: $json.name } }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-2-1",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        780
+      ],
+      "notes": "S4.1 \u2014 reply-received path reports lead.replied to Hub-Intake. Runs in parallel with the existing Odoo Discuss alert, doesn't block the Postal webhook response. Not yet wired into Hub-Dispatcher (per S0-EVENT-TYPE-TAXONOMY.md nothing subscribes to lead.replied yet, so it falls through to flagged_events by design \u2014 add a Dispatcher branch later if a consumer module needs it)."
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Lead Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Lead Detail": {
+      "main": [
+        [
+          {
+            "node": "Ollama - Generate Outreach Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Generate Outreach Messages": {
+      "main": [
+        [
+          {
+            "node": "Parse Outreach JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Outreach JSON": {
+      "main": [
+        [
+          {
+            "node": "Send Outreach Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp (Waha)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Odoo - Create LinkedIn Task (Semi-Automated)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Outreach Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Update clients_master (Contacted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp (Waha)": {
+      "main": [
+        [
+          {
+            "node": "Update clients_master (Contacted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Create LinkedIn Task (Semi-Automated)": {
+      "main": [
+        [
+          {
+            "node": "Update clients_master (Contacted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postal Inbound Reply Webhook": {
+      "main": [
+        [
+          {
+            "node": "Mark Lead as Replied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Lead as Replied": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Notify Reply",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo Discuss - Notify Reply": {
+      "main": [
+        [
+          {
+            "node": "Respond to Postal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "1825a46d7bb76459"
+}

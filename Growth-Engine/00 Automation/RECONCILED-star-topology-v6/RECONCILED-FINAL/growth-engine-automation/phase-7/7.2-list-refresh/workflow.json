@@ -1,0 +1,98 @@
+{
+    "name": "7.2 - Segmented List Auto-Refresh",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "0 5 * * *"
+                        }
+                    ]
+                }
+            },
+            "id": "n1-daily-trigger",
+            "name": "Daily 5AM",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                200,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "ALTER TABLE clients_master ADD COLUMN IF NOT EXISTS list_segment TEXT;\n\nUPDATE clients_master SET list_segment = CASE\n  WHEN status = 'New' THEN 'fresh_lead'\n  WHEN status IN ('Qualified','Contacted','Replied') AND score = 'hot' THEN 'hot_active_outreach'\n  WHEN status IN ('Nurtured') THEN 'long_term_nurture'\n  WHEN status IN ('Onboarded','Active') THEN 'active_client'\n  WHEN status = 'Churn Risk' THEN 'churn_risk'\n  WHEN promoter_flag = true THEN 'promoter'\n  ELSE list_segment\nEND;\n\nSELECT list_segment, count(*) AS segment_count FROM clients_master GROUP BY list_segment;",
+                "options": {}
+            },
+            "id": "n2-refresh-segments",
+            "name": "Postgres - Refresh list_segment Tags",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2.5,
+            "position": [
+                420,
+                260
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Odoo Postgres"
+                }
+            },
+            "notes": "Adds list_segment as a live-computed tag on clients_master itself (matches this build's own rule: extend the existing table with ALTER...ADD COLUMN IF NOT EXISTS, no new parallel table for the same entity). Segment names are a starting set -- add more CASE branches as new segments are needed for Stage 14 list-building use cases."
+        },
+        {
+            "parameters": {
+                "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+                "workflowInputs": {
+                    "value": {
+                        "event_type": "list_segment.refreshed",
+                        "client_id": "={{ null }}",
+                        "odoo_lead_id": "={{ null }}",
+                        "source_module": "7.2",
+                        "payload": "={{ { segment_counts: $input.all().map(i => i.json) } }}"
+                    }
+                },
+                "options": {}
+            },
+            "id": "report-to-hub-7-2",
+            "name": "Report to Hub",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                660,
+                380
+            ],
+            "notes": "S6-gap-fill \u2014 IMPORTANT DEVIATION from usual convention: 7.2 ye ek bulk, all-rows-at-once UPDATE hai (no WHERE clause, no single lead/client), isliye ismein client_id/odoo_lead_id wala per-lead shape fit hi nahi baithta jaisa baaki har module me hai. client_id/odoo_lead_id dono explicitly null bheje hain (Hub-Intake ye already handle karta hai -- 'client_id ?? null', S1.1 ke notes dekho). event_type naya hai: list_segment.refreshed -- taxonomy doc me pehle se nahi tha, is batch me add kiya, 1.3 ke lead.captured jaisa hi treat kiya (purely informational/traceability ke liye, koi consumer abhi nahi, Dispatcher me wire nahi kiya). Postgres query me ek SELECT...GROUP BY add kiya sirf isliye taaki payload me kuch meaningful (per-segment counts) jaaye, warna UPDATE ke baad koi useful row hi nahi milta report karne ko."
+        }
+    ],
+    "connections": {
+        "Daily 5AM": {
+            "main": [
+                [
+                    {
+                        "node": "Postgres - Refresh list_segment Tags",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Postgres - Refresh list_segment Tags": {
+            "main": [
+                [
+                    {
+                        "node": "Report to Hub",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1"
+    }
+}

@@ -1,0 +1,211 @@
+{
+  "plan_id": "3.1.2.1",
+  "parent_workflow": "3.1.2",
+  "module": "LinkedIn hiring-posts scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Wrap LinkedIn Hiring Posts Scraper as Subworkflow",
+  "purpose": "Make the existing LinkedIn hiring-posts scraper callable as a reusable n8n sub-workflow.",
+
+  "required_change": {
+    "action": "ADD_CALLABLE_ENTRY_POINT",
+    "node": {
+      "name": "3.1.2.1 - Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger"
+    }
+  },
+
+  "target_flow": [
+    "Execute Workflow Trigger",
+    "Existing LinkedIn hiring-posts scraper",
+    "Output"
+  ],
+
+  "rules": [
+    "Reuse the existing LinkedIn scraper.",
+    "Do not rebuild the scraper.",
+    "Do not change its core scraping logic.",
+    "Do not hard-code search parameters.",
+    "Keep the workflow callable by the Master Orchestrator."
+  ],
+
+  "integration": {
+    "next_step": "3.1.2.2",
+    "next_purpose": "Add input-parameter node."
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_LINKEDIN_WORKFLOW_REQUIRED",
+    "reason": "Source specifies the sub-workflow wrap but not the existing trigger/node IDs.",
+    "action": "Apply this to the actual LinkedIn scraper workflow."
+  }
+}
+
+{
+  "plan_id": "3.1.2.2",
+  "parent_workflow": "3.1.2",
+  "module": "LinkedIn hiring-posts scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "LinkedIn Hiring Posts Input Parameters",
+  "purpose": "Validate and pass the input parameters required by the LinkedIn hiring-posts scraper.",
+
+  "node": {
+    "name": "3.1.2.2 - LinkedIn Input Parameters",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "const keyword = String($json.keyword || $json.search_query || '').trim();\nconst location = String($json.location || '').trim();\n\nif (!keyword) {\n  throw new Error('LINKEDIN_SEARCH_KEYWORD_MISSING');\n}\n\nif (!location) {\n  throw new Error('LINKEDIN_LOCATION_MISSING');\n}\n\nreturn [{\n  json: {\n    ...$json,\n    keyword,\n    location\n  }\n}];"
+    }
+  },
+
+  "input_contract": {
+    "required": [
+      "keyword",
+      "location"
+    ]
+  },
+
+  "output_contract": {
+    "keyword": "string",
+    "location": "string"
+  },
+
+  "rules": [
+    "Do not hard-code the keyword.",
+    "Do not hard-code the location.",
+    "Preserve additional orchestrator input.",
+    "Do not perform scraping in this node."
+  ],
+
+  "validation": [
+    "Reject missing keyword.",
+    "Reject missing location.",
+    "Trim whitespace."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.2.1",
+    "next_step": "3.1.2.3"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_LINKEDIN_SCRAPER_SCHEMA_REQUIRED",
+    "reason": "The source only identifies an input-parameter node and does not specify exact scraper input field names.",
+    "action": "Map these inputs to the actual existing LinkedIn scraper parameters during integration."
+  }
+}
+
+{
+  "plan_id": "3.1.2.3",
+  "parent_workflow": "3.1.2",
+  "module": "LinkedIn hiring-posts scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Normalize LinkedIn Hiring Posts Output",
+  "purpose": "Convert LinkedIn hiring-post results into the project's common lead schema.",
+
+  "node": {
+    "name": "3.1.2.3 - Normalize LinkedIn Output",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "return items.map(item => {\n  const data = item.json;\n\n  return {\n    json: {\n      name: data.name ?? data.company_name ?? data.company ?? null,\n      phone: data.phone ?? data.phone_number ?? null,\n      email: data.email ?? null,\n      website: data.website ?? data.company_website ?? null,\n      source: 'linkedin_hiring_post'\n    }\n  };\n});"
+    }
+  },
+
+  "common_schema": {
+    "fields": [
+      "name",
+      "phone",
+      "email",
+      "website",
+      "source"
+    ]
+  },
+
+  "source": "linkedin_hiring_post",
+
+  "rules": [
+    "Every output item must use the common lead schema.",
+    "Do not fabricate missing contact information.",
+    "Missing values remain null.",
+    "Do not perform enrichment here.",
+    "Do not perform deduplication here."
+  ],
+
+  "validation": [
+    {
+      "case": "Multiple hiring-post results",
+      "expected": "Each result becomes one normalized lead item."
+    },
+    {
+      "case": "Email unavailable",
+      "expected": "email = null."
+    },
+    {
+      "case": "Website unavailable",
+      "expected": "website = null."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.1.2.2",
+    "next_step": "3.1.2.4"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_LINKEDIN_OUTPUT_SCHEMA_REQUIRED",
+    "reason": "The master specification does not define the exact fields emitted by the existing LinkedIn scraper.",
+    "action": "Map the actual scraper output fields to the common schema before production use."
+  }
+}
+
+{
+  "plan_id": "3.1.2.4",
+  "parent_workflow": "3.1.2",
+  "module": "LinkedIn hiring-posts scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "LinkedIn Hiring Posts Error Handling",
+  "purpose": "Provide a controlled error-handling branch for the LinkedIn hiring-posts scraper.",
+
+  "node": {
+    "name": "3.1.2.4 - LinkedIn Error Handler",
+    "type": "n8n-nodes.base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "const data = $json;\n\nconst hasResults = Array.isArray(data.results)\n  ? data.results.length > 0\n  : Object.keys(data).length > 0;\n\nif (!hasResults) {\n  return [{\n    json: {\n      ...data,\n      success: false,\n      error_type: 'NO_RESULTS',\n      source: 'linkedin_hiring_post',\n      results_count: 0\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...data,\n    success: true,\n    error_type: null,\n    source: 'linkedin_hiring_post'\n  }\n}];"
+    }
+  },
+
+  "rules": [
+    "Do not fabricate leads when there are no results.",
+    "Do not silently treat scraper failure as successful output.",
+    "Preserve the LinkedIn source identifier.",
+    "Do not add retry logic unless separately specified."
+  ],
+
+  "validation": [
+    {
+      "case": "Results available",
+      "expected": "success=true."
+    },
+    {
+      "case": "Zero results",
+      "expected": "success=false and error_type=NO_RESULTS."
+    },
+    {
+      "case": "Scraper/API error",
+      "expected": "Existing workflow error path must remain distinguishable from successful output."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.1.2.3",
+    "status": "FINAL_STEP_OF_3.1.2",
+    "next_step": "3.1.3.1"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_LINKEDIN_ERROR_SCHEMA_REQUIRED",
+    "reason": "Source only specifies an error-handling branch and does not define the existing scraper's exact error payload.",
+    "action": "Map this branch to the actual LinkedIn scraper error/result structure."
+  }
+}

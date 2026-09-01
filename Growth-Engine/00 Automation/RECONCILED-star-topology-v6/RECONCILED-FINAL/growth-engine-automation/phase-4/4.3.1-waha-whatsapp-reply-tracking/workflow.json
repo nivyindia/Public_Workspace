@@ -1,0 +1,495 @@
+{
+  "name": "4.3.1 - Waha WhatsApp Reply Tracking",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 4.3.1 \u2014 Waha WhatsApp Reply Tracking\n\n**Plan ID:** 4.3.1 (Phase 4 \u2014 Missing Channels + Reply Tracking)\n**Sub-steps covered:** 4.3.1.1 (webhook), 4.3.1.2 (parse), 4.3.1.3 (Postgres update)\n\n**Purpose:** Waha fires this webhook on every inbound/outbound WhatsApp event. This workflow filters for genuine inbound replies (fromMe=false) from a known lead/client, and updates `clients_master.last_reply_channel` / `last_reply_at`.\n\n**Feeds into (not built yet):**\n- 4.3.2 LinkedIn reply-check polling\n- 4.3.3 Merge reply channels + nurture-suppression patch (adds `AND status != 'Replied'`-style filter into Module 2.2)\n\n**ONE-TIME SETUP:** run the disconnected \"ONE-TIME SETUP\" Postgres node below manually once before activating this workflow (adds the two columns this workflow writes to).",
+        "height": 400,
+        "width": 460
+      },
+      "id": "sticky-overview",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## \u26a0\ufe0f ONE-TIME SETUP \u2014 run manually before activating\n\nThis node is intentionally NOT connected to the trigger. Open it and click \"Execute Node\" once, manually, before you activate this workflow. It adds the two columns Phase 3 already reserved for Phase 4.3 (see master tracker \u00a710A.1 / \u00a711) using the mandatory `ADD COLUMN IF NOT EXISTS` pattern \u2014 safe to re-run.",
+        "height": 220,
+        "width": 380
+      },
+      "id": "sticky-migration",
+      "name": "Migration Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "ALTER TABLE clients_master ADD COLUMN IF NOT EXISTS last_reply_channel TEXT;\nALTER TABLE clients_master ADD COLUMN IF NOT EXISTS last_reply_at TIMESTAMP;",
+        "options": {}
+      },
+      "id": "pg-migration",
+      "name": "ONE-TIME SETUP - Add Reply Tracking Columns",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -160,
+        280
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Disconnected on purpose \u2014 run manually once. See Migration Note sticky."
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "waha-whatsapp-reply",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-waha-inbound",
+      "name": "4.3.1.1 - Waha Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        260,
+        -420
+      ],
+      "webhookId": "waha-whatsapp-reply-tracking"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 4.3.1.2 - Message-payload parse Code node\n// Validates a shared-secret header (configure the SAME value in n8n env var\n// WAHA_WEBHOOK_SECRET and in Waha's webhook config as a custom header),\n// then parses/normalizes the Waha event payload.\n//\n// NOTE: Waha's webhook config does not have a built-in HMAC signature scheme\n// documented in the source material (unlike Documenso/Cal.com/payment webhooks\n// in Phase 3.0). A shared-secret header is used here as the minimum viable\n// auth check. If Nivy confirms Waha supports HMAC signing on this Waha version,\n// upgrade this to the same verify-signature pattern as 3.0.1.3/3.0.1.4 \u2014 flagged\n// here rather than invented.\n\nconst item = $input.item.json;\nconst body = item.body || item;\nconst headers = item.headers || {};\n\nconst expectedSecret = $env.WAHA_WEBHOOK_SECRET || '';\nconst providedSecret = headers['x-webhook-secret'] || headers['X-Webhook-Secret'] || '';\n// If no secret is configured yet, auth check is skipped (open) \u2014 this must be\n// closed before go-live, same category as the other unauthenticated webhooks\n// already flagged in \u00a710A.5 of the master tracker.\nconst isAuthValid = expectedSecret !== '' ? providedSecret === expectedSecret : true;\n\n// Expected Waha payload shape (session webhook, event-based):\n// { event: \"message\", session: \"default\", payload: { id, timestamp, from, fromMe, body, ... } }\nconst event = body.event || null;\nconst payload = body.payload || {};\n\nconst fromMe = payload.fromMe === true;\nconst rawFrom = payload.from || payload.chatId || '';\nconst digitsOnly = String(rawFrom).replace(/[^0-9]/g, '');\nconst normalizedPhone = digitsOnly ? ('+' + digitsOnly) : null;\n\nconst messageText = (payload.body || payload.text || '').toString().slice(0, 2000);\nconst waMessageId = payload.id || null;\nconst messageTimestamp = payload.timestamp\n  ? new Date(Number(payload.timestamp) * 1000).toISOString()\n  : new Date().toISOString();\n\nconst isMessageEvent = event === 'message' || event === 'message.any';\nconst isInboundReply = Boolean(isMessageEvent && fromMe === false && normalizedPhone);\n\nreturn [{\n  json: {\n    isAuthValid,\n    event,\n    fromMe,\n    normalizedPhone,\n    messageText,\n    waMessageId,\n    messageTimestamp,\n    isInboundReply\n  }\n}];"
+      },
+      "id": "code-parse-payload",
+      "name": "4.3.1.2 - Validate & Parse Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.isAuthValid}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-auth-valid",
+      "name": "Auth Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        700,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"unauthorized\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "respond-401",
+      "name": "Respond 401 - Auth Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.isInboundReply}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-inbound-reply",
+      "name": "Is Inbound Reply?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        920,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"ignored\", \"reason\": \"not an inbound message event\" } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-ignored",
+      "name": "Respond 200 - Ignored",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1140,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, phone\nFROM clients_master\nWHERE regexp_replace(phone, '\\D', '', 'g') = regexp_replace($1, '\\D', '', 'g')\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{$json.normalizedPhone}}"
+        }
+      },
+      "id": "pg-find-client",
+      "name": "Find Client By Phone",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "alwaysOutputData": true,
+      "position": [
+        1140,
+        -180
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "alwaysOutputData=true so a no-match case still produces one item (carrying the upstream fields, with no 'id') instead of silently dropping \u2014 this is what lets the Unmatched branch below run at all."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalizes the 'found vs not found' shape from the Postgres node above into\n// an explicit boolean, since a 0-row SELECT + alwaysOutputData just re-emits\n// the input item (no 'id' field) rather than an item with id=null.\nconst j = $input.item.json;\nreturn [{\n  json: {\n    ...j,\n    clientFound: Boolean(j.id),\n    clientId: j.id || null\n  }\n}];"
+      },
+      "id": "code-client-found-flag",
+      "name": "Compute Client Found Flag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.clientFound}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-client-found",
+      "name": "Client Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1580,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET last_reply_channel = 'whatsapp',\n    last_reply_at = $1,\n    updated_at = now()\nWHERE id = $2;",
+        "options": {
+          "queryReplacement": "={{ [$json.messageTimestamp, $json.clientId] }}"
+        },
+        "onError": "continueErrorOutput"
+      },
+      "id": "pg-update-reply",
+      "name": "4.3.1.3 - Update last_reply_channel/at",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1800,
+        -300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_ODOO_POSTGRES_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Idempotent by construction: repeated deliveries of the same webhook event just overwrite last_reply_at/channel with the same values, never create a duplicate row."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"ok\", \"client_id\": $json.clientId, \"last_reply_channel\": \"whatsapp\" } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-success",
+      "name": "Respond 200 - Updated",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2020,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Postgres update failed after a match was found. No retry/alert queue exists\n// yet for this module (same known-gap pattern as Modules 1.1/1.3/2.3 \u2014 see\n// master tracker \u00a710A.3). Logged to n8n's own execution log via this node so\n// it's at least visible in Executions, not silently lost.\nconst j = $input.item.json;\nreturn [{ json: { ...j, updateFailed: true } }];"
+      },
+      "id": "code-log-update-failure",
+      "name": "Log Update Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2020,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"error\", \"reason\": \"db update failed\", \"client_id\": $json.clientId } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-update-failed",
+      "name": "Respond 200 - Update Failed (logged)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inbound message from a phone number not found in clients_master \u2014 could be\n// a wrong number, a non-lead contact, or a lead whose phone was stored in a\n// different format. No action taken beyond logging; matches this module's\n// stated scope (reply tracking for known leads/clients only).\nconst j = $input.item.json;\nreturn [{ json: { ...j, unmatchedPhone: j.normalizedPhone } }];"
+      },
+      "id": "code-log-unmatched",
+      "name": "Log Unmatched Number",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"ok\", \"matched\": false } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-unmatched",
+      "name": "Respond 200 - Unmatched",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2020,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "reply.received",
+            "client_id": "={{$json.clientId}}",
+            "odoo_lead_id": "={{$json.odoo_lead_id}}",
+            "source_module": "4.3.1",
+            "payload": "={{ { channel: 'whatsapp', message_text: $json.messageText, wa_message_id: $json.waMessageId, reply_at: $json.messageTimestamp, phone: $json.normalizedPhone } }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-4-3-1",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2020,
+        -480
+      ],
+      "notes": "S5.1 \u2014 fires in parallel off '4.3.1.3 - Update last_reply_channel/at' success output, same branch as 'Respond 200 - Updated', so the webhook response isn't blocked waiting on the Hub round trip (same non-blocking pattern as Report to Hub in 1.4/1.5/2.3/2.5). client_id is $json.clientId (set by 'Compute Client Found Flag', guaranteed non-null on this branch since it only runs after 'Client Found?' passes true). odoo_lead_id is not selected by 'Find Client By Phone' (id, name, phone only) so this resolves to null/undefined \u2014 same as the 2.5 Report to Hub node when odoo_lead_id isn't in scope; funnel_events.odoo_lead_id is nullable so this is safe, not a silently invented value. NOTE: Hub-Dispatcher does not have a reply.received branch wired yet (S5b/S5.4 consumes it) \u2014 until that Switch branch is added, these events land in funnel_events and fall through to flagged_events, same safety net every other not-yet-wired event type gets."
+    }
+  ],
+  "connections": {
+    "4.3.1.1 - Waha Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "4.3.1.2 - Validate & Parse Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4.3.1.2 - Validate & Parse Payload": {
+      "main": [
+        [
+          {
+            "node": "Auth Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Valid?": {
+      "main": [
+        [
+          {
+            "node": "Is Inbound Reply?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401 - Auth Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Inbound Reply?": {
+      "main": [
+        [
+          {
+            "node": "Find Client By Phone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 200 - Ignored",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Client By Phone": {
+      "main": [
+        [
+          {
+            "node": "Compute Client Found Flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Client Found Flag": {
+      "main": [
+        [
+          {
+            "node": "Client Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client Found?": {
+      "main": [
+        [
+          {
+            "node": "4.3.1.3 - Update last_reply_channel/at",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Unmatched Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4.3.1.3 - Update last_reply_channel/at": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 - Updated",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Update Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Update Failure": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 - Update Failed (logged)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Unmatched Number": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 - Unmatched",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

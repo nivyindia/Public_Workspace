@@ -1,0 +1,343 @@
+{
+    "name": "1.1 - Content to Social Factory",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "minutes",
+                            "minutesInterval": 30
+                        }
+                    ]
+                }
+            },
+            "id": "n1-schedule-trigger",
+            "name": "Every 30 Min",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                240,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT bp.id, bp.name, bp.subtitle, bp.content, bp.write_date\nFROM blog_post bp\nLEFT JOIN n8n_processed_posts pp ON pp.post_id = bp.id\nWHERE bp.is_published = true\n  AND pp.post_id IS NULL\nORDER BY bp.write_date ASC\nLIMIT 5;",
+                "options": {}
+            },
+            "id": "n2-get-new-posts",
+            "name": "Get New Published Blog Posts",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2.5,
+            "position": [
+                460,
+                300
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Odoo Postgres"
+                }
+            },
+            "notes": "NOTE: blog_post is Odoo's actual table for Website Blog posts. Run this once first: CREATE TABLE n8n_processed_posts (post_id INTEGER PRIMARY KEY, processed_at TIMESTAMP DEFAULT now());"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://localhost:11434/api/generate",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"model\": \"qwen2.5:7b\",\n  \"stream\": false,\n  \"prompt\": \"You are a social media copywriter for a digital marketing/IT/AI agency called Nivy. Rewrite the following blog post into 4 platform-specific social posts.\\n\\nBlog Title: {{$json.name.replace(/\\\"/g, '\\\\\\\"')}}\\nBlog Content: {{$json.content.replace(/<[^>]*>/g, ' ').replace(/\\\"/g, '\\\\\\\"').slice(0,2500)}}\\n\\nReturn ONLY a valid JSON object with exactly these 4 keys, no other text before or after: linkedin (150-200 words, professional tone, 2-3 relevant hashtags), twitter (under 280 characters, punchy hook), instagram (casual tone with emojis, 5-8 hashtags at the end), facebook (80-120 words, conversational tone).\"\n}"
+            },
+            "id": "n3-ollama-rewrite",
+            "name": "Ollama - Rewrite for All Platforms",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                680,
+                300
+            ],
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+        },
+        {
+            "parameters": {
+                "jsCode": "const response = $input.item.json.response || '';\nlet parsed = {};\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  const match = response.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : { linkedin: '', twitter: '', instagram: '', facebook: '' };\n}\n\nconst original = $('Get New Published Blog Posts').item.json;\n\nreturn [{\n  json: {\n    post_id: original.id,\n    post_title: original.name,\n    post_url: 'https://REPLACE-WITH-YOUR-DOMAIN.com/blog/' + original.id,\n    linkedin: parsed.linkedin || '',\n    twitter: parsed.twitter || '',\n    instagram: parsed.instagram || '',\n    facebook: parsed.facebook || ''\n  }\n}];"
+            },
+            "id": "n4-parse-json",
+            "name": "Parse Platform Posts JSON",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                900,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.MIXPOST_URL}}/api/{{$env.MIXPOST_WORKSPACE_UUID}}/posts",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "=Bearer {{$env.MIXPOST_TOKEN}}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"accounts\": [\"{{$env.MIXPOST_LINKEDIN_ACCOUNT_ID}}\"],\n  \"content\": [ { \"body\": {{JSON.stringify($json.linkedin + '\\n\\n' + $json.post_url)}} } ],\n  \"schedule\": { \"now\": true }\n}",
+                "options": {
+                    "response": {
+                        "response": {
+                            "neverError": true
+                        }
+                    }
+                }
+            },
+            "id": "n5-mixpost-linkedin",
+            "name": "Mixpost - Post LinkedIn",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1140,
+                120
+            ],
+            "notes": "VERIFY exact body schema against https://docs.mixpost.app/api/posts/create/ for your installed Mixpost version before going live.",
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.MIXPOST_URL}}/api/{{$env.MIXPOST_WORKSPACE_UUID}}/posts",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "=Bearer {{$env.MIXPOST_TOKEN}}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"accounts\": [\"{{$env.MIXPOST_X_ACCOUNT_ID}}\"],\n  \"content\": [ { \"body\": {{JSON.stringify($json.twitter)}} } ],\n  \"schedule\": { \"now\": true }\n}",
+                "options": {
+                    "response": {
+                        "response": {
+                            "neverError": true
+                        }
+                    }
+                }
+            },
+            "id": "n6-mixpost-x",
+            "name": "Mixpost - Post X",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1140,
+                260
+            ],
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.MIXPOST_URL}}/api/{{$env.MIXPOST_WORKSPACE_UUID}}/posts",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "=Bearer {{$env.MIXPOST_TOKEN}}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"accounts\": [\"{{$env.MIXPOST_INSTAGRAM_ACCOUNT_ID}}\"],\n  \"content\": [ { \"body\": {{JSON.stringify($json.instagram)}} } ],\n  \"schedule\": { \"now\": true }\n}",
+                "options": {
+                    "response": {
+                        "response": {
+                            "neverError": true
+                        }
+                    }
+                }
+            },
+            "id": "n7-mixpost-instagram",
+            "name": "Mixpost - Post Instagram",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1140,
+                400
+            ],
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.MIXPOST_URL}}/api/{{$env.MIXPOST_WORKSPACE_UUID}}/posts",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "=Bearer {{$env.MIXPOST_TOKEN}}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"accounts\": [\"{{$env.MIXPOST_FACEBOOK_ACCOUNT_ID}}\"],\n  \"content\": [ { \"body\": {{JSON.stringify($json.facebook + '\\n\\n' + $json.post_url)}} } ],\n  \"schedule\": { \"now\": true }\n}",
+                "options": {
+                    "response": {
+                        "response": {
+                            "neverError": true
+                        }
+                    }
+                }
+            },
+            "id": "n8-mixpost-facebook",
+            "name": "Mixpost - Post Facebook",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1140,
+                540
+            ],
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "INSERT INTO n8n_processed_posts (post_id, processed_at)\nVALUES ({{$json.post_id}}, now())\nON CONFLICT (post_id) DO NOTHING;",
+                "options": {}
+            },
+            "id": "n9-mark-processed",
+            "name": "Mark Post as Processed",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2.5,
+            "position": [
+                1140,
+                680
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Odoo Postgres"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Every 30 Min": {
+            "main": [
+                [
+                    {
+                        "node": "Get New Published Blog Posts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get New Published Blog Posts": {
+            "main": [
+                [
+                    {
+                        "node": "Ollama - Rewrite for All Platforms",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Ollama - Rewrite for All Platforms": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Platform Posts JSON",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Platform Posts JSON": {
+            "main": [
+                [
+                    {
+                        "node": "Mixpost - Post LinkedIn",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Mixpost - Post X",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Mixpost - Post Instagram",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Mixpost - Post Facebook",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Mark Post as Processed",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1",
+        "errorWorkflow": "REPLACE_WITH_0.0_ERROR_HANDLER_WORKFLOW_ID"
+    },
+    "id": "819e4885b72bf1be"
+}

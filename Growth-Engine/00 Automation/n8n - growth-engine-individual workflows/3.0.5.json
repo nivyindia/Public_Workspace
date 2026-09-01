@@ -1,0 +1,1065 @@
+
+{
+  "plan_id": "3.0.5a.1",
+  "parent_workflow": "3.0.5a",
+  "module": "2.4 Proposal",
+  "type": "n8n-node-patch",
+  "name": "Odoo res.partner Search - Email/Phone Match",
+  "purpose": "Search the real Odoo res.partner model using the available client email and/or phone before creating a new partner.",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "res.partner",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 1,
+        "filters": {
+          "email": "={{ $json.email || $json.client_email || '' }}"
+        }
+      },
+      "id": "3-0-5a-1-search-partner-email",
+      "name": "3.0.5a.1 - Odoo Search res.partner by Email",
+      "type": "n8n-nodes-base.odoo",
+      "typeVersion": 1,
+      "position": [
+        420,
+        0
+      ],
+      "notes": "Use the existing Odoo credential. Exact n8n Odoo node parameter schema must match the installed n8n version."
+    }
+  ],
+  "lookup_strategy": {
+    "primary": "email",
+    "secondary": "phone",
+    "rule": "Use exact normalized email/phone matching. Do not use fuzzy matching for partner identity.",
+    "deduplication": "If multiple records are returned, do not arbitrarily select one; route to duplicate-resolution handling."
+  },
+  "input_mapping": {
+    "email": "{{$json.email || $json.client_email}}",
+    "phone": "{{$json.phone || $json.client_phone}}"
+  },
+  "required_output": [
+    "id",
+    "name",
+    "email",
+    "phone"
+  ],
+  "integration": {
+    "next_step": "3.0.5a.2",
+    "next_purpose": "IF node: found vs not-found",
+    "source": "Existing 2.4 Proposal workflow",
+    "target_model": "Odoo res.partner"
+  },
+  "security_rules": [
+    "Use the existing Odoo credential; never hard-code credentials.",
+    "Do not create a partner in this step.",
+    "Do not overwrite an existing partner.",
+    "Do not use name-only matching as an identity match.",
+    "Normalize email/phone before comparison where the existing workflow supports it."
+  ],
+  "validation": [
+    {
+      "case": "Existing partner with matching email",
+      "expected": "Existing res.partner record returned."
+    },
+    {
+      "case": "No email match",
+      "expected": "Continue to phone lookup/decision logic."
+    },
+    {
+      "case": "Existing partner with matching phone",
+      "expected": "Existing res.partner record returned."
+    },
+    {
+      "case": "No match",
+      "expected": "No partner ID is fabricated; proceed to 3.0.5a.2."
+    },
+    {
+      "case": "Multiple matching records",
+      "expected": "Do not arbitrarily choose a record; flag duplicate condition."
+    }
+  ],
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.4_WORKFLOW",
+    "items": [
+      "Exact existing Odoo node/credential configuration",
+      "Actual field names used for email and phone",
+      "Installed n8n Odoo node version/schema"
+    ],
+    "action": "Merge this logical unit into the real 2.4 workflow rather than importing it as a standalone production workflow."
+  }
+}
+
+{
+  "plan_id": "3.0.5a.2",
+  "parent_workflow": "3.0.5a",
+  "module": "2.4 Proposal",
+  "type": "n8n-node-patch",
+  "name": "Odoo res.partner - Found vs Not Found",
+  "purpose": "Determine whether the preceding Odoo res.partner lookup returned an existing partner and route the workflow accordingly.",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.id }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "3-0-5a-2-partner-found-if",
+      "name": "3.0.5a.2 - res.partner Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        760,
+        0
+      ],
+      "notes": "TRUE = existing Odoo res.partner found. FALSE = no existing partner found."
+    }
+  ],
+  "connections": {
+    "3.0.5a.1 - Odoo Search res.partner by Email": {
+      "main": [
+        [
+          {
+            "node": "3.0.5a.2 - res.partner Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "branches": {
+    "true": {
+      "meaning": "Existing res.partner found",
+      "next_step": "3.0.5a.4",
+      "action": "Use the returned Odoo partner ID."
+    },
+    "false": {
+      "meaning": "No matching res.partner found",
+      "next_step": "3.0.5a.3",
+      "action": "Create a new Odoo res.partner."
+    }
+  },
+  "rules": [
+    "Do not create a duplicate partner when an existing partner is found.",
+    "Do not fabricate a partner_id.",
+    "Do not use name-only matching.",
+    "The TRUE branch must preserve the actual Odoo res.partner ID.",
+    "The FALSE branch must proceed to the controlled create step."
+  ],
+  "validation": [
+    {
+      "case": "Search returns an Odoo partner with id",
+      "expected": "TRUE branch."
+    },
+    {
+      "case": "Search returns no partner",
+      "expected": "FALSE branch."
+    },
+    {
+      "case": "Partner ID is missing",
+      "expected": "Treat as not-found."
+    }
+  ],
+  "integration": {
+    "previous_step": "3.0.5a.1",
+    "true_branch": "3.0.5a.4",
+    "false_branch": "3.0.5a.3"
+  },
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.4_WORKFLOW_SCHEMA",
+    "note": "The exact output structure of the existing Odoo node must be verified before importing. The logical requirement is only found vs not-found."
+  }
+}
+{
+  "plan_id": "3.0.5a.3",
+  "parent_workflow": "3.0.5a",
+  "module": "2.4 Proposal",
+  "type": "n8n-node-patch",
+  "name": "Create Odoo res.partner When Not Found",
+  "purpose": "Create a real Odoo res.partner only when the preceding lookup confirms that no existing matching partner was found.",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "res.partner",
+        "operation": "create",
+        "fieldsToSend": "defineBelow",
+        "fields": {
+          "name": "={{ $json.name || $json.client_name }}",
+          "email": "={{ $json.email || $json.client_email }}",
+          "phone": "={{ $json.phone || $json.client_phone }}"
+        }
+      },
+      "id": "3-0-5a-3-create-partner",
+      "name": "3.0.5a.3 - Create Odoo res.partner",
+      "type": "n8n-nodes-base.odoo",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        180
+      ],
+      "notes": "Connect only to the FALSE/not-found branch of 3.0.5a.2. Use the existing Odoo credential."
+    }
+  ],
+  "connections": {
+    "3.0.5a.2 - res.partner Found?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "3.0.5a.3 - Create Odoo res.partner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "input_fields": {
+    "name": "Client/company name",
+    "email": "Client email",
+    "phone": "Client phone"
+  },
+  "output_required": [
+    "id",
+    "name",
+    "email",
+    "phone"
+  ],
+  "integration": {
+    "previous_step": "3.0.5a.2 - res.partner Found?",
+    "input_branch": "FALSE / not-found",
+    "next_step": "3.0.5a.4",
+    "next_purpose": "Merge existing partner ID and newly-created partner ID into unified partner_id."
+  },
+  "rules": [
+    "Create only when lookup returned no matching partner.",
+    "Never create based only on a missing email if phone lookup has not been completed.",
+    "Use the existing Odoo credential.",
+    "Do not hard-code credentials.",
+    "Do not create duplicate partners.",
+    "Return the actual Odoo-created partner ID.",
+    "Do not overwrite an existing partner."
+  ],
+  "validation": [
+    {
+      "case": "No matching partner",
+      "expected": "One new res.partner is created and its Odoo ID is returned."
+    },
+    {
+      "case": "Existing partner",
+      "expected": "This node must not execute."
+    },
+    {
+      "case": "Missing name",
+      "expected": "Creation must be rejected or routed to validation/error handling."
+    },
+    {
+      "case": "Duplicate detected before create",
+      "expected": "Do not create another partner."
+    }
+  ],
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.4_WORKFLOW_SCHEMA",
+    "items": [
+      "Exact Odoo field mapping",
+      "Actual n8n Odoo node schema/version",
+      "Whether email and phone lookup must both complete before creation"
+    ],
+    "action": "Verify against the existing 2.4 workflow before production import."
+  }
+}
+
+{
+  "plan_id": "3.0.5a.4",
+  "parent_workflow": "3.0.5a",
+  "module": "2.4 Proposal",
+  "type": "n8n-node-patch",
+  "name": "Merge Partner Branches -> Unified partner_id",
+  "purpose": "Merge the existing-partner and newly-created-partner branches into one consistent partner_id output.",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "3-0-5a-4-merge-partner-branches",
+      "name": "3.0.5a.4 - Merge Partner Branches",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1320,
+        0
+      ],
+      "notes": "Input 0 = existing res.partner branch. Input 1 = newly-created res.partner branch."
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst partnerId =\n  data.partner_id ??\n  data.id ??\n  data.res_partner_id ??\n  null;\n\nif (partnerId === null || partnerId === undefined || partnerId === '') {\n  throw new Error('PARTNER_ID_MISSING: Unable to determine unified Odoo res.partner ID.');\n}\n\nreturn [{\n  json: {\n    ...data,\n    partner_id: partnerId,\n    partner_resolution: 'RESOLVED'\n  }\n}];"
+      },
+      "id": "3-0-5a-4-unified-partner-id",
+      "name": "3.0.5a.4 - Set Unified partner_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1580,
+        0
+      ],
+      "notes": "Produces the single canonical partner_id consumed by downstream 2.4 Proposal nodes."
+    }
+  ],
+  "connections": {
+    "3.0.5a.4 - Merge Partner Branches": {
+      "main": [
+        [
+          {
+            "node": "3.0.5a.4 - Set Unified partner_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "branch_mapping": {
+    "input_0": {
+      "source": "3.0.5a.2 TRUE branch",
+      "meaning": "Existing Odoo res.partner",
+      "partner_id_source": "Existing Odoo partner record"
+    },
+    "input_1": {
+      "source": "3.0.5a.3",
+      "meaning": "Newly-created Odoo res.partner",
+      "partner_id_source": "Created Odoo partner record"
+    }
+  },
+  "output_contract": {
+    "partner_id": "Canonical Odoo res.partner ID",
+    "partner_resolution": "RESOLVED"
+  },
+  "rules": [
+    "Exactly one partner_id must be produced.",
+    "Existing partner ID takes precedence on the existing-partner branch.",
+    "Created partner ID is used on the create branch.",
+    "Do not generate or guess a partner ID.",
+    "Do not merge two different partner IDs into one record.",
+    "Downstream nodes should consume only partner_id."
+  ],
+  "validation": [
+    {
+      "case": "Existing partner found",
+      "expected": "Existing Odoo partner ID becomes partner_id."
+    },
+    {
+      "case": "Partner not found and new partner created",
+      "expected": "Created Odoo partner ID becomes partner_id."
+    },
+    {
+      "case": "Neither branch provides an ID",
+      "expected": "Workflow stops with PARTNER_ID_MISSING."
+    }
+  ],
+  "integration": {
+    "previous_steps": [
+      "3.0.5a.2 TRUE branch",
+      "3.0.5a.3 FALSE branch"
+    ],
+    "next_step": "3.0.5a.5",
+    "next_purpose": "Remove/replace old generic-contact fallback."
+  },
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.4_WORKFLOW_SCHEMA",
+    "note": "The source specifies a unified partner_id but does not specify the exact output field names of the existing Odoo nodes. Verify those IDs/fields before final import."
+  }
+}
+
+
+{
+  "plan_id": "3.0.5a.5",
+  "parent_workflow": "3.0.5a",
+  "module": "2.4 Proposal",
+  "type": "n8n-node-patch",
+  "name": "Remove Old Generic Odoo Contact Fallback",
+  "purpose": "Remove the obsolete generic-contact fallback and make the new real res.partner resolution path the authoritative partner source.",
+  "nodes": [],
+  "required_changes": [
+    {
+      "action": "REMOVE_OR_BYPASS",
+      "target": "EXISTING_GENERIC_CONTACT_FALLBACK_NODE",
+      "reason": "Replaced by the real Odoo res.partner lookup/create flow."
+    },
+    {
+      "action": "REPLACE",
+      "old_output": "Generic contact ID / fallback contact reference",
+      "new_output": "partner_id",
+      "source": "3.0.5a.4 - Unified partner_id"
+    }
+  ],
+  "rewiring_rule": {
+    "old_path": "Proposal -> generic contact fallback",
+    "new_path": "Proposal -> 3.0.5a.1 -> 3.0.5a.2 -> 3.0.5a.3/3.0.5a.4 -> partner_id",
+    "authoritative_identifier": "partner_id"
+  },
+  "do_not_modify": [
+    "Do not delete unrelated Odoo nodes.",
+    "Do not delete the existing proposal workflow.",
+    "Do not remove the new res.partner lookup/create nodes.",
+    "Do not create another fallback mechanism."
+  ],
+  "validation": [
+    {
+      "case": "Existing partner found",
+      "expected": "Generic fallback is not executed; existing partner_id is used."
+    },
+    {
+      "case": "Partner not found",
+      "expected": "New res.partner is created and its partner_id is used."
+    },
+    {
+      "case": "Generic fallback node is still reachable",
+      "expected": "FAIL - downstream wiring must be corrected."
+    },
+    {
+      "case": "No partner_id available",
+      "expected": "Workflow must stop/error rather than use generic fallback."
+    }
+  ],
+  "integration": {
+    "previous_step": "3.0.5a.4",
+    "next_step": "3.0.5a.6",
+    "next_purpose": "Rewire all downstream Proposal nodes to consume unified partner_id."
+  },
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.4_WORKFLOW_JSON",
+    "reason": "The source identifies that the old generic fallback must be removed/replaced, but does not identify the actual node ID/name.",
+    "action": "Do not invent a node ID. Locate the existing generic-contact fallback in the real 2.4 workflow before applying this patch."
+  }
+}
+
+
+{
+  "plan_id": "3.0.5a.6",
+  "parent_workflow": "3.0.5a",
+  "module": "2.4 Proposal",
+  "type": "n8n-node-patch",
+  "name": "Rewire Proposal Downstream Nodes to Unified partner_id",
+  "purpose": "Make the resolved Odoo res.partner ID the single authoritative partner reference for all downstream Proposal operations.",
+  "source_of_truth": {
+    "field": "partner_id",
+    "source_node": "3.0.5a.4 - Set Unified partner_id"
+  },
+  "rewiring": {
+    "old_identifiers": [
+      "generic_contact_id",
+      "contact_id",
+      "fallback_contact_id",
+      "temporary_partner_id"
+    ],
+    "new_identifier": "partner_id",
+    "rule": "All downstream partner-related operations must consume the canonical partner_id."
+  },
+  "required_downstream_operations": [
+    "Proposal creation/update",
+    "Odoo partner association",
+    "Client/contact association",
+    "Invoice/customer association where applicable",
+    "Contract/customer association where applicable",
+    "Any downstream record requiring the Odoo partner reference"
+  ],
+  "node_patch_rules": [
+    {
+      "action": "REPLACE_REFERENCE",
+      "from": "old generic/fallback contact identifier",
+      "to": "={{ $json.partner_id }}"
+    },
+    {
+      "action": "PRESERVE",
+      "rule": "Do not alter unrelated fields or business logic."
+    },
+    {
+      "action": "VALIDATE",
+      "rule": "Every downstream partner reference must resolve to the same partner_id."
+    }
+  ],
+  "validation": [
+    {
+      "case": "Existing partner found",
+      "expected": "All downstream nodes use existing Odoo partner_id."
+    },
+    {
+      "case": "New partner created",
+      "expected": "All downstream nodes use newly-created Odoo partner_id."
+    },
+    {
+      "case": "partner_id missing",
+      "expected": "Workflow stops before partner-dependent operations."
+    },
+    {
+      "case": "Old generic fallback reference remains",
+      "expected": "FAIL - remove/rewrite the remaining reference."
+    }
+  ],
+  "audit_checks": [
+    "Search workflow JSON for generic_contact_id.",
+    "Search workflow JSON for contact_id.",
+    "Search workflow JSON for fallback_contact_id.",
+    "Search workflow JSON for temporary partner identifiers.",
+    "Verify every partner-related downstream node.",
+    "Verify all partner references point to partner_id.",
+    "Verify no duplicate partner creation path remains."
+  ],
+  "integration": {
+    "previous_step": "3.0.5a.5",
+    "status": "FINAL_STEP_OF_3.0.5a",
+    "next_action": "Run 3.0.5a validation tests before moving to the next master-plan session."
+  },
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.4_WORKFLOW_JSON_FOR_EXACT_NODE_IDS",
+    "reason": "The plan defines the required rewiring but does not contain the actual downstream node IDs.",
+    "action": "Apply the logical patch against the real 2.4 workflow JSON and verify every downstream partner reference."
+  }
+}
+
+
+{
+  "plan_id": "3.0.5b.1",
+  "parent_workflow": "3.0.5b",
+  "module": "2.6 Invoice/Payment",
+  "type": "n8n-node-patch",
+  "name": "Reuse res.partner Lookup/Create Pattern in Invoice Payment",
+  "purpose": "Reuse the validated 3.0.5a res.partner lookup/create structure inside the existing 2.6 Invoice/Payment workflow.",
+  "source_pattern": {
+    "pattern_workflow": "3.0.5a",
+    "source_module": "2.4 Proposal",
+    "target_module": "2.6 Invoice/Payment"
+  },
+  "nodes_to_reuse": [
+    {
+      "source_step": "3.0.5a.1",
+      "function": "Search Odoo res.partner by email/phone",
+      "target_step": "3.0.5b.1"
+    },
+    {
+      "source_step": "3.0.5a.2",
+      "function": "IF existing partner found vs not-found",
+      "target_step": "3.0.5b.1"
+    },
+    {
+      "source_step": "3.0.5a.3",
+      "function": "Create res.partner when not found",
+      "target_step": "3.0.5b.1"
+    },
+    {
+      "source_step": "3.0.5a.4",
+      "function": "Merge to unified partner_id",
+      "target_step": "3.0.5b.1"
+    }
+  ],
+  "reuse_rules": [
+    "Copy the logical node pattern, not the Proposal-specific field mappings.",
+    "Preserve the existing 2.6 Invoice/Payment workflow structure.",
+    "Use the existing Odoo credential configured for 2.6.",
+    "Do not create a second independent partner-resolution architecture.",
+    "Keep partner_id as the canonical downstream identifier."
+  ],
+  "target_structure": {
+    "input": "Existing 2.6 Invoice/Payment client/customer data",
+    "lookup": "res.partner email/phone match",
+    "decision": "Found vs not-found",
+    "not_found": "Create res.partner",
+    "merge": "Unified partner_id",
+    "next_step": "3.0.5b.2"
+  },
+  "do_not_do_in_this_step": [
+    "Do not finalize Invoice-specific field mappings.",
+    "Do not rewire downstream invoice nodes yet.",
+    "Do not remove old invoice references yet.",
+    "Do not change payment processing logic."
+  ],
+  "validation": [
+    {
+      "case": "Existing partner",
+      "expected": "Existing partner branch produces partner_id."
+    },
+    {
+      "case": "Partner not found",
+      "expected": "Create branch produces partner_id."
+    },
+    {
+      "case": "No partner_id",
+      "expected": "Resolution fails safely."
+    }
+  ],
+  "integration": {
+    "previous_session": "3.0.5a",
+    "next_step": "3.0.5b.2",
+    "next_purpose": "Adjust field mapping specifically for Invoice/Payment context."
+  },
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.6_WORKFLOW_JSON",
+    "reason": "The source defines pattern reuse but does not provide the actual 2.6 node IDs or field schema.",
+    "action": "Apply this pattern to the real 2.6 workflow instead of importing as a standalone workflow."
+  }
+}
+
+{
+  "plan_id": "3.0.5b.2",
+  "parent_workflow": "3.0.5b",
+  "module": "2.6 Invoice/Payment",
+  "type": "n8n-node-patch",
+  "name": "Adjust res.partner Field Mapping for Invoice Payment",
+  "purpose": "Adapt the reusable 3.0.5a res.partner resolution pattern to the actual data structure used by the 2.6 Invoice/Payment workflow.",
+  "source_pattern": "3.0.5a",
+  "target_workflow": "2.6 Invoice/Payment",
+
+  "field_mapping": {
+    "partner_lookup": {
+      "email": "={{ $json.email || $json.client_email || $json.customer_email }}",
+      "phone": "={{ $json.phone || $json.client_phone || $json.customer_phone }}"
+    },
+    "partner_create": {
+      "name": "={{ $json.name || $json.client_name || $json.customer_name }}",
+      "email": "={{ $json.email || $json.client_email || $json.customer_email }}",
+      "phone": "={{ $json.phone || $json.client_phone || $json.customer_phone }}"
+    },
+    "invoice_context": {
+      "invoice_id": "={{ $json.invoice_id }}",
+      "payment_id": "={{ $json.payment_id }}",
+      "payment_status": "={{ $json.payment_status }}",
+      "amount": "={{ $json.amount }}",
+      "currency": "={{ $json.currency }}"
+    }
+  },
+
+  "canonical_output": {
+    "partner_id": "={{ $json.partner_id }}",
+    "rule": "All downstream Invoice/Payment partner references must use partner_id."
+  },
+
+  "mapping_rules": [
+    "Use the actual 2.6 input field names where they differ from 2.4.",
+    "Do not blindly copy Proposal-specific fields into Invoice/Payment.",
+    "Preserve invoice and payment data.",
+    "Do not modify payment business logic.",
+    "Do not create a second partner identifier.",
+    "partner_id remains the canonical Odoo res.partner reference."
+  ],
+
+  "validation": [
+    {
+      "case": "Existing customer",
+      "expected": "Existing res.partner ID becomes partner_id."
+    },
+    {
+      "case": "New customer",
+      "expected": "Created res.partner ID becomes partner_id."
+    },
+    {
+      "case": "Invoice data present",
+      "expected": "Invoice ID and relevant payment context remain intact."
+    },
+    {
+      "case": "Missing customer identity",
+      "expected": "Partner resolution fails safely; no guessed partner_id."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.0.5b.1",
+    "next_step": "3.0.5b.3",
+    "next_purpose": "Rewire downstream Invoice/Payment nodes to consume partner_id."
+  },
+
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.6_WORKFLOW_SCHEMA",
+    "reason": "The Master Plan requires Invoice/Payment-specific field mapping but does not provide the exact live 2.6 field names.",
+    "action": "Verify the actual 2.6 workflow JSON and replace fallback field expressions with its real schema before production use."
+  }
+}
+
+
+{
+  "plan_id": "3.0.5b.3",
+  "parent_workflow": "3.0.5b",
+  "module": "2.6 Invoice/Payment",
+  "type": "n8n-node-patch",
+  "name": "Rewire Invoice Payment Downstream Nodes to partner_id",
+  "purpose": "Make the resolved Odoo res.partner partner_id the single authoritative customer/partner reference for downstream Invoice/Payment operations.",
+
+  "source_of_truth": {
+    "field": "partner_id",
+    "source": "3.0.5b.1 + 3.0.5b.2 partner resolution"
+  },
+
+  "rewiring_rules": [
+    {
+      "action": "REPLACE_PARTNER_REFERENCE",
+      "old_references": [
+        "generic_contact_id",
+        "contact_id",
+        "customer_id",
+        "fallback_contact_id",
+        "temporary_partner_id"
+      ],
+      "new_reference": "={{ $json.partner_id }}"
+    },
+    {
+      "action": "PRESERVE",
+      "fields": [
+        "invoice_id",
+        "payment_id",
+        "payment_status",
+        "amount",
+        "currency"
+      ]
+    }
+  ],
+
+  "downstream_nodes_to_audit": [
+    "Invoice creation",
+    "Invoice update",
+    "Customer association",
+    "Payment registration",
+    "Payment reconciliation",
+    "Any Odoo operation requiring res.partner/customer reference"
+  ],
+
+  "node_patch": {
+    "type": "code",
+    "name": "3.0.5b.3 - Validate Canonical partner_id",
+    "code": "const partnerId = $json.partner_id;\\n\\nif (partnerId === null || partnerId === undefined || partnerId === '') {\\n  throw new Error('PARTNER_ID_MISSING: Invoice/Payment operation cannot continue without a resolved Odoo res.partner ID.');\\n}\\n\\nreturn [{\\n  json: {\\n    ...$json,\\n    partner_id: partnerId,\\n    partner_resolution: 'RESOLVED'\\n  }\\n}];"
+  },
+
+  "rules": [
+    "All partner/customer-related downstream operations must use partner_id.",
+    "Do not create another customer/partner lookup path.",
+    "Do not use generic fallback contact IDs.",
+    "Do not guess or fabricate partner_id.",
+    "Do not alter payment processing logic.",
+    "Do not modify invoice amounts or payment status.",
+    "The same partner_id must remain consistent through the entire downstream chain."
+  ],
+
+  "audit": {
+    "search_for": [
+      "generic_contact_id",
+      "contact_id",
+      "customer_id",
+      "fallback_contact_id",
+      "temporary_partner_id"
+    ],
+    "expected_result": "No obsolete partner reference remains in partner-dependent downstream nodes."
+  },
+
+  "validation": [
+    {
+      "case": "Existing Odoo partner",
+      "expected": "Invoice/Payment nodes receive the existing partner_id."
+    },
+    {
+      "case": "New Odoo partner",
+      "expected": "Invoice/Payment nodes receive the newly-created partner_id."
+    },
+    {
+      "case": "partner_id missing",
+      "expected": "Invoice/Payment processing stops safely."
+    },
+    {
+      "case": "Old customer/contact reference remains",
+      "expected": "FAIL - downstream node must be rewired."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.0.5b.2",
+    "status": "FINAL_STEP_OF_3.0.5b",
+    "next_action": "Validate the complete 2.6 partner-resolution path before moving to the next master-plan session."
+  },
+
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.6_WORKFLOW_JSON",
+    "reason": "The plan specifies downstream rewiring but does not provide the actual node IDs or exact current customer-reference fields.",
+    "action": "Apply this against the real 2.6 workflow and audit every downstream node before production activation."
+  }
+}
+
+{
+  "plan_id": "3.0.5c.1",
+  "parent_workflow": "3.0.5c",
+  "module": "2.7 Onboarding",
+  "type": "n8n-node-patch",
+  "name": "Reuse res.partner Lookup/Create Pattern in Onboarding",
+  "purpose": "Reuse the validated 3.0.5a res.partner lookup/create architecture inside the existing 2.7 Onboarding workflow.",
+
+  "source_pattern": {
+    "pattern_workflow": "3.0.5a",
+    "source_module": "2.4 Proposal",
+    "target_module": "2.7 Onboarding"
+  },
+
+  "pattern_components": [
+    {
+      "source_step": "3.0.5a.1",
+      "function": "Search Odoo res.partner by email/phone",
+      "target": "2.7 Onboarding"
+    },
+    {
+      "source_step": "3.0.5a.2",
+      "function": "IF found vs not-found",
+      "target": "2.7 Onboarding"
+    },
+    {
+      "source_step": "3.0.5a.3",
+      "function": "Create res.partner when not found",
+      "target": "2.7 Onboarding"
+    },
+    {
+      "source_step": "3.0.5a.4",
+      "function": "Merge to unified partner_id",
+      "target": "2.7 Onboarding"
+    }
+  ],
+
+  "target_flow": [
+    "2.7 Onboarding customer data",
+    "Search res.partner",
+    "Found?",
+    "YES -> existing partner",
+    "NO -> Create res.partner",
+    "Merge",
+    "Unified partner_id"
+  ],
+
+  "reuse_rules": [
+    "Reuse the logical pattern from 3.0.5a.",
+    "Do not blindly copy Proposal-specific field mappings.",
+    "Use the existing Odoo credential configured for 2.7.",
+    "Do not create a second partner-resolution architecture.",
+    "partner_id must become the canonical Odoo partner identifier."
+  ],
+
+  "do_not_do": [
+    "Do not rewire downstream onboarding nodes yet.",
+    "Do not finalize onboarding-specific field mappings yet.",
+    "Do not remove existing downstream references yet.",
+    "Do not change onboarding business logic."
+  ],
+
+  "validation": [
+    {
+      "case": "Existing partner",
+      "expected": "Existing Odoo res.partner ID is available."
+    },
+    {
+      "case": "Partner not found",
+      "expected": "Create branch produces a real Odoo partner ID."
+    },
+    {
+      "case": "No partner ID",
+      "expected": "Resolution fails safely."
+    }
+  ],
+
+  "integration": {
+    "previous_session": "3.0.5b",
+    "next_step": "3.0.5c.2",
+    "next_purpose": "Adjust field mapping for the 2.7 Onboarding module."
+  },
+
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.7_WORKFLOW_JSON",
+    "reason": "The plan specifies pattern reuse but does not provide the actual 2.7 node IDs or field schema.",
+    "action": "Apply this pattern to the real 2.7 workflow rather than importing it as an independent workflow."
+  }
+}
+
+{
+  "plan_id": "3.0.5c.2",
+  "parent_workflow": "3.0.5c",
+  "module": "2.7 Onboarding",
+  "type": "n8n-node-patch",
+  "name": "Adjust res.partner Field Mapping for Onboarding",
+  "purpose": "Adapt the reused 3.0.5a res.partner lookup/create pattern to the actual 2.7 Onboarding data structure.",
+
+  "source_pattern": "3.0.5a",
+  "target_workflow": "2.7 Onboarding",
+
+  "field_mapping": {
+    "partner_lookup": {
+      "email": "={{ $json.email || $json.client_email || $json.customer_email }}",
+      "phone": "={{ $json.phone || $json.client_phone || $json.customer_phone }}"
+    },
+
+    "partner_create": {
+      "name": "={{ $json.name || $json.client_name || $json.customer_name || $json.company_name }}",
+      "email": "={{ $json.email || $json.client_email || $json.customer_email }}",
+      "phone": "={{ $json.phone || $json.client_phone || $json.customer_phone }}"
+    },
+
+    "onboarding_context": {
+      "lead_id": "={{ $json.lead_id }}",
+      "client_id": "={{ $json.client_id }}",
+      "contract_id": "={{ $json.contract_id }}",
+      "contract_start": "={{ $json.contract_start }}",
+      "contract_term_months": "={{ $json.contract_term_months }}"
+    }
+  },
+
+  "canonical_output": {
+    "partner_id": "={{ $json.partner_id }}",
+    "rule": "partner_id is the canonical Odoo res.partner identifier for downstream onboarding operations."
+  },
+
+  "mapping_rules": [
+    "Use the actual 2.7 Onboarding field names when they differ.",
+    "Preserve lead_id and client_id.",
+    "Preserve contract information.",
+    "Do not modify onboarding business logic.",
+    "Do not create another partner identifier.",
+    "Do not overwrite an existing Odoo partner."
+  ],
+
+  "validation": [
+    {
+      "case": "Existing partner",
+      "expected": "Existing res.partner ID becomes partner_id."
+    },
+    {
+      "case": "New partner",
+      "expected": "Created res.partner ID becomes partner_id."
+    },
+    {
+      "case": "lead_id/client_id present",
+      "expected": "Identifiers remain available after partner mapping."
+    },
+    {
+      "case": "Contract details present",
+      "expected": "contract_id, contract_start and contract_term_months remain intact."
+    },
+    {
+      "case": "Identity data missing",
+      "expected": "Do not fabricate partner_id; route to existing validation/error handling."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.0.5c.1",
+    "next_step": "3.0.5c.3",
+    "next_purpose": "Rewire downstream onboarding nodes to partner_id."
+  },
+
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.7_WORKFLOW_SCHEMA",
+    "reason": "The master plan specifies the mapping requirement but does not define the exact live 2.7 field names.",
+    "action": "Verify the actual 2.7 workflow JSON before production import and replace fallback expressions with the real schema."
+  }
+}
+
+
+
+{
+  "plan_id": "3.0.5c.3",
+  "parent_workflow": "3.0.5c",
+  "module": "2.7 Onboarding",
+  "type": "n8n-node-patch",
+  "name": "Rewire Onboarding Downstream Nodes to Unified partner_id",
+  "purpose": "Make the resolved Odoo res.partner partner_id the single authoritative partner reference throughout the downstream 2.7 Onboarding workflow.",
+
+  "source_of_truth": {
+    "field": "partner_id",
+    "source": "3.0.5c partner-resolution flow"
+  },
+
+  "rewiring_rules": [
+    {
+      "action": "REPLACE_PARTNER_REFERENCE",
+      "old_references": [
+        "generic_contact_id",
+        "contact_id",
+        "customer_id",
+        "fallback_contact_id",
+        "temporary_partner_id"
+      ],
+      "new_reference": "={{ $json.partner_id }}"
+    },
+    {
+      "action": "PRESERVE",
+      "fields": [
+        "lead_id",
+        "client_id",
+        "contract_id",
+        "contract_start",
+        "contract_term_months"
+      ]
+    }
+  ],
+
+  "downstream_operations_to_audit": [
+    "Client/customer association",
+    "Onboarding record creation",
+    "Odoo partner association",
+    "Client master/customer record association",
+    "Any onboarding operation requiring an Odoo res.partner reference"
+  ],
+
+  "validation_node": {
+    "name": "3.0.5c.3 - Validate Canonical partner_id",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "jsCode": "const partnerId = $json.partner_id;\n\nif (partnerId === null || partnerId === undefined || partnerId === '') {\n  throw new Error('PARTNER_ID_MISSING: Onboarding cannot continue without a resolved Odoo res.partner ID.');\n}\n\nreturn [{\n  json: {\n    ...$json,\n    partner_id: partnerId,\n    partner_resolution: 'RESOLVED'\n  }\n}];"
+  },
+
+  "rules": [
+    "All partner-dependent onboarding nodes must consume partner_id.",
+    "Do not create another partner lookup path.",
+    "Do not use a generic contact fallback.",
+    "Do not fabricate partner_id.",
+    "Do not modify unrelated onboarding business logic.",
+    "The same partner_id must remain consistent through downstream onboarding."
+  ],
+
+  "audit_checks": [
+    "Search workflow JSON for generic_contact_id.",
+    "Search workflow JSON for contact_id.",
+    "Search workflow JSON for customer_id.",
+    "Search workflow JSON for fallback_contact_id.",
+    "Search workflow JSON for temporary_partner_id.",
+    "Verify every partner-dependent node uses partner_id.",
+    "Verify no obsolete fallback path remains."
+  ],
+
+  "validation": [
+    {
+      "case": "Existing partner found",
+      "expected": "Existing Odoo partner_id reaches all partner-dependent onboarding nodes."
+    },
+    {
+      "case": "New partner created",
+      "expected": "Newly-created Odoo partner_id reaches all partner-dependent onboarding nodes."
+    },
+    {
+      "case": "partner_id missing",
+      "expected": "Onboarding stops before partner-dependent operations."
+    },
+    {
+      "case": "Old partner reference remains",
+      "expected": "FAIL - node must be rewired."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.0.5c.2",
+    "status": "FINAL_STEP_OF_3.0.5c",
+    "next_step": "3.0.6.1"
+  },
+
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_2.7_WORKFLOW_JSON",
+    "reason": "The source specifies downstream rewiring but does not identify the exact live node IDs or current partner-reference fields.",
+    "action": "Apply this logical patch to the actual 2.7 workflow and audit every downstream partner reference before production activation."
+  }
+}

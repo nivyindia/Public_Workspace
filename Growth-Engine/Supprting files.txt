@@ -1,0 +1,2315 @@
+# AI_WORKFLOW_BUILDER_CONTEXT.md
+
+> **Purpose:** This document is the operating context for any AI that will design, build, audit, modify, test, or document the Nivy Next / Growth Engine n8n automation system.
+>
+> **Primary rule:** The AI must use the supplied Master Workflow Plan, supporting files, and connected GitHub repositories as the source of truth. Do not invent business rules, pricing, API behavior, credentials, provider capabilities, database fields, or workflow steps when the source material does not specify them.
+
+---
+
+# 01. PROJECT PURPOSE
+
+Build the **Nivy Next Growth Engine automation system** as a modular, production-grade automation platform.
+
+The system is intended to automate and coordinate:
+
+* Lead generation
+* Lead enrichment
+* Lead qualification
+* CRM management
+* Outreach
+* Follow-up
+* Email
+* WhatsApp
+* SMS
+* Cold calling / voice
+* AI-assisted sales processes
+* Proposal generation
+* Pricing
+* Contract generation
+* E-signature
+* Payment/invoicing
+* Client onboarding
+* Project execution
+* Customer support
+* Reporting
+* KPI tracking
+* Auditability
+* Security
+* Error recovery
+
+The workflow architecture must remain modular so that individual workflows can be developed, tested, replaced, retried, and reused without breaking the complete system.
+
+---
+
+# 02. SOURCE-OF-TRUTH HIERARCHY
+
+When information conflicts, use this order:
+
+1. **Latest Master Workflow Plan**
+2. **Latest supporting project files**
+3. **Connected GitHub repository**
+4. Existing working n8n workflow JSONs
+5. Explicit business decisions provided by the project owner
+6. General technical knowledge
+
+Do **NOT** silently override the Master Plan with general best practices.
+
+If the sources disagree:
+
+```text
+DO NOT GUESS
+       ↓
+FLAG CONFLICT
+       ↓
+SHOW BOTH VALUES
+       ↓
+ASK / MARK DECISION REQUIRED
+```
+
+---
+
+# 03. MASTER WORKFLOW STRUCTURE
+
+The system is divided into:
+
+```text
+PROJECT
+│
+├── PHASE
+│   │
+│   ├── MODULE / SESSION
+│   │   │
+│   │   ├── WORKFLOW
+│   │   │   │
+│   │   │   ├── SUB-WORKFLOW
+│   │   │   │   │
+│   │   │   │   └── NODE-LEVEL TASK
+```
+
+The Master Plan uses a large workflow decomposition, including approximately:
+
+* 48 parent sessions
+* 175 planned steps/workflows
+
+The exact numbering in the Master Plan must always be preserved.
+
+Example:
+
+```text
+3.0
+└── 3.0.1
+    ├── 3.0.1.1
+    ├── 3.0.1.2
+    ├── 3.0.1.3
+    ├── 3.0.1.4
+    └── 3.0.1.5
+```
+
+Do not renumber existing plan steps.
+
+---
+
+# 04. WORKFLOW BUILDING PHILOSOPHY
+
+Every workflow must be:
+
+* Modular
+* Idempotent where appropriate
+* Observable
+* Auditable
+* Retry-safe
+* Secure
+* Environment-aware
+* Failure-aware
+* API-friendly
+* Reusable
+* Testable
+* Easy to maintain
+
+Avoid creating giant monolithic workflows when the Master Plan specifies further decomposition.
+
+Prefer:
+
+```text
+Trigger
+ ↓
+Validate
+ ↓
+Normalize
+ ↓
+Authorize
+ ↓
+Deduplicate / Idempotency
+ ↓
+Business Logic
+ ↓
+External API
+ ↓
+Persist State
+ ↓
+Audit
+ ↓
+Notify
+ ↓
+Response
+```
+
+---
+
+# 05. N8N BUILDING RULES
+
+For every n8n workflow:
+
+### 5.1 Trigger
+
+Use the trigger specified by the Master Plan.
+
+Possible triggers include:
+
+* Webhook
+* Schedule
+* Cron
+* Manual trigger
+* Odoo event/API
+* Database-driven trigger
+* External application webhook
+* Sub-workflow execution
+
+Do not replace a specified trigger without documenting why.
+
+---
+
+### 5.2 Input validation
+
+Every externally triggered workflow should validate:
+
+* Required fields
+* Data types
+* IDs
+* Email addresses
+* Phone numbers
+* Dates
+* Amounts
+* Status values
+* Authentication/security fields
+
+Invalid input should fail safely.
+
+---
+
+### 5.3 Normalize data
+
+Normalize external inputs before business logic.
+
+Examples:
+
+```text
+email → lowercase
+phone → E.164 where applicable
+IDs → string/integer according to schema
+timestamps → UTC/defined project standard
+currency → explicit currency code
+status → canonical status
+```
+
+---
+
+### 5.4 Idempotency
+
+Any workflow that can be triggered more than once must consider idempotency.
+
+Examples:
+
+* Webhook retries
+* Payment callbacks
+* WhatsApp callbacks
+* Email events
+* Proposal acceptance
+* Contract callbacks
+* CRM synchronization
+
+Never create duplicate records simply because the same event was delivered twice.
+
+---
+
+# 06. EXISTING WORKFLOWS
+
+Existing n8n workflow JSONs must be treated as reusable assets.
+
+Before creating a new workflow:
+
+```text
+SEARCH EXISTING WORKFLOWS
+        ↓
+CHECK GITHUB
+        ↓
+CHECK PROJECT FILES
+        ↓
+CHECK WHETHER FUNCTION ALREADY EXISTS
+        ↓
+REUSE / EXTEND / WRAP
+        ↓
+ONLY THEN BUILD NEW
+```
+
+Do not duplicate existing automation unnecessarily.
+
+---
+
+# 07. GITHUB
+
+Connected GitHub repositories include project/workflow material.
+
+Relevant repositories discovered include:
+
+* `nivyindia/Public_Workspace`
+* `nivyindia/n8nworkflows.xyz`
+* `nivyindia/all_n8n_templates_collection`
+
+The Public Workspace contains Growth Engine material including areas such as:
+
+```text
+00 Automation
+00 Marketing
+00 Sales Funnel
+03 Outreach & Lead Generation
+04 Marketing & Content Systems
+05 Automation & AI Systems
+06 Packages, Pricing & Service Catalog
+08 KPI, Performance & Dashboards
+```
+
+GitHub should be searched before assuming that a business rule, template, workflow, provider decision, or document does not exist.
+
+---
+
+# 08. BUSINESS DOCUMENTATION
+
+The project contains supporting documentation for areas including:
+
+* Automation
+* Methods
+* Tools
+* Sales
+* Outreach
+* Marketing
+* Pricing
+* Packages
+* Templates
+* Objection handling
+* Qualification
+* Proposals
+* Contracts
+* Onboarding
+* KPIs
+* Dashboards
+
+Use these materials as the business logic source.
+
+Do not replace business-specific processes with generic sales automation.
+
+---
+
+# 09. PRICING
+
+Pricing information **does exist in the Public Workspace**.
+
+Relevant area:
+
+```text
+Growth-Engine/
+└── 06 Packages, Pricing & Service Catalog
+```
+
+This contains pricing/package-related material including:
+
+* Package structures
+* Pricing strategy
+* Service catalog
+* Package matrices
+* Product/package intelligence
+* Pricing workflows
+
+Therefore:
+
+```text
+DO NOT SAY "PRICING IS MISSING"
+```
+
+unless the exact pricing value needed for a particular workflow genuinely cannot be found.
+
+If a workflow needs a specific price:
+
+```text
+SEARCH MASTER PLAN
+↓
+SEARCH PUBLIC_WORKSPACE
+↓
+SEARCH PRICING FILES
+↓
+SEARCH PACKAGE FILES
+↓
+IF STILL NOT FOUND → MARK REQUIRED INPUT
+```
+
+Never invent prices.
+
+---
+
+# 10. SOFTWARE ARCHITECTURE
+
+The project owner wants software to be open-source wherever practical.
+
+Selected / planned stack includes:
+
+### Core
+
+* n8n — existing workflow automation environment
+* PostgreSQL — primary relational database
+* Odoo Community — CRM/business system
+* Ollama — local AI runtime
+* Qwen / approved local LLMs — AI models
+
+### Communication
+
+* Waha / Evolution API — WhatsApp integration as selected
+* Postal / selected email infrastructure
+* Jasmin SMS Gateway — recommended for self-hosted SMS gateway
+* VICIdial — recommended call-center/dialer platform
+* Asterisk — telephony engine
+* External SMS/SMPP provider required
+* External SIP carrier/trunk required
+
+### Customer support
+
+* Zammad — selected/recommended helpdesk
+
+### Contracts
+
+* Documenso — e-signature
+
+### Scheduling
+
+* Cal.com
+
+### Analytics
+
+* Metabase
+
+### Storage
+
+* Nextcloud / selected file-storage architecture
+* SeaweedFS — recommended S3-compatible object storage where needed
+
+### Security / Infrastructure
+
+* Keycloak — identity / SSO / RBAC
+* Infisical — secrets
+* Caddy — reverse proxy/TLS
+* Prometheus — metrics
+* Grafana — dashboards
+* Loki — centralized logs
+* GlitchTip — application error tracking
+* Uptime Kuma — uptime monitoring
+* Trivy — security scanning
+* pgBackRest — PostgreSQL backup/PITR
+* NATS — event/message backbone where required
+* Valkey — cache/state where required
+
+### Development / project management
+
+* GitHub
+* Plane / selected project management system
+
+---
+
+# 11. IMPORTANT LICENSE RULE
+
+The project wants open-source software.
+
+Before introducing a new software dependency:
+
+Check:
+
+1. License
+2. Self-hosting capability
+3. API availability
+4. Active maintenance
+5. Security posture
+6. n8n integration feasibility
+7. Long-term sustainability
+
+Do not casually call software "open source" without checking its current license.
+
+---
+
+# 12. EXTERNAL PROVIDERS
+
+Open-source software does not eliminate external network providers.
+
+The following may still require external services/accounts:
+
+```text
+SMS
+ └── SMS/SMPP carrier
+
+Voice
+ └── SIP trunk / telephony carrier
+
+WhatsApp
+ └── WhatsApp connectivity/account/provider
+
+Email
+ └── Email delivery infrastructure/provider if required
+
+Payments
+ └── Payment gateway
+
+Phone numbers
+ └── Telecom provider
+
+External data
+ └── LinkedIn / Google / enrichment / other proprietary APIs
+```
+
+These are infrastructure/provider dependencies, not necessarily software gaps.
+
+---
+
+# 13. DATABASE
+
+PostgreSQL is the primary database.
+
+Use the project database schema as the source of truth.
+
+Important concepts include:
+
+* Client master
+* Leads
+* Contacts
+* Companies
+* Opportunities
+* Workflow state
+* Events
+* Outreach
+* Communication history
+* Contracts
+* Payments
+* Onboarding
+* Audit events
+* Errors
+* Retry state
+
+Do not invent columns when the schema already exists.
+
+If a required field does not exist:
+
+```text
+MARK SCHEMA CHANGE REQUIRED
+```
+
+instead of silently adding it to workflow logic.
+
+---
+
+# 14. ODOO
+
+Odoo is used as the CRM/business-system layer.
+
+Typical responsibilities may include:
+
+* Leads
+* Opportunities
+* Contacts
+* Companies
+* Sales information
+* CRM state
+* Business records
+
+Before creating duplicate database state, determine whether the record belongs in:
+
+```text
+Odoo
+PostgreSQL
+Both
+```
+
+If both:
+
+```text
+define source of truth
+define synchronization direction
+define unique identifier
+define conflict handling
+```
+
+---
+
+# 15. EVENT / AUDIT MODEL
+
+Every important business event should be auditable.
+
+Audit information should ideally identify:
+
+```text
+event_id
+event_type
+entity_type
+entity_id
+workflow_id
+execution_id
+actor
+source
+timestamp
+old_state
+new_state
+result
+error
+metadata
+```
+
+Never log:
+
+* Passwords
+* API secrets
+* Private keys
+* Sensitive authentication tokens
+
+---
+
+# 16. SECURITY
+
+Security is not an optional feature.
+
+Apply:
+
+* Authentication
+* Authorization
+* Signature validation
+* HMAC where specified
+* HTTPS
+* Secret management
+* Input validation
+* Rate limiting where appropriate
+* Replay protection
+* Idempotency
+* Audit logs
+* Least privilege
+* Fail-closed behavior
+
+---
+
+# 17. CURRENT EXAMPLE: 3.0.1 CONTRACT ACCEPTANCE SECURITY
+
+The Master Plan breaks 3.0.1 into:
+
+```text
+3.0.1 Contract e-sign security
+│
+├── 3.0.1.1 Generate HMAC accept token
+├── 3.0.1.2 Append token to accept URL
+├── 3.0.1.3 Parse token
+├── 3.0.1.4 Verify signature + expiry
+└── 3.0.1.5 Reject invalid/replay request
+```
+
+Integrated logic:
+
+```text
+Proposal Accept Webhook
+        ↓
+Parse accept_token
+        ↓
+Verify HMAC signature
+        ↓
+Verify expiry
+        ↓
+Token Verified?
+     /       \
+   YES       NO
+    ↓         ↓
+Existing     Reject
+acceptance   request
+logic        + audit
+```
+
+---
+
+# 18. HMAC IMPLEMENTATION
+
+Environment variable:
+
+```text
+PROPOSAL_ACCEPT_HMAC_SECRET
+```
+
+Never hard-code the secret.
+
+Token format:
+
+```text
+lead_id.expiry_unix.signature
+```
+
+Signature:
+
+```text
+HMAC-SHA256
+```
+
+The token must not be trusted until:
+
+```text
+signature valid
+AND
+expiry valid
+```
+
+Use timing-safe comparison for signatures.
+
+---
+
+# 19. REPLAY PROTECTION
+
+HMAC verification alone does **not** provide true one-time-use replay protection.
+
+For workflows requiring one-time acceptance:
+
+```text
+Verify token
+      ↓
+Check token/event consumption state
+      ↓
+Atomically mark consumed
+      ↓
+Continue
+```
+
+The database operation must prevent two simultaneous requests from both consuming the same token.
+
+Do not claim replay protection is complete until persistent one-time-use state exists.
+
+---
+
+# 20. EMAIL
+
+Email workflows must respect:
+
+* Correct recipient
+* Correct sender
+* Template
+* Personalization
+* Consent/suppression
+* Unsubscribe requirements
+* Tracking where permitted
+* Retry logic
+* Bounce handling
+* Delivery status
+* Idempotency
+
+Do not send emails without checking the relevant outreach/consent rules.
+
+---
+
+# 21. WHATSAPP
+
+WhatsApp workflows must handle:
+
+* Correct recipient
+* Message template
+* Conversation state
+* Opt-in/consent where required
+* Provider/API response
+* Retry
+* Duplicate webhook prevention
+* Delivery/read state where available
+* Failure handling
+
+Never assume provider-specific API fields.
+
+Verify against the configured provider/API documentation.
+
+---
+
+# 22. SMS
+
+SMS architecture:
+
+```text
+n8n
+ ↓
+Jasmin SMS Gateway
+ ↓
+SMPP / SMS Carrier
+ ↓
+Mobile Network
+```
+
+Jasmin is the self-hosted gateway layer.
+
+The actual carrier remains external.
+
+Required information before production:
+
+* SMPP host
+* SMPP port
+* System ID
+* Password
+* Source address
+* DLR configuration
+* Routing
+* Country restrictions
+* Compliance requirements
+
+Never put credentials directly into workflow JSON.
+
+---
+
+# 23. VOICE / DIALER
+
+Recommended architecture:
+
+```text
+n8n
+ ↓
+VICIdial
+ ↓
+Asterisk
+ ↓
+SIP Trunk
+ ↓
+Telephone Network
+```
+
+Required production configuration:
+
+* SIP provider
+* SIP credentials
+* Caller IDs
+* Phone numbers
+* Call recording policy
+* Campaign configuration
+* Agent configuration
+* Calling hours
+* Compliance rules
+
+Do not invent carrier settings.
+
+---
+
+# 24. SUPPORT
+
+Recommended:
+
+```text
+Zammad
+```
+
+Potential responsibilities:
+
+* Tickets
+* Customer issues
+* SLA
+* Escalation
+* Support history
+* Customer communication
+* Internal notes
+* Resolution state
+
+The exact integration must follow the selected deployment/API configuration.
+
+---
+
+# 25. AI / LLM RULES
+
+AI should be used where the Master Plan specifies it.
+
+AI outputs should be:
+
+* Structured
+* Validated
+* Logged where appropriate
+* Bounded by business rules
+* Rejected if schema-invalid
+* Human-reviewed when required
+
+Never let an LLM directly make irreversible business actions without the specified validation/approval layer.
+
+For example:
+
+```text
+LLM recommendation
+      ↓
+Schema validation
+      ↓
+Business-rule validation
+      ↓
+Human approval if required
+      ↓
+Action
+```
+
+---
+
+# 26. AI MODEL OUTPUT
+
+Whenever possible require structured JSON.
+
+Example:
+
+```json
+{
+  "decision": "QUALIFIED",
+  "confidence": 0.87,
+  "reason_codes": [],
+  "next_action": "BOOK_CALL"
+}
+```
+
+The exact schema must come from the Master Plan/business documentation.
+
+Do not invent decision values if predefined values exist.
+
+---
+
+# 27. ERROR HANDLING
+
+Every production workflow must consider:
+
+```text
+Validation error
+Authentication error
+Authorization error
+Rate limit
+Timeout
+Network failure
+Provider failure
+Database failure
+Invalid API response
+Duplicate event
+Partial failure
+Unknown failure
+```
+
+Recommended structure:
+
+```text
+Main workflow
+     │
+     ├── Success
+     │
+     └── Error
+          ↓
+      Classify
+          ↓
+      Retryable?
+       /      \
+     YES       NO
+      ↓         ↓
+    Retry      DLQ
+                ↓
+             Alert
+                ↓
+             Audit
+```
+
+---
+
+# 28. RETRY RULES
+
+Retries must be bounded.
+
+Do not create infinite loops.
+
+A retry strategy should specify:
+
+* Maximum attempts
+* Delay
+* Backoff
+* Retryable errors
+* Non-retryable errors
+* Final failure destination
+
+---
+
+# 29. DEAD-LETTER QUEUE
+
+Failed events that cannot be processed automatically should be recoverable.
+
+DLQ records should include:
+
+```text
+event_id
+workflow_id
+execution_id
+attempt_count
+failure_reason
+payload/reference
+first_failed_at
+last_failed_at
+next_action
+status
+```
+
+Do not lose failed business events.
+
+---
+
+# 30. HUMAN-IN-THE-LOOP
+
+Human approval is required wherever the Master Plan specifies it.
+
+Examples may include:
+
+* Pricing exceptions
+* Discount approval
+* Contract approval
+* High-risk AI decision
+* Escalation
+* Sensitive client action
+* Certain payment actions
+
+The workflow should stop safely and persist state.
+
+Example:
+
+```text
+Automation
+ ↓
+Approval Required
+ ↓
+PENDING_APPROVAL
+ ↓
+Human decision
+ ├── APPROVED
+ ├── REJECTED
+ └── EXPIRED
+```
+
+---
+
+# 31. ENVIRONMENTS
+
+Use separate:
+
+```text
+DEV
+STAGING
+PRODUCTION
+```
+
+Do not hard-code production endpoints into development workflows.
+
+Environment-specific values should come from:
+
+* Environment variables
+* n8n credentials
+* Secret manager
+* Deployment configuration
+
+---
+
+# 32. CREDENTIALS
+
+Never put secrets directly into exported JSON.
+
+Use placeholders such as:
+
+```text
+POSTGRES_CREDENTIAL
+ODOO_CREDENTIAL
+EMAIL_CREDENTIAL
+WHATSAPP_CREDENTIAL
+SMS_CREDENTIAL
+SIP_CREDENTIAL
+INFISICAL_CREDENTIAL
+OPENAI_OR_LOCAL_LLM_CREDENTIAL
+```
+
+The exact credential IDs/names should be mapped during deployment.
+
+---
+
+# 33. API RULES
+
+For every external API:
+
+Document:
+
+```text
+Provider
+Base URL
+Authentication
+Endpoint
+HTTP method
+Request schema
+Response schema
+Error codes
+Rate limits
+Timeout
+Retry policy
+Webhook behavior
+Idempotency
+```
+
+If any of these are unknown:
+
+```text
+UNKNOWN — DO NOT INVENT
+```
+
+---
+
+# 34. WEBHOOK RULES
+
+Every webhook should consider:
+
+```text
+Authentication
+Signature verification
+Timestamp validation
+Replay protection
+Idempotency
+Input validation
+Rate limiting
+Response status
+Audit logging
+```
+
+Do not expose an unauthenticated webhook for sensitive operations unless explicitly required and protected by another mechanism.
+
+---
+
+# 35. DATA PRIVACY
+
+Avoid unnecessary personal data.
+
+Do not log:
+
+* Passwords
+* Tokens
+* Secrets
+* Private keys
+* Full sensitive payloads unnecessarily
+
+Use IDs/references where possible.
+
+---
+
+# 36. WORKFLOW NAMING
+
+Use:
+
+```text
+<PLAN-ID>-<SHORT-DESCRIPTION>-v<version>
+```
+
+Examples:
+
+```text
+3.0.1-Proposal-Acceptance-Security-v1
+3.0.1.1-HMAC-Accept-Token-Generate
+3.0.1.4-HMAC-Signature-Expiry-Verify
+```
+
+Node names should begin with the plan step where useful:
+
+```text
+3.0.1.3 - Parse HMAC Accept Token
+3.0.1.4 - Verify HMAC Signature + Expiry
+```
+
+---
+
+# 37. FILE NAMING
+
+For complete workflows:
+
+```text
+<PLAN-ID>-<Workflow-Name>-v1.json
+```
+
+For node patches:
+
+```text
+<PLAN-ID>-<Description>-Node-Patch.json
+```
+
+Do not confuse a node patch with a complete importable n8n workflow.
+
+---
+
+# 38. COMPLETE WORKFLOW VS NODE PATCH
+
+### Node patch
+
+Contains:
+
+* One or more nodes
+* Integration instructions
+* Test cases
+
+It is not necessarily a complete n8n workflow.
+
+### Complete workflow
+
+Must contain:
+
+```text
+name
+nodes
+connections
+settings
+credentials references where required
+```
+
+and should be importable into n8n.
+
+When the user asks:
+
+> "integrate all"
+
+produce a single complete workflow rather than separate patches.
+
+---
+
+# 39. TESTING
+
+Every workflow must have test cases.
+
+At minimum:
+
+### Happy path
+
+```text
+Valid input
+→ expected output
+```
+
+### Validation failure
+
+```text
+Missing/invalid input
+→ controlled rejection
+```
+
+### Authentication failure
+
+```text
+Invalid credentials/signature
+→ rejection
+```
+
+### Duplicate event
+
+```text
+Same event twice
+→ no duplicate business action
+```
+
+### Provider failure
+
+```text
+External API failure
+→ retry/error path
+```
+
+### Timeout
+
+```text
+Provider timeout
+→ retry or DLQ
+```
+
+### Unexpected response
+
+```text
+Invalid provider payload
+→ safe failure
+```
+
+---
+
+# 40. PRODUCTION READINESS
+
+A workflow is not "complete" merely because the JSON imports.
+
+Definition of ready:
+
+```text
+Design complete
+        ↓
+JSON created
+        ↓
+Imports successfully
+        ↓
+Credentials configured
+        ↓
+DEV tested
+        ↓
+Failure cases tested
+        ↓
+Idempotency tested
+        ↓
+Security tested
+        ↓
+STAGING tested
+        ↓
+Business approval
+        ↓
+PRODUCTION
+```
+
+---
+
+# 41. WORKFLOW PROGRESS STATUS
+
+Use these statuses:
+
+```text
+NOT_STARTED
+RESEARCHING
+DESIGNING
+BUILDING
+JSON_READY
+IMPORTED
+DEV_TESTING
+STAGING_TESTING
+BUSINESS_REVIEW
+PRODUCTION_READY
+PRODUCTION
+BLOCKED
+```
+
+Do not mark a workflow `PRODUCTION_READY` merely because JSON has been generated.
+
+---
+
+# 42. PROGRESS TRACKER
+
+For every workflow maintain:
+
+| Field            | Description           |
+| ---------------- | --------------------- |
+| Plan ID          | Exact Master Plan ID  |
+| Name             | Workflow name         |
+| Parent           | Parent workflow       |
+| Dependencies     | Required workflows    |
+| Software         | Systems used          |
+| API dependencies | External APIs         |
+| Credentials      | Required credentials  |
+| Status           | Current state         |
+| JSON             | Filename              |
+| Tests            | Test status           |
+| Security         | Security status       |
+| Idempotency      | Idempotency status    |
+| Error handling   | Error handling status |
+| Human approval   | Required or not       |
+| Notes            | Open issues           |
+
+---
+
+# 43. DEPENDENCY TRACKING
+
+Never build a downstream workflow while silently assuming an unavailable upstream output.
+
+Example:
+
+```text
+Lead qualification
+       ↓
+Proposal
+       ↓
+Pricing
+       ↓
+Contract
+       ↓
+Payment
+       ↓
+Onboarding
+```
+
+If Proposal requires a field produced by Qualification:
+
+```text
+Document dependency explicitly.
+```
+
+---
+
+# 44. DO NOT INVENT RULE
+
+This is one of the most important rules.
+
+If the source material says:
+
+```text
+Pricing threshold = ?
+```
+
+do not write:
+
+```text
+Pricing threshold = ₹50,000
+```
+
+Instead:
+
+```text
+REQUIRED INPUT:
+Pricing approval threshold
+```
+
+Likewise for:
+
+* API endpoints
+* Provider names
+* Credentials
+* Discount percentages
+* SLA
+* Calling limits
+* Email limits
+* SMS limits
+* AI confidence thresholds
+* Database fields
+* Business statuses
+
+---
+
+# 45. WHEN INFORMATION IS MISSING
+
+Use this format:
+
+```text
+BLOCKER:
+<what is missing>
+
+WHY REQUIRED:
+<why workflow cannot safely complete>
+
+SOURCE CHECKED:
+<Master Plan / GitHub / supporting file>
+
+CURRENT STATE:
+<unknown / undecided>
+
+PROPOSED OPTION:
+<only if user asks for recommendation>
+```
+
+---
+
+# 46. WHEN RECOMMENDING SOFTWARE
+
+For new software:
+
+1. Search current options.
+2. Prefer open-source.
+3. Verify license.
+4. Check active maintenance.
+5. Check API.
+6. Check self-hosting.
+7. Check n8n compatibility.
+8. Compare alternatives.
+9. Explain why selected software fits this architecture.
+
+Do not add software simply because it is popular.
+
+---
+
+# 47. CURRENT SOFTWARE GAP DECISIONS
+
+The following recommendations were made for previously unresolved areas:
+
+```text
+SMS:
+Jasmin SMS Gateway
++
+external SMPP/SMS carrier
+
+VOICE:
+VICIdial
++
+Asterisk
++
+external SIP carrier
+
+HELPDESK:
+Zammad
+```
+
+These are software recommendations, not provider credentials.
+
+---
+
+# 48. EMAIL ARCHITECTURE
+
+Selected/planned email infrastructure includes:
+
+```text
+n8n
+ ↓
+Postal / selected mail system
+ ↓
+SMTP / delivery infrastructure
+```
+
+Use the actual configured project software rather than automatically replacing it.
+
+---
+
+# 49. DOCUMENT GENERATION
+
+Where documents are generated:
+
+```text
+Template
+ ↓
+Data population
+ ↓
+Validation
+ ↓
+PDF/document generation
+ ↓
+Storage
+ ↓
+Delivery
+ ↓
+Audit
+```
+
+Gotenberg may be used where specified for document rendering/conversion.
+
+---
+
+# 50. CONTRACT FLOW
+
+Typical contract flow:
+
+```text
+Proposal
+ ↓
+Client acceptance
+ ↓
+Security validation
+ ↓
+Contract generation
+ ↓
+E-signature
+ ↓
+Signature callback
+ ↓
+Contract state update
+ ↓
+Payment/invoicing
+ ↓
+Onboarding
+```
+
+Every transition should be auditable.
+
+---
+
+# 51. PAYMENT / INVOICE FLOW
+
+Payment workflow must distinguish:
+
+```text
+Invoice created
+Invoice sent
+Payment initiated
+Payment pending
+Payment successful
+Payment failed
+Payment refunded
+```
+
+Never mark payment successful based solely on a client-side redirect.
+
+Use verified provider callback/webhook where applicable.
+
+---
+
+# 52. CLIENT ONBOARDING
+
+Onboarding should be state-driven.
+
+Example:
+
+```text
+NEW_CLIENT
+ ↓
+CONTRACT_SIGNED
+ ↓
+PAYMENT_CONFIRMED
+ ↓
+ONBOARDING_STARTED
+ ↓
+INFORMATION_PENDING
+ ↓
+READY_FOR_DELIVERY
+ ↓
+ACTIVE
+```
+
+Use the exact statuses defined by the project.
+
+---
+
+# 53. SALES / OUTREACH
+
+The system contains dedicated documentation for:
+
+* Lead generation
+* Outreach
+* Multi-channel sequencing
+* SMS
+* Cold calling
+* Email
+* WhatsApp
+* Qualification
+* Follow-up
+* Objection handling
+
+Use the project's templates and methods.
+
+Do not replace them with generic outreach copy.
+
+---
+
+# 54. OBJECTION HANDLING
+
+The objection-response library exists in the project.
+
+Do not create a new generic objection library unless requested.
+
+The workflow should reference the existing library and route the correct objection/category.
+
+---
+
+# 55. QUALIFICATION
+
+The project uses qualification frameworks including:
+
+* BANT
+* MEDDICC/MEDDIC-related qualification
+
+Use the project's exact terminology and fields.
+
+Do not invent scoring thresholds.
+
+---
+
+# 56. MULTI-CHANNEL SEQUENCING
+
+The system has dedicated multi-channel sequencing documentation.
+
+Potential channel sequence:
+
+```text
+Email
+ ↓
+LinkedIn
+ ↓
+WhatsApp
+ ↓
+SMS
+ ↓
+Call
+ ↓
+Follow-up
+```
+
+The exact sequence, timing and conditions must come from the project documentation.
+
+Do not automatically create a universal sequence.
+
+---
+
+# 57. RATE LIMITS
+
+Every provider should have rate-limit awareness.
+
+Do not assume:
+
+```text
+unlimited API calls
+```
+
+Store/handle:
+
+* Provider limits
+* Retry-after
+* Backoff
+* Daily limits
+* Campaign limits
+
+where the source specifies them.
+
+---
+
+# 58. OBSERVABILITY
+
+Recommended architecture:
+
+```text
+Application / n8n
+        │
+        ├── Metrics → Prometheus
+        │
+        ├── Dashboards → Grafana
+        │
+        ├── Logs → Loki
+        │
+        ├── Errors → GlitchTip
+        │
+        └── Uptime → Uptime Kuma
+```
+
+Use only what is actually deployed.
+
+---
+
+# 59. BACKUPS
+
+Production must have backups for:
+
+```text
+PostgreSQL
+Workflow definitions
+Configuration
+Important documents
+Object storage
+Critical business data
+```
+
+PostgreSQL backup/PITR recommendation:
+
+```text
+pgBackRest
+```
+
+Backups should be tested by restoration, not merely created.
+
+---
+
+# 60. SECRETS
+
+Recommended:
+
+```text
+Infisical
+```
+
+Secrets include:
+
+```text
+API keys
+Database passwords
+Webhook secrets
+HMAC secrets
+SMTP credentials
+SMPP credentials
+SIP credentials
+OAuth secrets
+Encryption keys
+```
+
+Never commit these to GitHub.
+
+---
+
+# 61. IDENTITY
+
+Recommended:
+
+```text
+Keycloak
+```
+
+Use for:
+
+* Authentication
+* SSO
+* RBAC
+* MFA
+* Service identity where appropriate
+
+Do not duplicate authentication logic in every workflow.
+
+---
+
+# 62. REVERSE PROXY
+
+Recommended:
+
+```text
+Caddy
+```
+
+Responsibilities:
+
+* HTTPS
+* TLS certificates
+* Domain routing
+* Reverse proxy
+* Service exposure
+
+Do not expose internal services unnecessarily.
+
+---
+
+# 63. OBJECT STORAGE
+
+Recommended where required:
+
+```text
+SeaweedFS
+```
+
+Use for:
+
+* Generated documents
+* Attachments
+* Reports
+* Files
+* Other large objects
+
+Keep transactional metadata in PostgreSQL.
+
+---
+
+# 64. EVENT BUS
+
+Recommended:
+
+```text
+NATS
+```
+
+Use where asynchronous event-driven processing is actually required.
+
+Do not introduce an event bus into a simple workflow unnecessarily.
+
+---
+
+# 65. CACHE
+
+Recommended:
+
+```text
+Valkey
+```
+
+Potential uses:
+
+* Cache
+* Temporary state
+* Rate limiting
+* Queue-related state where appropriate
+
+Do not use cache as the permanent source of truth for critical business records.
+
+---
+
+# 66. OUTPUT REQUIREMENTS FOR AI
+
+When asked to build a workflow, the AI must return:
+
+### 1. Filename
+
+```text
+<PLAN-ID>-<NAME>-v1.json
+```
+
+### 2. Purpose
+
+One or two sentences.
+
+### 3. Dependencies
+
+List required:
+
+* Previous workflows
+* APIs
+* Credentials
+* Environment variables
+* Database tables
+
+### 4. n8n JSON
+
+Provide the actual JSON.
+
+### 5. Test cases
+
+List at least:
+
+* Happy path
+* Validation failure
+* Duplicate/retry
+* External API failure
+* Security failure where applicable
+
+### 6. Status
+
+Example:
+
+```text
+JSON_READY
+```
+
+---
+
+# 67. DO NOT CREATE FAKE CREDENTIALS
+
+Never produce fake:
+
+```text
+API keys
+Passwords
+Tokens
+Client secrets
+Webhook secrets
+Database credentials
+SMPP credentials
+SIP credentials
+```
+
+Use:
+
+```text
+{{$env.VARIABLE_NAME}}
+```
+
+or n8n credentials.
+
+---
+
+# 68. DO NOT CREATE FAKE API ENDPOINTS
+
+If the exact API endpoint is unknown:
+
+```text
+PLACEHOLDER / REQUIRES PROVIDER DOCS
+```
+
+Do not invent an endpoint merely to make JSON look complete.
+
+---
+
+# 69. DO NOT CREATE FAKE DATABASE TABLES
+
+If a table is not confirmed:
+
+```text
+REQUIRES SCHEMA CONFIRMATION
+```
+
+Do not silently create SQL based on an imagined schema.
+
+---
+
+# 70. DO NOT MODIFY BUSINESS LOGIC SILENTLY
+
+If a workflow needs a business-rule change:
+
+```text
+IDENTIFY CHANGE
+↓
+EXPLAIN WHY
+↓
+MARK AS DECISION
+↓
+WAIT FOR APPROVAL
+```
+
+---
+
+# 71. EXISTING WORKFLOW INTEGRATION
+
+When integrating a new workflow into an existing workflow:
+
+```text
+Read existing JSON
+        ↓
+Understand trigger
+        ↓
+Understand data contract
+        ↓
+Identify insertion point
+        ↓
+Add new nodes
+        ↓
+Preserve existing behavior
+        ↓
+Update connections
+        ↓
+Test
+```
+
+Do not rebuild a working workflow from scratch without a reason.
+
+---
+
+# 72. VERSIONING
+
+Use:
+
+```text
+v1
+v2
+v3
+```
+
+for meaningful changes.
+
+Never overwrite a previous production version without version control.
+
+Git should be the source of version history.
+
+---
+
+# 73. CHANGELOG
+
+Every meaningful workflow change should document:
+
+```text
+Version
+Date
+Change
+Reason
+Dependencies
+Breaking change?
+Migration required?
+```
+
+---
+
+# 74. WORKFLOW AUDIT
+
+Before declaring a workflow complete, verify:
+
+```text
+[ ] Correct plan ID
+[ ] Correct trigger
+[ ] Correct inputs
+[ ] Validation
+[ ] Authentication
+[ ] Authorization
+[ ] Idempotency
+[ ] Business logic
+[ ] API integration
+[ ] Database persistence
+[ ] Audit event
+[ ] Error handling
+[ ] Retry logic
+[ ] DLQ where needed
+[ ] Notifications
+[ ] Security
+[ ] Secrets
+[ ] Tests
+[ ] Documentation
+```
+
+---
+
+# 75. BUILD ORDER
+
+The AI must follow the Master Plan's build order.
+
+Do not jump randomly between unrelated stages.
+
+If a workflow has dependencies:
+
+```text
+Build dependency first
+```
+
+unless a mocked interface is intentionally being used for development.
+
+---
+
+# 76. MOCKING
+
+When an external provider is not yet available:
+
+Use a clearly labelled mock/stub.
+
+Example:
+
+```text
+MOCK_SMS_PROVIDER
+MOCK_PAYMENT_PROVIDER
+MOCK_SIP_PROVIDER
+```
+
+Never present a mock as production integration.
+
+---
+
+# 77. BLOCKED WORKFLOW
+
+A workflow can be:
+
+```text
+BLOCKED
+```
+
+if it requires:
+
+* Provider credentials
+* API documentation
+* Missing database schema
+* Missing business rule
+* Missing pricing
+* Missing template
+* Missing legal/compliance decision
+
+The AI should continue building independent workflows instead of stopping the entire project.
+
+---
+
+# 78. CURRENT PROJECT STATE
+
+At the point this context was created:
+
+### Confirmed
+
+* Master workflow plan exists.
+* Detailed workflow decomposition exists.
+* Supporting business documentation exists.
+* GitHub contains substantial Growth Engine material.
+* Pricing/package material exists.
+* SMS workflow documentation exists.
+* Cold-calling documentation exists.
+* Multi-channel sequencing documentation exists.
+* Objection-response material exists.
+* Existing n8n workflow JSONs exist.
+* Security requirements have been explicitly identified.
+* Software architecture has been substantially selected.
+
+### Remaining configuration dependencies
+
+Potential remaining deployment-level dependencies include:
+
+* Actual provider accounts
+* API credentials
+* SMS/SMPP carrier
+* SIP carrier/trunk
+* Production domains
+* Production database credentials
+* Production secrets
+* Provider-specific API configuration
+* Final infrastructure deployment configuration
+
+These do not prevent design/build of workflows that do not depend on them.
+
+---
+
+# 79. CURRENT 3.0.1 FILES
+
+Individual node patches were created during development:
+
+```text
+3.0.1.1-HMAC-Accept-Token-Generate-Node-Patch.json
+
+3.0.1.2-HMAC-Accept-Token-Append-URL-Node-Patch.json
+
+3.0.1.3-HMAC-Accept-Token-Parse-Node-Patch.json
+
+3.0.1.4-HMAC-Signature-Expiry-Verify-Node-Patch.json
+
+3.0.1.5-HMAC-Invalid-Replay-Branch-Node-Patch.json
+```
+
+These are **patches**, not five independent production workflows.
+
+They should be integrated into the appropriate Module 2.4/2.5 proposal acceptance workflow.
+
+---
+
+# 80. IMPORTANT 3.0.1 INTEGRATION WARNING
+
+The integrated 3.0.1 flow must eventually be:
+
+```text
+Existing proposal acceptance trigger
+             ↓
+3.0.1.3 Parse token
+             ↓
+3.0.1.4 Verify signature + expiry
+             ↓
+3.0.1.5 Security branch
+          /        \
+       valid       invalid
+        ↓             ↓
+existing          reject
+acceptance        + audit
+logic
+```
+
+Do not create a second competing production acceptance endpoint unless the architecture explicitly requires it.
+
+---
+
+# 81. REPLAY-PROTECTION WARNING
+
+The 3.0.1.5 branch alone does not make the token one-time-use.
+
+True replay protection requires:
+
+```text
+Token verified
+       ↓
+Atomic DB consume/check
+       ↓
+Already consumed?
+    /          \
+  YES           NO
+   ↓             ↓
+Reject       Mark consumed
+                ↓
+             Continue
+```
+
+This must be implemented before claiming complete one-time acceptance security.
+
+---
+
+# 82. AI WORKFLOW-BUILDING INSTRUCTION
+
+When the project owner says:
+
+> "Agli banao"
+
+interpret it as:
+
+```text
+Build the NEXT unfinished step in the Master Workflow Plan.
+```
+
+Do not select a random workflow.
+
+Use the exact next plan ID.
+
+---
+
+# 83. WHEN THE USER SAYS "INTEGRATE"
+
+Interpret:
+
+> "sabko integrate karke ek json bana do"
+
+as:
+
+```text
+Take all relevant nodes/patches for that plan step
+        ↓
+combine them
+        ↓
+connect them correctly
+        ↓
+produce ONE complete n8n importable JSON
+```
+
+Do not give five separate patch files.
+
+---
+
+# 84. WHEN USER SAYS "START"
+
+Start from the first unfinished workflow in the Master Plan.
+
+Do not start from a later workflow merely because it is technically easier.
+
+---
+
+# 85. COMMUNICATION STYLE
+
+The project owner prefers:
+
+* Direct answers
+* Practical implementation
+* Small batches
+* Actual files
+* Exact filenames
+* Minimal unnecessary theory
+
+For each completed workflow say:
+
+```text
+Done.
+
+Filename:
+<filename>
+
+Status:
+<status>
+
+Next:
+<next plan ID>
+```
+
+---
+
+# 86. FINAL PRINCIPLE
+
+The AI is not merely generating JSON.
+
+It is building a **production automation system**.
+
+Therefore:
+
+```text
+BUSINESS PLAN
+      ↓
+WORKFLOW ARCHITECTURE
+      ↓
+DATA CONTRACT
+      ↓
+SECURITY
+      ↓
+N8N IMPLEMENTATION
+      ↓
+ERROR HANDLING
+      ↓
+TESTING
+      ↓
+OBSERVABILITY
+      ↓
+DEPLOYMENT
+```
+
+A workflow is complete only when its **business purpose, technical implementation, security, dependencies, failure handling, and testing requirements** are all understood.
+
+---
+
+# 87. GOLDEN RULE
+
+> **Never invent what the project has already defined, and never pretend that something is defined when it is not.**
+
+When the source provides the answer:
+
+```text
+USE THE SOURCE.
+```
+
+When the source does not provide the answer:
+
+```text
+FLAG THE GAP.
+```
+
+When the user explicitly asks for a recommendation:
+
+```text
+RESEARCH → COMPARE → RECOMMEND → DOCUMENT THE DECISION.
+```
+
+When the workflow can be built without the missing information:
+
+```text
+BUILD THE UNBLOCKED PART.
+```
+
+This context should be used together with the **latest Master Workflow Plan, supporting project files, and connected GitHub repositories**.

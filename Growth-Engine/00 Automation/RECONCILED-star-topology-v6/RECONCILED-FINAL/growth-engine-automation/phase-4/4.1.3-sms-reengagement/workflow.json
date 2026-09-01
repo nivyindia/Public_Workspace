@@ -1,0 +1,233 @@
+{
+  "name": "4.1.3 - SMS Re-engagement",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "id": "n1-daily-10am",
+      "name": "Daily 10AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        300
+      ],
+      "notes": "4.1.3.1: roz 10AM ek baar re-engagement batch check karta hai (calling-hours jaisa SMS ke liye bhi decent-hour rule)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master\nWHERE sms_opt_out = false\n  AND COALESCE(active_sequence_suppressed, false) = false\n  AND phone IS NOT NULL AND phone <> ''\n  -- 16.4 rule: SIRF warm/consented relationship -- kabhi cold/first-touch SMS nahi\n  AND (\n    status IN ('Onboarded', 'Active', 'Churn Risk')\n    OR last_reply_channel = 'sms'\n  )\n  AND (last_sms_sent_at IS NULL OR last_sms_sent_at < now() - interval '90 days')\n  AND (updated_at < now() - interval '30 days')  -- inactive-lead threshold\nLIMIT 50;",
+        "options": {}
+      },
+      "id": "n2-fetch-reengagement-candidates",
+      "name": "Fetch Re-engagement Candidates",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "4.1.3.1 (Inactive-lead filter): scope sirf warm/consented list tak — cold leads is query se kabhi nahi aayenge, jaisa tracker §16.4 mein explicitly instruct kiya gaya hai. '90 days'/'30 days' thresholds ⚠️ INPUT NEEDED — abhi reasonable default hai, tumhare actual re-engagement cadence se confirm karo."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-not-suppressed",
+              "leftValue": "={{$json.sms_opt_out}}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n3-if-not-suppressed",
+      "name": "IF Not Suppressed (safety re-check)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ],
+      "notes": "§16.4 standard: har outbound send-node ke pehle explicit suppression IF-check honi chahiye, sirf query-filter par depend nahi karna — is se agar koi doosra module beech mein opt-out update kare to bhi race-condition safe rahega."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.JASMIN_HTTP_API_URL}}/send",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "={{$env.JASMIN_SYSTEM_ID}}"
+            },
+            {
+              "name": "password",
+              "value": "={{$env.JASMIN_PASSWORD}}"
+            },
+            {
+              "name": "to",
+              "value": "={{$json.phone}}"
+            },
+            {
+              "name": "from",
+              "value": "={{$env.JASMIN_SOURCE_ADDR}}"
+            },
+            {
+              "name": "content",
+              "value": "=Hi {{$json.name}}, it's been a while! We'd love to reconnect on your {{$json.service_type}} project. Reply here or book a quick call: {{$env.CALCOM_BOOKING_LINK}} - Team Nivy (reply STOP to opt out)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n4-jasmin-send-sms",
+      "name": "Jasmin - Send Re-engagement SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        260
+      ],
+      "notes": "4.1.3.2. ⚠️ INPUT NEEDED (per Supprting_files.txt §22, 'Required information before production'): JASMIN_HTTP_API_URL, JASMIN_SYSTEM_ID, JASMIN_PASSWORD, JASMIN_SOURCE_ADDR, plus SMPP-side DLR/routing/country-restriction config on the Jasmin server itself (not an n8n setting). Jasmin's HTTP API path/param names shown here match its documented /send endpoint — verify against your actual Jasmin instance version before go-live. Credentials must go into n8n Credentials/env, NEVER hardcoded in this JSON."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET last_sms_sent_at = now(), updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n5-mark-sms-sent",
+      "name": "Postgres - Mark SMS Sent (suppress-repeat)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1060,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "4.1.3.3: last_sms_sent_at update karta hai — agla run isi lead ko 90 din tak dobara nahi uthayega (suppress-repeat), Fetch query ki WHERE clause mein already handled hai."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Re-engagement SMS sent: ' + $json.company)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n6-odoo-discuss-alert",
+      "name": "Odoo Discuss - Re-engagement SMS Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 10AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Re-engagement Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Re-engagement Candidates": {
+      "main": [
+        [
+          {
+            "node": "IF Not Suppressed (safety re-check)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Not Suppressed (safety re-check)": {
+      "main": [
+        [
+          {
+            "node": "Jasmin - Send Re-engagement SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Jasmin - Send Re-engagement SMS": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark SMS Sent (suppress-repeat)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark SMS Sent (suppress-repeat)": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Re-engagement SMS Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

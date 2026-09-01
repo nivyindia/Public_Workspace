@@ -1,0 +1,159 @@
+{
+  "name": "1.5 - Central CRM Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "n1-schedule",
+      "name": "Every 5 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Odoo CRM stage change detect: compare crm.lead.stage_id (Odoo) against last-known stage in clients_master\nSELECT\n  cl.id AS odoo_lead_id,\n  cl.name,\n  cl.email_from AS email,\n  cl.phone,\n  cl.partner_name AS company,\n  st.name AS current_stage,\n  cm.status AS last_known_status\nFROM crm_lead cl\nJOIN crm_stage st ON st.id = cl.stage_id\nLEFT JOIN clients_master cm ON cm.odoo_lead_id = cl.id\nWHERE cm.odoo_lead_id IS NULL\n   OR st.name != cm.status\nORDER BY cl.write_date DESC\nLIMIT 25;",
+        "options": {}
+      },
+      "id": "n2-detect-changes",
+      "name": "Detect CRM Stage Changes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "crm_lead aur crm_stage Odoo ke actual Postgres tables hain (same DB). st.name Odoo me aapke pipeline stages ke exact naam se match hone chahiye: New, Qualified, Contacted, Nurtured, Booked, Proposal Sent, Won, Onboarded, Delivered, Renewal - Section 1 wale funnel status ke mutabiq CRM pipeline stages rename kar lena."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO clients_master (odoo_lead_id, name, email, phone, company, status, created_at, updated_at)\nVALUES ({{$json.odoo_lead_id}}, {{JSON.stringify($json.name)}}, {{JSON.stringify($json.email)}}, {{JSON.stringify($json.phone)}}, {{JSON.stringify($json.company)}}, {{JSON.stringify($json.current_stage)}}, now(), now())\nON CONFLICT (odoo_lead_id) DO UPDATE\nSET status = EXCLUDED.status, updated_at = now()\nRETURNING id, odoo_lead_id, status AS current_stage;",
+        "options": {}
+      },
+      "id": "n3-upsert-master",
+      "name": "Upsert clients_master",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        620,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Ye woh 'single source of truth sync' hai jiska zikr Master Plan ke Section 5.1 me hai - har module isi table ko read/write karta hai."
+    },
+    {
+      "parameters": {
+        "jsCode": "const stageMap = {\n  'Qualified': 'lead.qualified',\n  'Booked': 'lead.booked',\n  'Proposal Sent': 'proposal.ready',\n  'Won': 'client.won'\n};\nconst stage = $json.current_stage;\nconst event_type = stageMap[stage] || null;\nreturn [{\n  json: {\n    event_type,\n    client_id: $json.id,\n    odoo_lead_id: $json.odoo_lead_id,\n    detected_stage: stage,\n    payload: { detected_stage: stage }\n  }\n}];"
+      },
+      "id": "map-stage-to-event-type",
+      "name": "Map Stage to Event Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        320
+      ],
+      "notes": "S3.3 replacement for the 4 IF nodes. event_type=null (unmapped stage) still gets reported to the Hub \u2014 Hub-Dispatcher's default/no-match output (S2.4) logs it to flagged_events + Odoo Discuss alert, which is the same protection the old 'Detect Unmatched Stage' / 'Log Unmatched Stage Event' nodes gave (F3.1), now centralized in the Dispatcher instead of duplicated per-spoke."
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "={{$json.event_type}}",
+            "client_id": "={{$json.client_id}}",
+            "odoo_lead_id": "={{$json.odoo_lead_id}}",
+            "source_module": "1.5",
+            "payload": "={{$json.payload}}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-1-5",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        320
+      ],
+      "notes": "S3.3 \u2014 replaces ALL of: 4x IF Stage=X, 4x Execute Workflow (2.1/2.4/2.5/2.7), Detect Unmatched Stage, Log Unmatched Stage Event, and Odoo Discuss - Notify Stage Change. The Dispatcher now owns routing + the unmatched-stage alert; 1.5's only job is detect-stage-change -> upsert -> tell the Hub what happened."
+    }
+  ],
+  "connections": {
+    "Every 5 Min": {
+      "main": [
+        [
+          {
+            "node": "Detect CRM Stage Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect CRM Stage Changes": {
+      "main": [
+        [
+          {
+            "node": "Upsert clients_master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert clients_master": {
+      "main": [
+        [
+          {
+            "node": "Map Stage to Event Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Stage to Event Type": {
+      "main": [
+        [
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_0.0_ERROR_HANDLER_WORKFLOW_ID"
+  },
+  "id": "25527b8572ff348b"
+}

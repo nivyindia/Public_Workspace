@@ -1,0 +1,583 @@
+{
+  "name": "2.6 - Invoice + Payment",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "n1-execute-trigger",
+      "name": "From Module 2.5 (Contract Signed)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        260
+      ],
+      "notes": "Module 2.5 ka 'Odoo - Set CRM Stage to Won' ke baad ye workflow Execute Workflow se call hota hai, input me { odoo_lead_id } aata hai."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_lead_id = {{$json.odoo_lead_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "n2-fetch-lead",
+      "name": "Fetch Lead + Deal Detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"account.move\",\n      \"create\",\n      [ {\n        \"move_type\": \"out_invoice\",\n        \"partner_id\": {{$json.odoo_partner_id || $env.ODOO_FALLBACK_PARTNER_ID}},\n        \"invoice_origin\": {{JSON.stringify('Nivy deal - ' + $json.company)}},\n        \"invoice_line_ids\": [ [0, 0, {\n          \"name\": {{JSON.stringify('Services - ' + $json.company)}},\n          \"quantity\": 1,\n          \"price_unit\": {{$json.recommended_price || $json.deal_value || 0}}\n        }] ]\n      } ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n3-odoo-create-invoice",
+      "name": "Odoo - Create Draft Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        260
+      ],
+      "notes": "recommended_price Module 2.4 ke proposal se aana chahiye -- agar clients_master me alag column (deal_value) me store kar rahe ho to wahi use karo. Setup section 1 dekho."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"account.move\",\n      \"action_post\",\n      [ [{{$json.result}}] ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n4-odoo-post-invoice",
+      "name": "Odoo - Post/Validate Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"account.move\",\n      \"read\",\n      [ [{{$('Odoo - Create Draft Invoice').item.json.result}}], [\"access_token\", \"name\", \"amount_total\"] ]\n    ]\n  },\n  \"id\": 1\n}"
+      },
+      "id": "n5-odoo-read-invoice",
+      "name": "Odoo - Read Invoice (portal token)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        260
+      ],
+      "notes": "Odoo Community me account.move par access_token field standard nahi hai (Enterprise portal feature ke close hai) -- agar khali aaye to Known Limitations dekho, fallback plain portal-login link use karo."
+    },
+    {
+      "parameters": {
+        "jsCode": "const inv = $input.item.json.result?.[0] || {};\nconst lead = $('Fetch Lead + Deal Detail').item.json;\nconst invoiceId = $('Odoo - Create Draft Invoice').item.json.result;\nconst token = inv.access_token;\nconst paymentUrl = token\n  ? `${$env.ODOO_URL}/my/invoices/${invoiceId}?access_token=${token}`\n  : `${$env.ODOO_URL}/my/invoices/${invoiceId}`;\n\nreturn [{\n  json: {\n    ...lead,\n    odoo_invoice_id: invoiceId,\n    invoice_number: inv.name || '',\n    amount_total: inv.amount_total || lead.recommended_price || 0,\n    payment_url: paymentUrl\n  }\n}];"
+      },
+      "id": "n6-build-payment-link",
+      "name": "Build Payment Link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$json.email}}",
+        "subject": "=Invoice {{$json.invoice_number}} - Nivy International",
+        "emailFormat": "text",
+        "text": "=Hi {{$json.name}},\n\nThank you for confirming! Your invoice {{$json.invoice_number}} for Rs. {{$json.amount_total}} is ready.\n\nPay securely here: {{$json.payment_url}}\n\nOnce payment is received you'll get an automatic receipt and our onboarding team will reach out.",
+        "options": {}
+      },
+      "id": "n7-send-invoice-email",
+      "name": "Send Invoice Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1500,
+        260
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Invoiced',\n    odoo_invoice_id = {{$json.odoo_invoice_id}},\n    updated_at = now()\nWHERE odoo_lead_id = {{$json.odoo_lead_id}};",
+        "options": {}
+      },
+      "id": "n8-mark-invoiced",
+      "name": "Postgres - Mark Invoiced",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1720,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Invoice ' + $json.invoice_number + ' sent to ' + $json.name + ' - Rs. ' + $json.amount_total)}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n9-discuss-invoiced",
+      "name": "Odoo Discuss - Invoice Sent Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-received",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n10-payment-webhook",
+      "name": "Payment Received Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        520
+      ],
+      "webhookId": "payment-received",
+      "notes": "Odoo portal payment confirmation (ya Razorpay/Stripe agar payment gateway alag se use ho raha hai) is webhook ko call karega. Payload structure gateway ke hisaab se Node 11 me adjust karo."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\nreturn [{\n  json: {\n    odoo_invoice_id: body.invoice_id || body.reference || null,\n    amount_paid: body.amount || 0,\n    transaction_id: body.transaction_id || body.payment_id || ''\n  }\n}];"
+      },
+      "id": "n11-parse-payment",
+      "name": "Parse Payment Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients_master WHERE odoo_invoice_id = {{$json.odoo_invoice_id}} LIMIT 1;",
+        "options": {}
+      },
+      "id": "n12-find-lead-by-invoice",
+      "name": "Find Lead by Invoice ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        620,
+        520
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"account.move\",\n      \"action_register_payment\",\n      [ [{{$('Parse Payment Payload').item.json.odoo_invoice_id}}] ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {}
+      },
+      "id": "n13-odoo-register-payment",
+      "name": "Odoo - Register Payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        520
+      ],
+      "notes": "Odoo Community me action_register_payment seedha default amount le leta hai (invoice ka full amount) -- partial payment support ke liye account.payment.register wizard model use karna padega (v2)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients_master\nSET status = 'Paid',\n    updated_at = now()\nWHERE odoo_invoice_id = {{$('Parse Payment Payload').item.json.odoo_invoice_id}}\nRETURNING *;",
+        "options": {}
+      },
+      "id": "n14-mark-paid",
+      "name": "Postgres - Mark Paid",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1060,
+        520
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.OUTREACH_FROM_EMAIL}}",
+        "toEmail": "={{$('Find Lead by Invoice ID').item.json.email}}",
+        "subject": "Payment Received - Thank You!",
+        "emailFormat": "text",
+        "text": "=Hi {{$('Find Lead by Invoice ID').item.json.name}},\n\nWe've received your payment of Rs. {{$('Parse Payment Payload').item.json.amount_paid}} (Transaction ID: {{$('Parse Payment Payload').item.json.transaction_id}}). Thank you!\n\nOur onboarding team will reach out shortly to get started.",
+        "options": {}
+      },
+      "id": "n15-send-receipt",
+      "name": "Send Receipt Email (Postal SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1280,
+        520
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Postal SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ODOO_URL}}/jsonrpc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call\",\n  \"params\": {\n    \"service\": \"object\",\n    \"method\": \"execute_kw\",\n    \"args\": [\n      \"{{$env.ODOO_DB}}\",\n      {{$env.ODOO_UID}},\n      \"{{$env.ODOO_API_KEY}}\",\n      \"mail.channel\",\n      \"message_post\",\n      [ [{{$env.ODOO_DISCUSS_CHANNEL_ID}}], {\n        \"body\": {{JSON.stringify('Payment RECEIVED: ' + $('Find Lead by Invoice ID').item.json.name + ' paid Rs. ' + $('Parse Payment Payload').item.json.amount_paid + '. Ready for onboarding!')}}\n      } ]\n    ]\n  },\n  \"id\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n16-discuss-paid",
+      "name": "Odoo Discuss - Payment Received Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1500,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "n17-respond-payment",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1720,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "payment.received",
+            "client_id": "={{$json.id}}",
+            "odoo_lead_id": "={{$json.odoo_lead_id}}",
+            "source_module": "2.6",
+            "payload": "={{ { odoo_invoice_id: $json.odoo_invoice_id, amount_paid: $('Parse Payment Payload').item.json.amount_paid } }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-2-6",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        780
+      ],
+      "notes": "S4.5 \u2014 replaces the direct 'Execute Workflow - 2.7 Client Onboarding' mesh link. Fires in parallel off 'Postgres - Mark Paid' (same branch as the receipt email) so onboarding isn't blocked on the Hub round trip. 'Postgres - Mark Paid' now has RETURNING * added (it had none before, and the old 2.7 call was silently reading a field \u2014 odoo_lead_id \u2014 that the query never actually returned; same gap now feeds this node instead)."
+    }
+  ],
+  "connections": {
+    "From Module 2.5 (Contract Signed)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Lead + Deal Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Lead + Deal Detail": {
+      "main": [
+        [
+          {
+            "node": "Odoo - Create Draft Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Create Draft Invoice": {
+      "main": [
+        [
+          {
+            "node": "Odoo - Post/Validate Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Post/Validate Invoice": {
+      "main": [
+        [
+          {
+            "node": "Odoo - Read Invoice (portal token)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Read Invoice (portal token)": {
+      "main": [
+        [
+          {
+            "node": "Build Payment Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Payment Link": {
+      "main": [
+        [
+          {
+            "node": "Send Invoice Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Invoice Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Invoiced",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Invoiced": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Invoice Sent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payment Received Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Payment Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Payment Payload": {
+      "main": [
+        [
+          {
+            "node": "Find Lead by Invoice ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Lead by Invoice ID": {
+      "main": [
+        [
+          {
+            "node": "Odoo - Register Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo - Register Payment": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Mark Paid": {
+      "main": [
+        [
+          {
+            "node": "Send Receipt Email (Postal SMTP)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Receipt Email (Postal SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Odoo Discuss - Payment Received Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo Discuss - Payment Received Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "56554944d9702690"
+}

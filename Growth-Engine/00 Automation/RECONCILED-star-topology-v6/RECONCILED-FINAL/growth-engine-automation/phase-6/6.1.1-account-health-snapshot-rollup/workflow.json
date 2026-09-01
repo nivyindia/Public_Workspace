@@ -1,0 +1,387 @@
+{
+  "name": "6.1.1 - Account Health-Snapshot Rollup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "c6111001-0000-4000-8000-000000000001",
+      "name": "Weekly Mon 7AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1400,
+        300
+      ],
+      "notes": "6.1.1.1. Cadence (weekly, Monday 7AM) is a placeholder matching the pattern already used by Module 2.8 (weekly Mon 8AM) and 2.9 (daily 7AM) - no cadence was specified for this session in the source docs, flagging as configurable rather than a confirmed business rule."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- pull all currently active/onboarded accounts to snapshot\nSELECT id AS client_id, odoo_lead_id, name, email, status, last_reply_at, last_reply_channel, last_nurture_sent, renewal_date, dunning_attempts, COALESCE(support_ticket_count, 0) AS support_ticket_count\nFROM clients_master\nWHERE status IN ('Onboarded', 'Active/Onboarded (recurring)', 'Churn Risk', 'Payment Failed')\nLIMIT 100;",
+        "options": {}
+      },
+      "id": "c6111002-0000-4000-8000-000000000002",
+      "name": "Get Active Accounts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1180,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "LIMIT 100 per \u00a716.3's pagination standard - add a has_more follow-up execution if this ever returns exactly 100."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 6.1.1.4 Last-contact data pull - most recent inbound/outbound event per client, grounded in \u00a716.5 communication_events\nSELECT client_id, MAX(occurred_at) AS last_contact_at, COUNT(*) FILTER (WHERE occurred_at > now() - interval '30 days') AS touches_last_30d\nFROM communication_events\nWHERE client_id = {{ $json.client_id }}\nGROUP BY client_id;",
+        "options": {}
+      },
+      "id": "c6111003-0000-4000-8000-000000000003",
+      "name": "Last-Contact Data Pull",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -960,
+        180
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "REQUIRES SCHEMA CONFIRMATION if communication_events (built in 4.3.3) isn't populated/live yet - falls back to clients_master.last_reply_at in the compute step if this returns nothing."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.METABASE_URL }}/api/card/{{ $vars.METABASE_CLIENT_CARD_ID }}/query/json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Metabase-Session",
+              "value": "={{ $vars.METABASE_API_KEY }}"
+            }
+          ]
+        },
+        "qs": {
+          "parameters": "={{ JSON.stringify([{ type: 'id', target: ['variable', ['template-tag', 'client_id']], value: $('Get Active Accounts').item.json.client_id }]) }}"
+        },
+        "options": {}
+      },
+      "id": "c6111004-0000-4000-8000-000000000004",
+      "name": "Usage-Data Pull (Metabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        300
+      ],
+      "notes": "6.1.1.2. Reuses the exact METABASE_URL/METABASE_API_KEY/METABASE_CLIENT_CARD_ID pattern Module 2.8 already uses for per-client metrics (\u00a710A.2/\u00a710A.3) - not a new tool, not invented. The specific 'usage' metric/card definition inside Metabase itself is whatever 2.8 already queries; confirm the card_id returns a usable numeric usage figure before relying on it here.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {},
+        "numberInputs": 2
+      },
+      "id": "c6111006-0000-4000-8000-000000000006",
+      "name": "Merge Data Sources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -740,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 6.1.1.5 - Merge + health-score compute\n// FLAG: the weighting below is a transparent, documented placeholder - it is NOT a confirmed\n// business rule from any source file (no health-score rubric exists in the uploads). Per the\n// golden rule (never invent thresholds and present them as final), this must be reviewed and\n// approved by Nivy before being used for any customer-facing or renewal-affecting decision.\n// The raw component values ARE real (grounded in communication_events / Metabase / clients_master).\n\nconst account = $('Get Active Accounts').item.json;\nconst contact = $('Last-Contact Data Pull').all().find(i => i.json.client_id === account.client_id) || {};\nconst usage = $('Usage-Data Pull (Metabase)').item.json || {};\n// F6.1 closure: ticket volume ab real hai \u2014 6.3.1 Support Ticketing Wiring already\n// clients_master.support_ticket_count maintain karta hai har Linear ticket par,\n// isliye ab ek alag API pull ki zaroorat nahi, seedha account row se milta hai.\nconst openTicketCount = account.support_ticket_count || 0;\n\nconst lastContactAt = contact.last_contact_at || account.last_reply_at || account.last_nurture_sent || null;\nconst daysSinceContact = lastContactAt ? Math.floor((Date.now() - new Date(lastContactAt).getTime()) / 86400000) : null;\n\n// PLACEHOLDER SCORING - flagged, not final:\nlet score = 100;\nif (daysSinceContact === null) score -= 20;\nelse if (daysSinceContact > 60) score -= 40;\nelse if (daysSinceContact > 30) score -= 20;\nelse if (daysSinceContact > 14) score -= 10;\n\nif (account.status === 'Churn Risk') score -= 30;\nif (account.status === 'Payment Failed') score -= 30;\nif (account.dunning_attempts > 0) score -= (account.dunning_attempts * 10);\n\nif (openTicketCount > 3) score -= 10;\n\nscore = Math.max(0, Math.min(100, score));\n\nreturn [{\n  json: {\n    client_id: account.client_id,\n    odoo_lead_id: account.odoo_lead_id,\n    snapshot_date: new Date().toISOString().slice(0,10),\n    days_since_last_contact: daysSinceContact,\n    touches_last_30d: contact.touches_last_30d ?? null,\n    usage_raw: usage && !usage.error ? usage : null,\n    ticket_data_source: 'REAL - clients_master.support_ticket_count, maintained by 6.3.1 Support Ticketing Wiring',\n    support_ticket_count: openTicketCount,\n    health_score_raw: score,\n    health_score_methodology_status: 'PLACEHOLDER - needs business confirmation, not yet approved'\n  }\n}];"
+      },
+      "id": "c6111007-0000-4000-8000-000000000007",
+      "name": "Health-Score Compute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        300
+      ],
+      "notes": "F6.1 CLOSED \u2014 ticket-volume input ab real hai (clients_master.support_ticket_count se, jo 6.3.1 maintain karta hai). Scoring WEIGHTS abhi bhi placeholder hain (jaise pehle the) \u2014 Nivy se confirm karwana baaki hai, sirf DATA SOURCE fix hua hai is patch me."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 6.1.1.6a - schema setup (idempotent, safe to run every time - matches ALTER TABLE IF NOT EXISTS pattern used everywhere else)\nALTER TABLE clients_master ADD COLUMN IF NOT EXISTS health_score INTEGER;\nALTER TABLE clients_master ADD COLUMN IF NOT EXISTS health_score_snapshot_at TIMESTAMP;\n\nUPDATE clients_master\nSET health_score = {{ $json.health_score_raw }},\n    health_score_snapshot_at = now(),\n    updated_at = now()\nWHERE id = {{ $json.client_id }};",
+        "options": {}
+      },
+      "id": "c6111008-0000-4000-8000-000000000008",
+      "name": "Write clients_master.health_score",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -300,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.ODOO_URL }}/jsonrpc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  jsonrpc: '2.0',\n  method: 'call',\n  params: {\n    service: 'object',\n    method: 'execute_kw',\n    args: [\n      $vars.ODOO_DB,\n      $vars.ODOO_UID,\n      $vars.ODOO_API_KEY,\n      'crm.lead',\n      'write',\n      [[$json.odoo_lead_id], { x_account_health_score: $json.health_score_raw }]\n    ]\n  },\n  id: Math.floor(Math.random() * 100000)\n}) }}",
+        "options": {}
+      },
+      "id": "c6111009-0000-4000-8000-000000000009",
+      "name": "Odoo write - x_account_health_score",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -300,
+        380
+      ],
+      "notes": "6.1.1.6b. Same execute_kw pattern as 5.1.2. x_account_health_score is a PLACEHOLDER field name, same caveat as 5.1.2 - requires fields_get confirmation before production use. Only fires when odoo_lead_id is present (guard recommended if not already handled upstream).",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.health_score_raw }}",
+              "rightValue": 40,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "c611100a-0000-4000-8000-00000000000a",
+      "name": "Low Health Score? (<40, placeholder cutoff)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c611100b-0000-4000-8000-00000000000b",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        140,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Not an alert-send yet (that's 6.4.1/6.5.x territory) - just logs for now so a human can review the flagged accounts\nINSERT INTO workflow_errors (workflow_name, execution_id, node_name, error_message, input_payload)\nVALUES ('6.1.1 - Account Health-Snapshot Rollup', '{{ $execution.id }}', 'Low Health Score Flag', 'Account scored below placeholder cutoff (40) - human review recommended, cutoff not yet business-confirmed', {{ JSON.stringify($json) }}::jsonb);",
+        "options": {}
+      },
+      "id": "c611100c-0000-4000-8000-00000000000c",
+      "name": "Log Low-Health Account for Review",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        140,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Odoo Postgres"
+        }
+      },
+      "notes": "Deliberately reuses workflow_errors as a lightweight review queue rather than sending an automated alert - alerting/escalation logic belongs to 6.4.1 (upsell) / 6.5.x (churn win-back), not this rollup session, so this session doesn't overreach into those sessions' scope."
+    },
+    {
+      "parameters": {
+        "workflowId": "REPLACE_WITH_0.0_HUB_INTAKE_WORKFLOW_ID",
+        "workflowInputs": {
+          "value": {
+            "event_type": "health.scored",
+            "client_id": "={{$json.client_id}}",
+            "odoo_lead_id": "={{$json.odoo_lead_id}}",
+            "source_module": "6.1.1",
+            "payload": "={{ { health_score_raw: $json.health_score_raw, days_since_last_contact: $json.days_since_last_contact, touches_last_30d: $json.touches_last_30d, health_score_methodology_status: $json.health_score_methodology_status } }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "report-to-hub-6-1-1",
+      "name": "Report to Hub",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -300,
+        500
+      ],
+      "notes": "S6.1 \u2014 health.scored fires for every scored account, not just low-health ones (6.2.2 Milestone Missed Alert and 6.4.1 Upsell Trigger both need to see the full stream to decide what applies to them, per the plan). Runs in parallel with the existing clients_master/Odoo writes, off Health-Score Compute, so a Hub failure can't block those writes. Note the health-score methodology itself is still flagged PLACEHOLDER upstream (see Health-Score Compute) \u2014 that caveat now travels downstream in the payload too, not just in this workflow."
+    }
+  ],
+  "connections": {
+    "Weekly Mon 7AM": {
+      "main": [
+        [
+          {
+            "node": "Get Active Accounts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Accounts": {
+      "main": [
+        [
+          {
+            "node": "Last-Contact Data Pull",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Usage-Data Pull (Metabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Last-Contact Data Pull": {
+      "main": [
+        [
+          {
+            "node": "Merge Data Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Usage-Data Pull (Metabase)": {
+      "main": [
+        [
+          {
+            "node": "Merge Data Sources",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Data Sources": {
+      "main": [
+        [
+          {
+            "node": "Health-Score Compute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health-Score Compute": {
+      "main": [
+        [
+          {
+            "node": "Write clients_master.health_score",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Odoo write - x_account_health_score",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report to Hub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write clients_master.health_score": {
+      "main": [
+        [
+          {
+            "node": "Low Health Score? (<40, placeholder cutoff)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Low Health Score? (<40, placeholder cutoff)": {
+      "main": [
+        [
+          {
+            "node": "Log Low-Health Account for Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "errorWorkflow": "REPLACE_WITH_0.0_ERROR_HANDLER_WORKFLOW_ID"
+  },
+  "meta": {
+    "planId": "6.1.1",
+    "planLabel": "Account health-snapshot rollup",
+    "subSteps": {
+      "6.1.1.1": "Cron trigger node -> Weekly Mon 7AM (cadence is a placeholder, not sourced)",
+      "6.1.1.2": "Usage-data pull node -> Usage-Data Pull (Metabase), reuses Module 2.8's Metabase pattern",
+      "6.1.1.3": "Tickets-data pull node -> MOCK_TICKETING_PROVIDER (disabled, flagged mock - helpdesk tool undecided per \u00a70.3)",
+      "6.1.1.4": "Last-contact data pull node -> Last-Contact Data Pull, grounded in communication_events (4.3.3) + clients_master",
+      "6.1.1.5": "Merge + health-score compute Code node -> Merge Data Sources + Health-Score Compute (scoring weights flagged as placeholder)",
+      "6.1.1.6": "Metabase/Odoo write node -> Write clients_master.health_score + Odoo write - x_account_health_score (placeholder field name)"
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "plan_id": "4.1.1.1",
+  "parent_workflow": "4.1.1",
+  "name": "SMS Gateway Credential Configuration",
+  "type": "n8n-node-patch",
+  "purpose": "Configure the credential reference required by the selected SMS gateway.",
+  "status": "BLOCKED_PENDING_SMS_GATEWAY_SELECTION",
+
+  "node": {
+    "name": "4.1.1.1 - SMS Gateway Credentials",
+    "type": "provider-dependent"
+  },
+
+  "requirements": [
+    "Selected SMS provider",
+    "API credential",
+    "Approved sender identity",
+    "Required compliance configuration"
+  ],
+
+  "rules": [
+    "Never hard-code API credentials.",
+    "Use n8n credential storage.",
+    "Do not select a provider without project approval."
+  ],
+
+  "integration": {
+    "next_step": "4.1.1.2"
+  }
+}{
+  "plan_id": "4.1.1.2",
+  "parent_workflow": "4.1.1",
+  "name": "Booking Confirmed Event Hook",
+  "type": "n8n-node-patch",
+  "purpose": "Trigger the SMS confirmation flow when Module 2.3 Booking Sync reports a booking-confirmed event.",
+
+  "node": {
+    "name": "4.1.1.2 - Booking Confirmed Hook",
+    "type": "n8n-nodes-base.executeWorkflow"
+  },
+
+  "source": {
+    "module": "2.3",
+    "event": "booking-confirmed"
+  },
+
+  "rules": [
+    "Only process confirmed bookings.",
+    "Preserve booking ID.",
+    "Preserve client/contact identity.",
+    "Do not send SMS for unconfirmed bookings."
+  ],
+
+  "required_fields": [
+    "booking_id",
+    "client_id",
+    "phone",
+    "booking_time"
+  ],
+
+  "integration": {
+    "previous_step": "4.1.1.1",
+    "next_step": "4.1.1.3"
+  }
+}{
+  "plan_id": "4.1.1.3",
+  "parent_workflow": "4.1.1",
+  "name": "Send Booking Confirmation SMS",
+  "type": "n8n-node-patch",
+  "purpose": "Send the approved booking-confirmation SMS.",
+
+  "node": {
+    "name": "4.1.1.3 - SMS Confirmation Send",
+    "type": "provider-dependent"
+  },
+
+  "template": {
+    "type": "booking_confirmation",
+    "status": "TEMPLATE_REQUIRED"
+  },
+
+  "input": [
+    "phone",
+    "booking_id",
+    "booking_time",
+    "client_name"
+  ],
+
+  "rules": [
+    "Use an approved transactional template.",
+    "Do not generate uncontrolled message text.",
+    "Do not send without a valid destination phone number.",
+    "Use the selected SMS gateway credential."
+  ],
+
+  "integration": {
+    "previous_step": "4.1.1.2",
+    "next_step": "4.1.1.4"
+  }
+}{
+  "plan_id": "4.1.1.4",
+  "parent_workflow": "4.1.1",
+  "name": "Log Booking Confirmation SMS Status",
+  "type": "n8n-node-patch",
+
+  "node": {
+    "name": "4.1.1.4 - SMS Status Log",
+    "type": "n8n-nodes-base.postgres"
+  },
+
+  "log_fields": [
+    "client_id",
+    "booking_id",
+    "channel",
+    "message_type",
+    "sent_at",
+    "delivery_status",
+    "provider_message_id"
+  ],
+
+  "channel": "sms",
+  "message_type": "booking_confirmation",
+
+  "rules": [
+    "Log successful and failed send states.",
+    "Preserve provider message ID when available.",
+    "Do not mark failed messages as sent."
+  ],
+
+  "integration": {
+    "previous_step": "4.1.1.3",
+    "status": "FINAL_STEP_OF_4.1.1",
+    "next_step": "4.1.2.1"
+  },
+
+  "source_gap": {
+    "status": "POSTGRES_LOG_SCHEMA_REQUIRED",
+    "action": "Map fields to the actual project messaging/log table."
+  }
+}

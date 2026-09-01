@@ -1,0 +1,272 @@
+{
+  "plan_id": "3.1.1.1",
+  "parent_workflow": "3.1.1",
+  "module": "Google Maps scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Wrap Existing Google Maps Scraper as Callable Subworkflow",
+  "purpose": "Convert the existing Google Maps scraper into a reusable callable sub-workflow.",
+
+  "required_node": {
+    "name": "3.1.1.1 - Execute Workflow Trigger",
+    "type": "n8n-nodes-base.executeWorkflowTrigger",
+    "purpose": "Receive execution requests and input parameters from the Master Orchestrator or another parent workflow."
+  },
+
+  "target_flow": {
+    "before": "Existing Google Maps scraper runs through its current trigger/direct entry.",
+    "after": "Execute Workflow Trigger -> existing Google Maps scraper logic -> output",
+    "rule": "Preserve the existing scraper logic; only make its entry point callable."
+  },
+
+  "input_contract": {
+    "status": "Defined in next step",
+    "expected_fields": [
+      "search_query",
+      "location"
+    ],
+    "note": "3.1.1.2 is responsible for the explicit input-parameter node."
+  },
+
+  "integration_rules": [
+    "Do not rebuild the scraper.",
+    "Do not remove the existing scraping logic.",
+    "Do not add normalization in this step.",
+    "Do not add error handling in this step.",
+    "Do not hard-code a search query or location.",
+    "Keep the workflow reusable by the Master Orchestrator."
+  ],
+
+  "validation": [
+    {
+      "case": "Sub-workflow invoked",
+      "expected": "Execute Workflow Trigger receives the execution."
+    },
+    {
+      "case": "Input parameters supplied",
+      "expected": "Input is available to downstream scraper nodes."
+    },
+    {
+      "case": "No input supplied",
+      "expected": "Do not silently invent search parameters; validation belongs to the input-parameter step."
+    },
+    {
+      "case": "Existing scraper logic",
+      "expected": "Original scraping logic remains intact."
+    }
+  ],
+
+  "integration": {
+    "next_step": "3.1.1.2",
+    "next_purpose": "Add input-parameter node for search query and location.",
+    "future_caller": "3.1.5 Master Orchestrator"
+  },
+
+  "source_gap": {
+    "status": "REQUIRES_ACTUAL_GOOGLE_MAPS_WORKFLOW_JSON",
+    "reason": "The plan specifies wrapping the existing scraper but does not identify its current trigger/node IDs.",
+    "action": "Apply the trigger to the actual existing Google Maps scraper workflow rather than creating a replacement scraper."
+  }
+}{
+  "plan_id": "3.1.1.2",
+  "parent_workflow": "3.1.1",
+  "module": "Google Maps scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Google Maps Input Parameters",
+  "purpose": "Define and validate the search query and location received by the callable Google Maps scraper.",
+
+  "node": {
+    "name": "3.1.1.2 - Search Query + Location",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "const search_query = String($json.search_query || '').trim();\nconst location = String($json.location || '').trim();\n\nif (!search_query) {\n  throw new Error('SEARCH_QUERY_MISSING');\n}\n\nif (!location) {\n  throw new Error('LOCATION_MISSING');\n}\n\nreturn [{\n  json: {\n    ...$json,\n    search_query,\n    location\n  }\n}];"
+    }
+  },
+
+  "input_contract": {
+    "required": [
+      "search_query",
+      "location"
+    ]
+  },
+
+  "output_contract": {
+    "search_query": "string",
+    "location": "string"
+  },
+
+  "rules": [
+    "Do not hard-code the search query.",
+    "Do not hard-code the location.",
+    "Do not perform scraping in this node.",
+    "Preserve additional input fields."
+  ],
+
+  "validation": [
+    "Reject missing search_query.",
+    "Reject missing location.",
+    "Trim whitespace before passing values downstream."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.1.1",
+    "next_step": "3.1.1.3"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_SCRAPER_SCHEMA_REQUIRED",
+    "reason": "Source specifies search query/location but does not specify additional scraper-specific parameters.",
+    "action": "Preserve only parameters actually supported by the existing Google Maps scraper."
+  }
+}{
+  "plan_id": "3.1.1.3",
+  "parent_workflow": "3.1.1",
+  "module": "Google Maps scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Normalize Google Maps Scraper Output",
+  "purpose": "Convert Google Maps scraper results into the common outbound-lead schema.",
+
+  "node": {
+    "name": "3.1.1.3 - Normalize Google Maps Output",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "return items.map(item => {\n  const data = item.json;\n\n  return {\n    json: {\n      name: data.name ?? data.business_name ?? null,\n      phone: data.phone ?? data.phone_number ?? null,\n      email: data.email ?? null,\n      website: data.website ?? data.url ?? null,\n      source: data.source ?? 'google_maps'\n    }\n  };\n});"
+    }
+  },
+
+  "common_schema": {
+    "required_fields": [
+      "name",
+      "phone",
+      "email",
+      "website",
+      "source"
+    ]
+  },
+
+  "source_value": {
+    "default": "google_maps"
+  },
+
+  "rules": [
+    "Every output item must follow the common schema.",
+    "Missing optional contact fields become null.",
+    "Do not invent missing contact information.",
+    "Do not enrich leads in this step.",
+    "Do not perform deduplication in this step."
+  ],
+
+  "validation": [
+    {
+      "case": "Complete scraper result",
+      "expected": "All common-schema fields populated where available."
+    },
+    {
+      "case": "Missing email",
+      "expected": "email = null."
+    },
+    {
+      "case": "Missing website",
+      "expected": "website = null."
+    },
+    {
+      "case": "Multiple scraper results",
+      "expected": "Each result becomes one normalized item."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.1.1.2",
+    "next_step": "3.1.1.4"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_SCRAPER_FIELD_SCHEMA_REQUIRED",
+    "reason": "Source defines the target common schema but not the exact field names emitted by the existing scraper.",
+    "action": "Map the actual scraper fields to the five common fields before production use."
+  }
+}{
+  "plan_id": "3.1.1.4",
+  "parent_workflow": "3.1.1",
+  "module": "Google Maps scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Google Maps Scraper Error Handling",
+  "purpose": "Handle zero-result searches and Google Maps/API failures without silently producing invalid lead data.",
+
+  "flow": {
+    "input": "Google Maps scraper result/error",
+    "decision": "Results available?",
+    "true": "Continue to normalized output.",
+    "false": "Controlled zero-result branch.",
+    "api_failure": "Controlled API-error branch."
+  },
+
+  "nodes": [
+    {
+      "name": "3.1.1.4 - Results Available?",
+      "type": "n8n-nodes-base.if",
+      "purpose": "Detect whether scraper returned usable results."
+    },
+    {
+      "name": "3.1.1.4 - Error Handler",
+      "type": "n8n-nodes-base.code",
+      "purpose": "Return structured error metadata."
+    }
+  ],
+
+  "zero_results_output": {
+    "success": false,
+    "error_type": "NO_RESULTS",
+    "source": "google_maps",
+    "results_count": 0,
+    "message": "No Google Maps results found for the supplied search query and location."
+  },
+
+  "api_failure_output": {
+    "success": false,
+    "error_type": "API_FAILURE",
+    "source": "google_maps",
+    "message": "Google Maps scraper/API execution failed."
+  },
+
+  "success_output": {
+    "success": true,
+    "error_type": null
+  },
+
+  "rules": [
+    "Do not convert zero results into fake lead records.",
+    "Do not silently treat API failures as successful empty results.",
+    "Preserve source = google_maps.",
+    "Return structured error information.",
+    "Do not retry indefinitely in this step."
+  ],
+
+  "validation": [
+    {
+      "case": "Results > 0",
+      "expected": "Continue to output normalization."
+    },
+    {
+      "case": "Results = 0",
+      "expected": "Return NO_RESULTS status."
+    },
+    {
+      "case": "Scraper/API exception",
+      "expected": "Return API_FAILURE status."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.1.1.3",
+    "status": "FINAL_STEP_OF_3.1.1",
+    "next_parent": "3.1.2"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_SCRAPER_ERROR_CONTRACT_REQUIRED",
+    "reason": "Source only specifies 0-results/API-fail handling and does not define retry count, alert channel, or exact upstream error format.",
+    "action": "Connect this branch to the existing project-wide error/alert convention when integrating."
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "step_id": "3.0.1.5",
+  "target_module": "2.5 - Contract + E-sign",
+  "purpose": "Safely branch invalid, expired, or forged proposal acceptance tokens and prevent proposal acceptance unless verification succeeds.",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.token_verified }}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "ge-3-0-1-5-verified-if",
+      "name": "Security - Token Verified?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "TRUE may continue to the existing proposal acceptance logic. FALSE must not mutate acceptance state."
+    },
+    {
+      "parameters": {
+        "jsCode": "const reason = $json.token_error || 'ACCEPT_TOKEN_REJECTED';\n\nreturn [{\n  json: {\n    ok: false,\n    accepted: false,\n    status: 'REJECTED_SECURITY_VALIDATION',\n    error_code: reason,\n    message: 'Proposal acceptance link is invalid or expired.',\n    lead_id: $json.accept_token_lead_id ?? null,\n    rejected_at: new Date().toISOString(),\n    security_event: {\n      type: 'proposal_accept_token_rejected',\n      reason\n    }\n  }\n}];"
+      },
+      "id": "ge-3-0-1-5-reject",
+      "name": "Security - Reject Invalid Accept Token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        180
+      ],
+      "notes": "Security failure branch. Do not update Odoo/PostgreSQL acceptance state from this branch."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "ge-3-0-1-5-response",
+      "name": "Security - Respond Rejected",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        960,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "Security - Token Verified?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Security - Reject Invalid Accept Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Security - Reject Invalid Accept Token": {
+      "main": [
+        [
+          {
+            "node": "Security - Respond Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "integration_notes": [
+    "Connect the TRUE output of Security - Token Verified? to the existing Module 2.5 proposal acceptance path.",
+    "Connect the FALSE output to Security - Reject Invalid Accept Token.",
+    "Replay protection requires persistent one-time-use state. This node intentionally does not invent a storage mechanism; add a database lookup/atomic consume step before acceptance if the master plan requires one-time tokens.",
+    "For production, write the rejection event to the existing audit/security-event path without storing the HMAC secret."
+  ],
+  "test_cases": [
+    "token_verified=true => continues to existing acceptance path.",
+    "token_verified=false => proposal is not accepted.",
+    "Expired token => rejected.",
+    "Forged signature => rejected.",
+    "Missing token => rejected.",
+    "Rejected request does not mutate acceptance state."
+  ]
+}

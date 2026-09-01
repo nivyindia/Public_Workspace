@@ -1,0 +1,180 @@
+{
+  "name": "5.1.1 - BANT/MEDDIC Extraction",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            { "name": "client_id" },
+            { "name": "opportunity_id" },
+            { "name": "call_notes_text" },
+            { "name": "source" }
+          ]
+        }
+      },
+      "id": "b5111001-0000-4000-8000-000000000001",
+      "name": "5.1.1 Trigger - Call Notes / Transcript In",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-1180, 300],
+      "notes": "STAR TOPOLOGY (S5.4): this Execute Workflow Trigger input is now what the Hub-Dispatcher calls off a `reply.received` event in funnel_events, instead of whichever ad-hoc source called it before (manually pasted call notes today, since no dialer/transcript source is wired yet - see 4.2.x blocker). Field shape (client_id, opportunity_id, call_notes_text, source) is unchanged - the Dispatcher's Switch branch for `reply.received` maps the event's payload JSONB onto these same four fields, so no node logic below had to change, only who calls this trigger. opportunity_id maps to Stage 27's 'Opportunity ID' field."
+    },
+    {
+      "parameters": {
+        "jsCode": "// 5.1.1.1 - Input node: validate call notes/transcript text\nconst item = $input.item.json;\nconst errors = [];\nif (!item.client_id) errors.push('client_id required');\nif (!item.call_notes_text || item.call_notes_text.trim().length < 20) errors.push('call_notes_text required (min 20 chars)');\n\nreturn [{\n  json: {\n    client_id: item.client_id,\n    opportunity_id: item.opportunity_id || null,\n    call_notes_text: (item.call_notes_text || '').trim(),\n    source: item.source || 'manual',\n    is_valid: errors.length === 0,\n    validation_errors: errors.join('; ')\n  }\n}];"
+      },
+      "id": "b5111002-0000-4000-8000-000000000002",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-960, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "c1", "leftValue": "={{ $json.is_valid }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true" } }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "b5111003-0000-4000-8000-000000000003",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-740, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_errors (workflow_name, execution_id, node_name, error_message, input_payload)\nVALUES ('5.1.1 - BANT/MEDDIC Extraction', '{{ $execution.id }}', 'Validate Input', {{ JSON.stringify($json.validation_errors) }}, {{ JSON.stringify($json) }}::jsonb);",
+        "options": {}
+      },
+      "id": "b5111004-0000-4000-8000-000000000004",
+      "name": "Log Invalid Input",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-520, 460],
+      "credentials": { "postgres": { "name": "Odoo Postgres" } }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.OLLAMA_URL || 'http://ollama:11434' }}/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: $vars.OLLAMA_MODEL || 'qwen2.5:14b',\n  format: 'json',\n  stream: false,\n  prompt: `You are extracting BANT qualification fields from sales call notes. Return ONLY valid JSON with these exact keys: budget, authority, need, timeline. Each value should be a short factual quote or paraphrase taken from the notes, or the literal string \"not mentioned\" if that field was not discussed. Do not infer, do not add commentary, do not add extra keys.\\n\\nCall notes:\\n${$json.call_notes_text}`\n}) }}",
+        "options": {}
+      },
+      "id": "b5111005-0000-4000-8000-000000000005",
+      "name": "Ollama Extraction - BANT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-520, 220],
+      "notes": "5.1.1.2. Field set (budget/authority/need/timeline) is the standard BANT acronym, not an invented weighting/threshold - no scoring or decision logic here, extraction only, per rule against inventing BANT weights."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.OLLAMA_URL || 'http://ollama:11434' }}/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: $vars.OLLAMA_MODEL || 'qwen2.5:14b',\n  format: 'json',\n  stream: false,\n  prompt: `You are extracting MEDDIC qualification fields from sales call notes. Return ONLY valid JSON with these exact keys: metrics, economic_buyer, decision_criteria, decision_process, identify_pain, champion, competition. Each value should be a short factual quote or paraphrase taken from the notes, or the literal string \"not mentioned\" if that field was not discussed. Do not infer, do not add commentary, do not add extra keys.\\n\\nCall notes:\\n${$('Validate Input').item.json.call_notes_text}`\n}) }}",
+        "options": {}
+      },
+      "id": "b5111006-0000-4000-8000-000000000006",
+      "name": "Ollama Extraction - MEDDIC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-300, 220],
+      "notes": "5.1.1.3. metrics/economic_buyer/decision_criteria/decision_process/identify_pain/champion/competition are the standard MEDDIC(C) field names - extraction only, no invented scoring."
+    },
+    {
+      "parameters": {
+        "jsCode": "// 5.1.1.4 - Output structure Code node: build the JSON schema matching Stage 27's mandatory field list\n// (Opportunity ID, Framework Used, Assessment Fields, Decision, Assessed Date, Assessed By)\nconst input = $('Validate Input').item.json;\n\nlet bant = {};\ntry { bant = JSON.parse($('Ollama Extraction - BANT').item.json.response); }\ncatch (e) { bant = { parse_error: true, raw: $('Ollama Extraction - BANT').item.json.response }; }\n\nlet meddic = {};\ntry { meddic = JSON.parse($json.response); }\ncatch (e) { meddic = { parse_error: true, raw: $json.response }; }\n\nreturn [{\n  json: {\n    client_id: input.client_id,\n    opportunity_id: input.opportunity_id,\n    framework_used: 'BANT+MEDDIC',\n    assessment_fields: { bant, meddic },\n    // Decision is deliberately NOT set here - per this master plan's AI-recommends/deterministic-decides\n    // rule (§16.x), a human or a separately-defined rule sets 'Decision', extraction never does.\n    decision: 'Pending Review',\n    assessed_date: new Date().toISOString(),\n    assessed_by: 'Ollama (' + (input.source || 'manual') + ') - pending human confirmation',\n    extraction_had_parse_error: !!(bant.parse_error || meddic.parse_error)\n  }\n}];"
+      },
+      "id": "b5111007-0000-4000-8000-000000000007",
+      "name": "Output Structure (Stage 27 schema)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-80, 220]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO qualification_records (client_id, framework, assessment, decision, assessed_by)\nVALUES (\n  {{ $json.client_id }},\n  {{ JSON.stringify($json.framework_used) }},\n  {{ JSON.stringify($json.assessment_fields) }}::jsonb,\n  {{ JSON.stringify($json.decision) }},\n  {{ JSON.stringify($json.assessed_by) }}\n)\nRETURNING id;",
+        "options": {}
+      },
+      "id": "b5111008-0000-4000-8000-000000000008",
+      "name": "Insert qualification_records",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [140, 220],
+      "credentials": { "postgres": { "name": "Odoo Postgres" } },
+      "notes": "REQUIRES SCHEMA CONFIRMATION if qualification_records (§16.5) hasn't been created yet - same table as flagged in 4.3.3's README, one CREATE TABLE covers both."
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_HUB_INTAKE_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Hub-Intake"
+        },
+        "workflowInputs": {
+          "value": {
+            "event_type": "qualification.scored",
+            "client_id": "={{ $json.client_id }}",
+            "payload": "={{ JSON.stringify({ opportunity_id: $json.opportunity_id, qualification_record_id: $('Insert qualification_records').item.json.id, framework_used: $json.framework_used, decision: $json.decision, extraction_had_parse_error: $json.extraction_had_parse_error }) }}"
+          },
+          "schema": [
+            { "id": "event_type", "type": "string" },
+            { "id": "client_id", "type": "number" },
+            { "id": "payload", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b5111009-0000-4000-8000-000000000009",
+      "name": "Report to Hub - qualification.scored",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [360, 220],
+      "notes": "STAR TOPOLOGY (S5.4): replaces the old direct 'Hand off to 5.1.2' Execute Workflow mesh-link. This spoke no longer knows 5.1.2's workflow ID at all - it only reports `qualification.scored` to Hub-Intake with client_id + payload (opportunity_id, the qualification_records.id just inserted, framework_used, decision, extraction_had_parse_error). The Hub-Dispatcher's Switch node is what routes `qualification.scored` on to 5.1.2 (S5.5) - that wiring lives once on the Dispatcher, not here. REQUIRES: workflowId.value must be filled in with the real Hub-Intake workflow ID once S1 (Build Hub-Intake) is done - same single-place-to-fill pattern the plan uses everywhere else, not a per-spoke placeholder."
+    }
+  ],
+  "connections": {
+    "5.1.1 Trigger - Call Notes / Transcript In": { "main": [[{ "node": "Validate Input", "type": "main", "index": 0 }]] },
+    "Validate Input": { "main": [[{ "node": "Valid?", "type": "main", "index": 0 }]] },
+    "Valid?": {
+      "main": [
+        [{ "node": "Ollama Extraction - BANT", "type": "main", "index": 0 }],
+        [{ "node": "Log Invalid Input", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ollama Extraction - BANT": { "main": [[{ "node": "Ollama Extraction - MEDDIC", "type": "main", "index": 0 }]] },
+    "Ollama Extraction - MEDDIC": { "main": [[{ "node": "Output Structure (Stage 27 schema)", "type": "main", "index": 0 }]] },
+    "Output Structure (Stage 27 schema)": { "main": [[{ "node": "Insert qualification_records", "type": "main", "index": 0 }]] },
+    "Insert qualification_records": { "main": [[{ "node": "Report to Hub - qualification.scored", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "errorWorkflow": "" },
+  "meta": {
+    "planId": "5.1.1",
+    "planLabel": "BANT/MEDDIC extraction",
+    "starTopologyPhase": "S5.4",
+    "starTopologyChanges": [
+      "Trigger is now Dispatcher-called off a `reply.received` funnel_events row instead of an ad-hoc caller - field shape unchanged, only the caller changed.",
+      "Removed the direct 'Hand off to 5.1.2' Execute Workflow node (mesh link) - this spoke no longer references 5.1.2's workflow ID.",
+      "Added 'Report to Hub - qualification.scored' node calling Hub-Intake with {event_type, client_id, payload}; Hub-Dispatcher now owns routing on to 5.1.2 (S5.5)."
+    ],
+    "subSteps": {
+      "5.1.1.1": "Input node - call notes/transcript text -> Validate Input",
+      "5.1.1.2": "Ollama extraction node - BANT fields -> Ollama Extraction - BANT",
+      "5.1.1.3": "Ollama extraction node - MEDDIC fields -> Ollama Extraction - MEDDIC",
+      "5.1.1.4": "Output structure Code node (JSON schema) -> Output Structure (Stage 27 schema)",
+      "5.1.1.5": "Report to Hub node (S5.4) - reports event_type: qualification.scored -> Report to Hub - qualification.scored"
+    }
+  }
+}

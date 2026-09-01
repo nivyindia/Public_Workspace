@@ -1,0 +1,196 @@
+{
+  "plan_id": "3.1.3.1",
+  "parent_workflow": "3.1.3",
+  "module": "Digital Footprints scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Wrap Digital Footprints Scraper as Subworkflow",
+  "purpose": "Make the existing Digital Footprints scraper callable as a reusable n8n sub-workflow.",
+
+  "required_node": {
+    "name": "3.1.3.1 - Execute Workflow Trigger",
+    "type": "n8n-nodes-base.executeWorkflowTrigger"
+  },
+
+  "target_flow": [
+    "Execute Workflow Trigger",
+    "Existing Digital Footprints scraper",
+    "Output"
+  ],
+
+  "rules": [
+    "Reuse the existing Digital Footprints scraper.",
+    "Do not rebuild the scraper.",
+    "Do not change its core scraping logic.",
+    "Do not hard-code input parameters.",
+    "Keep it callable by the Master Orchestrator."
+  ],
+
+  "integration": {
+    "next_step": "3.1.3.2",
+    "next_purpose": "Add Digital Footprints input-parameter node."
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_DIGITAL_FOOTPRINTS_WORKFLOW_REQUIRED",
+    "reason": "Source specifies sub-workflow wrapping but does not identify the existing trigger/node IDs.",
+    "action": "Apply the trigger to the actual Digital Footprints workflow."
+  }
+}
+
+{
+  "plan_id": "3.1.3.2",
+  "parent_workflow": "3.1.3",
+  "module": "Digital Footprints scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Digital Footprints Input Parameters",
+  "purpose": "Provide and validate the input parameters required by the existing Digital Footprints scraper.",
+
+  "node": {
+    "name": "3.1.3.2 - Digital Footprints Input Parameters",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "const input = { ...$json };\n\nconst query = String(\n  input.query || input.search_query || input.keyword || ''\n).trim();\n\nconst location = String(input.location || '').trim();\n\nif (!query) {\n  throw new Error('DIGITAL_FOOTPRINTS_QUERY_MISSING');\n}\n\nif (!location) {\n  throw new Error('DIGITAL_FOOTPRINTS_LOCATION_MISSING');\n}\n\nreturn [{\n  json: {\n    ...input,\n    query,\n    location\n  }\n}];"
+    }
+  },
+
+  "input_contract": {
+    "required": [
+      "query",
+      "location"
+    ]
+  },
+
+  "output_contract": {
+    "query": "string",
+    "location": "string"
+  },
+
+  "rules": [
+    "Do not hard-code the query.",
+    "Do not hard-code the location.",
+    "Preserve additional input fields.",
+    "Do not perform scraping in this node."
+  ],
+
+  "validation": [
+    "Reject missing query.",
+    "Reject missing location.",
+    "Trim whitespace before passing values downstream."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.3.1",
+    "next_step": "3.1.3.3"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_DIGITAL_FOOTPRINTS_INPUT_SCHEMA_REQUIRED",
+    "reason": "The source only specifies an input-parameter node and does not define the exact parameters expected by the existing scraper.",
+    "action": "Map query/location to the actual Digital Footprints scraper inputs during integration."
+  }
+}
+
+{
+  "plan_id": "3.1.3.3",
+  "parent_workflow": "3.1.3",
+  "module": "Digital Footprints scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Normalize Digital Footprints Output",
+  "purpose": "Convert Digital Footprints scraper output into the common outbound lead schema.",
+
+  "node": {
+    "name": "3.1.3.3 - Normalize Digital Footprints Output",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "return items.map(item => {\\n  const data = item.json;\\n\\n  return {\\n    json: {\\n      name: data.name ?? data.business_name ?? data.company_name ?? null,\\n      phone: data.phone ?? data.phone_number ?? null,\\n      email: data.email ?? null,\\n      website: data.website ?? data.domain ?? data.url ?? null,\\n      source: 'digital_footprints'\\n    }\\n  };\\n});"
+    }
+  },
+
+  "common_schema": {
+    "fields": [
+      "name",
+      "phone",
+      "email",
+      "website",
+      "source"
+    ]
+  },
+
+  "rules": [
+    "Every result must use the common lead schema.",
+    "Do not fabricate missing data.",
+    "Missing contact fields remain null.",
+    "Do not perform enrichment.",
+    "Do not perform deduplication."
+  ],
+
+  "integration": {
+    "previous_step": "3.1.3.2",
+    "next_step": "3.1.3.4"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_DIGITAL_FOOTPRINTS_OUTPUT_SCHEMA_REQUIRED",
+    "reason": "The source specifies the normalization step but does not specify the exact fields emitted by the existing scraper.",
+    "action": "Map the actual scraper fields to the common schema during integration."
+  }
+}
+
+{
+  "plan_id": "3.1.3.4",
+  "parent_workflow": "3.1.3",
+  "module": "Digital Footprints scraper wiring",
+  "type": "n8n-node-patch",
+  "name": "Digital Footprints Error Handling",
+  "purpose": "Provide a controlled error branch for Digital Footprints scraper failures and zero-result cases.",
+
+  "node": {
+    "name": "3.1.3.4 - Digital Footprints Error Handler",
+    "type": "n8n-nodes-base.code",
+    "typeVersion": 2,
+    "parameters": {
+      "jsCode": "const data = $json;\\nconst results = Array.isArray(data.results) ? data.results : null;\\n\\nif (results && results.length === 0) {\\n  return [{\\n    json: {\\n      ...data,\\n      success: false,\\n      error_type: 'NO_RESULTS',\\n      source: 'digital_footprints',\\n      results_count: 0\\n    }\\n  }];\\n}\\n\\nreturn [{\\n  json: {\\n    ...data,\\n    success: true,\\n    error_type: null,\\n    source: 'digital_footprints'\\n  }\\n}];"
+    }
+  },
+
+  "handling": {
+    "zero_results": "NO_RESULTS",
+    "execution_failure": "DIGITAL_FOOTPRINTS_FAILURE"
+  },
+
+  "rules": [
+    "Never fabricate leads for a zero-result search.",
+    "Do not silently convert scraper failures into successful output.",
+    "Preserve source identification.",
+    "Do not add unlimited retry logic here."
+  ],
+
+  "validation": [
+    {
+      "case": "Results available",
+      "expected": "success=true."
+    },
+    {
+      "case": "Zero results",
+      "expected": "success=false and error_type=NO_RESULTS."
+    },
+    {
+      "case": "Scraper/API failure",
+      "expected": "Controlled failure path."
+    }
+  ],
+
+  "integration": {
+    "previous_step": "3.1.3.3",
+    "status": "FINAL_STEP_OF_3.1.3",
+    "next_step": "3.1.4.1"
+  },
+
+  "source_gap": {
+    "status": "ACTUAL_SCRAPER_ERROR_SCHEMA_REQUIRED",
+    "reason": "The source only specifies an error-handling branch.",
+    "action": "Connect this to the actual Digital Footprints scraper's error format."
+  }
+}
