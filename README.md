@@ -1,10 +1,13 @@
 # Public Workspace
 
-## 📌 Current Work Status — Quick Resume
+## 📌 Work & Implementation Control
 
-- **Last updated:** 2026-09-16
-- **Role:** Public workspace/reference material supporting the Nivy AIOS ecosystem.
-- **Implementation completion:** Do **not** infer implementation % from this repository alone.
-- **Where to start:** `AIOS-WORK-STATUS.md` → then `nivyindia/Nivy-Next-AIOS` canonical plan/tracker.
+- **Common resume file:** [WORK-STATUS.md](WORK-STATUS.md)
+- **Start here:** `WORK-STATUS.md` → inspect relevant public workspace/reference material.
+- **Implementation repo:** [Nivy-Next-AIOS](https://github.com/nivyindia/Nivy-Next-AIOS)
+- **Master plan:** [AIOS Final Implementation Plan](https://github.com/nivyindia/Nivy-Next-AIOS/blob/main/docs/plans/AIOS-FINAL-IMPLEMENTATION-PLAN-v1.0-2026-09-06-SUN.md)
+- **Build map:** [AIOS One-Page Build Map](https://github.com/nivyindia/Nivy-Next-AIOS/blob/main/docs/plans/AIOS-ONE-PAGE-BUILD-MAP-v1.0-2026-09-06-SUN.md)
+- **Execution entry:** [First Prompt](https://github.com/nivyindia/Nivy-Next-AIOS/blob/main/docs/First%20Prompt)
+- **Important:** Do not infer implementation completion from this repository alone.
 
-**Detailed status:** [AIOS-WORK-STATUS.md](AIOS-WORK-STATUS.md)
+**Detailed status:** [WORK-STATUS.md](WORK-STATUS.md)
