@@ -1,5 +1,15 @@
 # Public Workspace
 
+## 📘 Repository Context — Read This First
+
+- **Purpose:** Public-facing workspace/reference layer for material that supports the broader Nivy AIOS ecosystem.
+- **Main objective:** Provide accessible reference material, public workspace assets and useful outputs while keeping canonical implementation state elsewhere.
+- **Main objects:** Public documents, reference assets, examples, published workspace material and supporting resources.
+- **Data/source:** Selected public/approved material derived from Nivy work and related references; provenance and authority should be checked before reuse.
+- **Implementation plan:** Actual AIOS implementation follows the canonical Nivy Next AIOS plan/tracker.
+- **Progress rule:** Public/reference material is not itself proof of implementation completion.
+- **How to use this README:** Understand the public-workspace role → check `WORK-STATUS.md` → inspect relevant material → trace implementation claims to canonical evidence.
+
 ## 📌 Work & Implementation Control
 
 - **Common resume file:** [WORK-STATUS.md](WORK-STATUS.md)
